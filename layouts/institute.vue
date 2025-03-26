@@ -5,10 +5,8 @@ import AppBar from "~/components/global/AppBarInstitute.vue";
 <template>
   <v-app>
     <v-main>
-      <v-container>
-        <AppBar />
-        <NuxtPage />
-      </v-container>
+      <AppBar />
+      <NuxtPage />
     </v-main>
   </v-app>
 </template>
