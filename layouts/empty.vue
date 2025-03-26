@@ -1,12 +1,7 @@
-<script setup lang="ts">
-import AppBar from "~/components/global/AppBarInstitute.vue";
-</script>
-
 <template>
   <v-app>
     <v-main>
       <v-container>
-        <AppBar />
         <NuxtPage />
       </v-container>
     </v-main>

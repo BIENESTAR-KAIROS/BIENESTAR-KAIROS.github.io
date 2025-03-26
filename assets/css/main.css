@@ -1,6 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Catamaran:wght@100..900&family=PT+Sans+Caption:wght@400;700&display=swap");
+
 body {
   margin: 0;
   background-image: url("~/assets/images/background.png");
   background-position: center;
   background-size: cover;
+}
+
+.catamaran-text {
+  font-family: "Catamaran", sans-serif !important;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
