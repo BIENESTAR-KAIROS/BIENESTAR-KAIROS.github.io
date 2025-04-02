@@ -21,6 +21,7 @@ export default defineNuxtPlugin((app) => {
           dark: false,
           colors: {
             background: colors.shades.transparent,
+            backgroundSecondary: "#F9F9F9",
             primary: "#065C5D",
             secondary: "#8475A0",
             error: "#B00020",

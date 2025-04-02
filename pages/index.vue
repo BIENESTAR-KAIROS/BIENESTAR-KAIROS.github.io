@@ -1,11 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "empty",
+  layout: "empty-login",
 });
+
+import LoginPage from "~/components/login/LoginPage"
 </script>
 
 <template>
-  <div>
-    <h1>Login Usuario final</h1>
-  </div>
+    <LoginPage />
 </template>

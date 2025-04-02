@@ -28,7 +28,7 @@ const navList = [
 </script>
 
 <template>
-  <v-navigation-drawer :width="275" class="bg-primary rounded-te-xl">
+  <v-navigation-drawer :width="275" class="bg-primary rounded-te-xxxl">
     <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
       <v-img src="/logo-white.png" class="logo-img" />
     </v-sheet>
