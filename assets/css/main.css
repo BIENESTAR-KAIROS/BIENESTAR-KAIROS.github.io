@@ -15,8 +15,8 @@ body {
 }
 
 .handlee-regular {
-  font-family: "Handlee", cursive;
-  font-weight: 400;
+  font-family: "Handlee", cursive !important;
+  font-weight: 600 !important;
   font-style: normal;
 }
 
