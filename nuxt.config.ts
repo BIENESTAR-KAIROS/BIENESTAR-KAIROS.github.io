@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     shim: false,
   },
 
-  ssr: false,
+  ssr: true,
   devtools: { enabled: true },
 
   css: [
@@ -38,6 +38,7 @@ export default defineNuxtConfig({
         config.plugins.push(vuetify({ autoImport: true }));
       });
     },
+    "@vite-pwa/nuxt",
   ],
 
   vite: {

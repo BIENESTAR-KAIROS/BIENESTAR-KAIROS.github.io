@@ -8,7 +8,7 @@ import colors from "vuetify/util/colors";
 
 export default defineNuxtPlugin((app) => {
   const vuetify = createVuetify({
-    ssr: true,
+    ssr: false,
     components,
     directives,
     display: {
