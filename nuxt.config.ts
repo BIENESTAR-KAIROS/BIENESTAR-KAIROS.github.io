@@ -19,6 +19,7 @@ export default defineNuxtConfig({
   },
 
   ssr: true,
+  compatibilityDate: "2025-03-25",
   devtools: { enabled: true },
 
   css: [
@@ -32,12 +33,6 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    (_options, nuxt) => {
-      nuxt.hooks.hook("vite:extendConfig", (config) => {
-        // @ts-expect-error
-        config.plugins.push(vuetify({ autoImport: true }));
-      });
-    },
     "@vite-pwa/nuxt",
   ],
 
@@ -58,5 +53,4 @@ export default defineNuxtConfig({
       );
     },
   },
-  compatibilityDate: "2025-03-25",
 });
