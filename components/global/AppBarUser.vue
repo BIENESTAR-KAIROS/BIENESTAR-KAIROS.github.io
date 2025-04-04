@@ -6,11 +6,11 @@ const navList = [
   },
   {
     title: "Histórico",
-    to: "/my-users",
+    to: "/history",
   },
   {
     title: "Actualizar mis datos",
-    to: "/stats",
+    to: "/update-my-data",
   },
   {
     title: "Contactarme con mi institución",
@@ -18,7 +18,7 @@ const navList = [
   },
   {
     title: "Aviso de privacidad",
-    to: "/login",
+    to: "/privacy-policy",
   },
   {
     title: "Cerrar sesión",
