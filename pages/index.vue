@@ -3,9 +3,9 @@ definePageMeta({
   layout: "empty-login",
 });
 
-import LoginPage from "~/components/login/LoginPage"
+import LoginPage from "~/components/login/LoginPage";
 </script>
 
 <template>
-    <LoginPage />
+  <LoginPage />
 </template>

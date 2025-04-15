@@ -22,8 +22,11 @@ export default defineNuxtPlugin((app) => {
           colors: {
             background: colors.shades.transparent,
             backgroundSecondary: "#F9F9F9",
-            primary: "#065C5D",
-            secondary: "#8475A0",
+            primary: "#6CC5CB",
+            secondary: "#07979F",
+            thirdy: "#8475A0",
+            purpleShadow: "#CBADD8",
+            greenShadow: "#065C5D",
             error: "#B00020",
             info: "#2196F3",
             success: "#4CAF50",
