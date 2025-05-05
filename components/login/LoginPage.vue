@@ -11,7 +11,7 @@ import LoginForm from "./LoginForm.vue"
             <v-row class="h-100">
               <v-col class="d-flex justify-center align-center">
                 <v-card :elevation="0" class="rounded-xxl h-85 w-85 bg-white">
-                  <v-card-title class="handlee-regular text-center text-h4">
+                  <v-card-title class="handlee-regular text-center text-h4 mt-2">
                     ¡Qué gusto verte!
                   </v-card-title>
                   <LoginForm />

@@ -22,6 +22,7 @@ export default defineNuxtPlugin((app) => {
           colors: {
             background: colors.shades.transparent,
             backgroundSecondary: "#F9F9F9",
+            loginInput: "#DBF2F4",
             primary: "#6CC5CB",
             secondary: "#07979F",
             thirdy: "#8475A0",

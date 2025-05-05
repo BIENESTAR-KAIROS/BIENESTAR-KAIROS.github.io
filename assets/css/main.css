@@ -2,6 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Handlee&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Yantramanav:wght@100;300;400;500;700;900&display=swap');
 
+a {
+  color: black;
+}
+
 body {
   margin: 0;
   background-image: url("~/assets/images/background.png");
