@@ -1,7 +1,8 @@
+<script setup lang="ts">
+import PosibleQuizzes from '~/components/user/quizz/posible-quizzes.vue';
+</script>
 <template>
-    <main>
-        <h1>
-            aquí va el cuestionario
-        </h1>
-    </main>
+  <main>
+    <PosibleQuizzes/>
+  </main>
 </template>

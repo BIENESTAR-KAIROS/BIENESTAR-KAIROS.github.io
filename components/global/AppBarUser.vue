@@ -1,40 +1,46 @@
 <script setup lang="ts">
-const navList = [
-  {
-    title: "Mi perfil",
-    to: "/dashboard",
-  },
-  {
-    title: "Histórico",
-    to: "/history",
-  },
-  {
-    title: "Actualizar mis datos",
-    to: "/update-my-data",
-  },
-  {
-    title: "Contactarme con mi institución",
-    to: "/quizzes",
-  },
-  {
-    title: "Aviso de privacidad",
-    to: "/privacy-policy",
-  },
-  {
-    title: "Cerrar sesión",
-    to: "/login",
-  },
-];
+import navigationList from "~/utils/constants/navigation-list"
+import { useAppStore } from "~/store/app"
+import { useDisplay } from "vuetify"
+
+const appStore = useAppStore();
+const { mobile } = useDisplay();
+
+const updateNavBarState = (value: boolean) => {
+  appStore.isNavBarOpen = value;
+}
+
+const isOpen = computed(() => {
+  return appStore.isNavBarOpen;
+})
+
+watch(mobile, () => {
+  if(isOpen.value && mobile.value){
+    appStore.isNavBarOpen = false;
+  }
+});
+
+onMounted(() => {
+  if(!mobile.value)
+    updateNavBarState(true)
+})
 </script>
 
 <template>
-  <v-navigation-drawer :width="275" class="bg-primary rounded-te-xxxl">
-    <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
-      <v-img src="/logo-white.png" class="logo-img" />
-    </v-sheet>
+  <v-navigation-drawer
+    :width="275"
+    class="bg-greenShadow rounded-te-xxxl"
+    :model-value="isOpen"
+    @update:model-value="updateNavBarState"
+  >
+    <a href="/user/dashboard">
+      <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
+        <v-img src="/logo-white.png" class="logo-img" />
+      </v-sheet>
+    </a>
 
     <v-list-item
-      v-for="(navOption, i) in navList"
+      v-for="(navOption, i) in navigationList"
       :key="i"
       link
       :to="'/user' + navOption.to"
