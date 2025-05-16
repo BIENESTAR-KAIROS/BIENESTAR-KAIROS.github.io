@@ -22,7 +22,7 @@ const options = [
   },
   {
     title: 'Recomendaciones',
-    link: '/user/recomended-books',
+    link: '/user/recomendations',
     image: '/image-dashboard-20.png',
   },
   /*{
