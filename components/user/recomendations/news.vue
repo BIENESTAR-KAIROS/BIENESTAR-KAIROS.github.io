@@ -7,15 +7,10 @@ const runtimeConfig = useRuntimeConfig()
 const news: {}[] = ref([])
 
 onMounted(async () => {
-  console.log(runtimeConfig.app)
-  await fetch(`https://newsapi.org/v2/everything?apiKey=${runtimeConfig.app.newsApiKey}&q=salud mental&language=es&pageSize=10`)
+  await fetch(`https://gnews.io/api/v4/search?apikey=${runtimeConfig.app.newsApiKey}&q=salud mental&lang=es&max=10`)
   .then(response => response.json())
   .then(data => {
-    if(data.status == 'ok')
-      news.value = data.articles
-    else
-      alert('Error al obtener las noticias')
-    console.log(data)
+    news.value = data.articles
   });
 })
 </script>
@@ -45,7 +40,7 @@ onMounted(async () => {
           :elevation="5"
         >
           <div class="w-100 text-left">
-          <span 
+            <span 
               :class="((mobile) ? '' : 'px-3') + ' text-h6 catamaran-regular'"
             >
               {{ notice.title }}
