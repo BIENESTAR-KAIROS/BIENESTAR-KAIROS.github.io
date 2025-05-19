@@ -42,11 +42,16 @@ onMounted(async () => {
       >
         <v-sheet
           rounded="xl"
-          height="280"
-          class="px-4 py-2 pt-5 d-flex flex-column justify-space-around align-center text-center"
+          height="300"
+          class="px-4 py-2 pt-5 d-flex flex-column justify-space-between align-center text-center"
           :elevation="5"
         >
-          <v-img :src="'https://covers.openlibrary.org/b/olid/'+ book.cover_edition_key +'.jpg'" height="110" width="80"/>
+          <v-img
+            :src="'https://covers.openlibrary.org/b/olid/'+ book.cover_edition_key +'.jpg'"
+            lazy-src="/logo-dark.png"
+            height="110"
+            width="80"
+          />
           <span class="text-h6 catamaran-regular">{{ book.title }}</span>
           <span class="text-body-1 catamaran-regular">{{ book.author_name[0] }}</span>
         </v-sheet>

@@ -2,6 +2,12 @@ import { resolvePath } from "nuxt/kit";
 import vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  runtimeConfig: {
+    app: {
+      newsApiKey: process.env.NUXT_NEWS_API_KEY,
+    },
+  },
+
   app: {
     head: {
       title: "Bienestar KAIROS",
