@@ -36,7 +36,7 @@ onMounted(async () => {
         <v-sheet
           rounded="xl"
           :height="(mobile) ? 400 : 250"
-          class="px-4 py-2 pt-5 d-flex flex-column justify-space-around align-center text-left"
+          class="px-5 py-3 pt-5 d-flex flex-column justify-space-around align-center text-left"
           :elevation="5"
         >
           <div class="w-100 text-left">
@@ -46,11 +46,13 @@ onMounted(async () => {
               {{ notice.title }}
             </span>
           </div>
-          <span 
-            :class="((mobile) ? '' : 'px-3') + ' text-body-1 catamaran-regular'"
-          >
-            {{ notice.description }}
-          </span>
+          <div class="w-100 text-justify">
+            <span 
+              :class="((mobile) ? '' : 'px-3') + ' text-body-1 catamaran-regular'"
+            >
+              {{ notice.description }}
+            </span>
+          </div>
           <a :href="notice.url" class="text-decoration-none">
             <v-btn class="rounded-ts-xl rounded-be-xl rounded-bs-0 rounded-te-0 text-body-1 catamaran-regular bg-primary">
               Leer más...
