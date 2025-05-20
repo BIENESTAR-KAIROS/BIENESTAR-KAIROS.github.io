@@ -36,17 +36,17 @@ onMounted(async () => {
         <v-sheet
           rounded="xl"
           :height="(mobile) ? 400 : 250"
-          class="px-5 py-3 pt-5 d-flex flex-column justify-space-around align-center text-left"
+          class="px-7 py-4 pt-5 d-flex flex-column justify-space-around align-center text-left"
           :elevation="5"
         >
-          <div class="w-100 text-left">
+          <div class="w-100 text-center">
             <span 
               :class="((mobile) ? '' : 'px-3') + ' text-h6 catamaran-regular'"
             >
               {{ notice.title }}
             </span>
           </div>
-          <div class="w-100 text-justify">
+          <div class="w-100 text-center">
             <span 
               :class="((mobile) ? '' : 'px-3') + ' text-body-1 catamaran-regular'"
             >
