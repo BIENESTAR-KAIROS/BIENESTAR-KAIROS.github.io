@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PosibleQuizzes from '~/components/user/quizz/posible-quizzes.vue';
+import PosibleQuizzes from '~/components/user/quiz/posible-quizzes.vue';
 </script>
 <template>
   <main>

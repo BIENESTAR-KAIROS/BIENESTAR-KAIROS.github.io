@@ -44,20 +44,20 @@ const posibleQuizzes = [
         cols="12"
         md="3"
       >
-          <v-sheet
-            rounded="lg"
-            height="500"
-            class="px-4 py-2 pt-5 d-flex flex-column justify-space-around align-center text-center"
-            :elevation="5"
-          >
-            <span class="text-h5 catamaran-regular">{{ posibleQuizz.title }}</span>
-            <span class="text-body-1 catamaran-regular">{{ posibleQuizz.description }}</span>
-        <a :href="'/user/quiz/' + posibleQuizz.id" class="text-decoration-none">
+        <v-sheet
+          rounded="lg"
+          height="500"
+          class="px-4 py-2 pt-5 d-flex flex-column justify-space-around align-center text-center"
+          :elevation="5"
+        >
+          <span class="text-h5 catamaran-regular">{{ posibleQuizz.title }}</span>
+          <span class="text-body-1 catamaran-regular">{{ posibleQuizz.description }}</span>
+          <a :href="'/user/quiz/' + posibleQuizz.id" class="text-decoration-none">
             <v-btn class="text-body-1 catamaran-regular bg-secondary" rounded="lg">
               Responder el cuestionario
             </v-btn>
-        </a>
-          </v-sheet>
+          </a>
+        </v-sheet>
       </v-col>
     </v-row>
   </v-container>

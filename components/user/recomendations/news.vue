@@ -4,7 +4,7 @@ import { useDisplay } from "vuetify"
 
 const { mobile } = useDisplay();
 const runtimeConfig = useRuntimeConfig()
-const news: {}[] = ref([])
+const news: { title: string; description: string; url: string }[] = ref([])
 
 onMounted(async () => {
   await fetch(`https://gnews.io/api/v4/search?apikey=${runtimeConfig.app.newsApiKey}&q=salud mental&lang=es&max=10`)

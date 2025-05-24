@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Quiz from '~/components/user/quizz/quiz.vue';
+import Quiz from '~/components/user/quiz/quiz.vue';
 
 definePageMeta({
   layout: "empty-login",
