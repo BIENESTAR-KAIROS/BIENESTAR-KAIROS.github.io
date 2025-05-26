@@ -86,20 +86,21 @@ const actualQuestion = computed(() => {
         </div>
         <div class="w-75">
           <v-row no-gutters class="w-100">
-            <v-col cols="2">
-          <span> En desacuerdo </span>
+            <v-col cols="6" md="2">
+              <span class="catamaran-text text-body-1 font-weight-regular"> En desacuerdo </span>
             </v-col>
-            <v-col class="d-flex justify-center">
-    <v-slider
-        v-model="quizStore.quiz[quizStore.actualQuestion]['answer']"
-        :max="5"
-        :min="1"
-        :step="1"
-        thumb-label
-      ></v-slider>
+            <v-col class="d-flex justify-center" cols="12" md="" order="last" order-md="2">
+              <v-slider
+                v-model="quizStore.quiz[quizStore.actualQuestion]['answer']"
+                :max="5"
+                :min="1"
+                :step="1"
+                thumb-label
+                color="secondary"
+              ></v-slider>
             </v-col>
-            <v-col cols="2" class="d-flex justify-end">
-          <span>De acuerdo</span>
+            <v-col cols="6" md="2" class="d-flex justify-end" order-md="last">
+              <span class="catamaran-text text-body-1 font-weight-regular">De acuerdo</span>
             </v-col>
           </v-row>
         </div>

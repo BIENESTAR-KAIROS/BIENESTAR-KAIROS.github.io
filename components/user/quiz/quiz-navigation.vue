@@ -31,7 +31,7 @@ function clickNext() {
 </script>
 
 <template>
-  <v-bottom-navigation v-if="mobile" :elevation="0" grow>
+  <v-bottom-navigation v-show="mobile" :elevation="0" grow>
     <v-menu>
       <template v-slot:activator="{props}">
         <v-btn value="recent" v-bind="props">
@@ -71,9 +71,33 @@ function clickNext() {
       <span>Siguiente</span>
     </v-btn>
   </v-bottom-navigation>
-  <div v-else>
-    <v-row no-gutters justify="end" class="me-4 mt-5">
-      <v-col cols="2" offset="10" class="d-flex justify-end">
+  <div v-show="!mobile">
+    <v-container class="pa-0">
+    <v-row no-gutters class=" mt-1">
+      <v-col cols="2" >
+        <v-menu>
+          <template v-slot:activator="{props}">
+            <v-btn value="recent" v-bind="props" :elevation="8">
+              <v-icon>mdi-history</v-icon>
+
+              <span>Historial</span>
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item
+              v-for="i in totalQuesitons"
+              :key="i"
+              :value="i-1"
+              @click="selectQuestion(i-1)"
+            >
+              <v-list-item-title>Pregunta {{ i }} </v-list-item-title>
+            </v-list-item>
+          </v-list>
+
+        </v-menu>
+      </v-col>
+      <v-col cols="2" offset="8" >
         <v-btn
           @click="clickNext"
           color="secondary"
@@ -83,5 +107,6 @@ function clickNext() {
         </v-btn>
       </v-col>
     </v-row>
+    </v-container>
   </div>
 </template>

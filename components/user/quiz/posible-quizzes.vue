@@ -42,7 +42,9 @@ const posibleQuizzes = [
         v-for="(posibleQuizz, i) in posibleQuizzes"
         :key="i"
         cols="12"
-        md="3"
+        md="6"
+        lg="4"
+        xl="3"
       >
         <v-sheet
           rounded="lg"
