@@ -101,9 +101,17 @@ function clickNext() {
         <v-btn
           @click="clickNext"
           color="secondary"
+            v-show="!isFinished"
         >      
           Siguiente
           <v-icon class='ms-2'>mdi-arrow-right-bold</v-icon>
+        </v-btn>
+        <v-btn 
+          color="secondary"
+            v-show="isFinished"
+        >      
+          Finalizar
+          <v-icon class='ms-2'>mdi-check</v-icon>
         </v-btn>
       </v-col>
     </v-row>
