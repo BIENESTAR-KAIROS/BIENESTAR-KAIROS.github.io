@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import DashboardInstitute from '~/components/institute/dashboard/dashboard-institute.vue';
+
 definePageMeta({
   layout: "institute",
 });
@@ -6,6 +8,6 @@ definePageMeta({
 
 <template>
   <main>
-    <h1>Dashboard institucional</h1>
+    <DashboardInstitute />
   </main>
 </template>

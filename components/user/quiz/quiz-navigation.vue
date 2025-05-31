@@ -73,48 +73,48 @@ function clickNext() {
   </v-bottom-navigation>
   <div v-show="!mobile">
     <v-container class="pa-0">
-    <v-row no-gutters class=" mt-1">
-      <v-col cols="2" >
-        <v-menu>
-          <template v-slot:activator="{props}">
-            <v-btn value="recent" v-bind="props" :elevation="8">
-              <v-icon>mdi-history</v-icon>
+      <v-row no-gutters class=" mt-1">
+        <v-col cols="2" >
+          <v-menu>
+            <template v-slot:activator="{props}">
+              <v-btn value="recent" v-bind="props" :elevation="8">
+                <v-icon>mdi-history</v-icon>
 
-              <span>Historial</span>
-            </v-btn>
-          </template>
+                <span>Historial</span>
+              </v-btn>
+            </template>
 
-          <v-list>
-            <v-list-item
-              v-for="i in totalQuesitons"
-              :key="i"
-              :value="i-1"
-              @click="selectQuestion(i-1)"
-            >
-              <v-list-item-title>Pregunta {{ i }} </v-list-item-title>
-            </v-list-item>
-          </v-list>
+            <v-list>
+              <v-list-item
+                v-for="i in totalQuesitons"
+                :key="i"
+                :value="i-1"
+                @click="selectQuestion(i-1)"
+              >
+                <v-list-item-title>Pregunta {{ i }} </v-list-item-title>
+              </v-list-item>
+            </v-list>
 
-        </v-menu>
-      </v-col>
-      <v-col cols="2" offset="8" >
-        <v-btn
-          @click="clickNext"
-          color="secondary"
+          </v-menu>
+        </v-col>
+        <v-col cols="2" offset="8" >
+          <v-btn
+            @click="clickNext"
+            color="secondary"
             v-show="!isFinished"
-        >      
-          Siguiente
-          <v-icon class='ms-2'>mdi-arrow-right-bold</v-icon>
-        </v-btn>
-        <v-btn 
-          color="secondary"
+          >      
+            Siguiente
+            <v-icon class='ms-2'>mdi-arrow-right-bold</v-icon>
+          </v-btn>
+          <v-btn 
+            color="secondary"
             v-show="isFinished"
-        >      
-          Finalizar
-          <v-icon class='ms-2'>mdi-check</v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
+          >      
+            Finalizar
+            <v-icon class='ms-2'>mdi-check</v-icon>
+          </v-btn>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>

@@ -3,7 +3,8 @@ import { required, validEmail } from '~/utils/helpers/form-rules'
 
 const dumpUser= {
   email: 'bruno@test.com',
-  password: '1234'
+  password: '1234',
+  type: 'admin'
 }
 
 const { $axios, $router} = useNuxtApp()
@@ -29,7 +30,11 @@ const login = async () => {
       await authStore.setAuth(session);
       */
       if(email.value == dumpUser.email && password.value == dumpUser.password){
-        $router.push("/user/dashboard");
+        if(dumpUser.type == 'admin'){
+          $router.push("/institute/dashboard");
+        }else{
+          $router.push("/user/dashboard");
+        }
       }
     } catch (error) {
       console.log(error);

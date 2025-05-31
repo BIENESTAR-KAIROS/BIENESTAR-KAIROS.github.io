@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MyUsersDashboard from '~/components/institute/my-users/my-users-dashboard.vue';
+
 definePageMeta({
   layout: "institute",
 });
@@ -7,5 +9,6 @@ definePageMeta({
 <template>
   <main>
     <h1>Mis usuarios</h1>
+    <MyUsersDashboard />
   </main>
 </template>

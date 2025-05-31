@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import LoginPage from '~/components/login/LoginPage.vue';
+
 definePageMeta({
   layout: "empty",
 });
 </script>
 
 <template>
-  <main>
-    <h1>Login de instituto</h1>
-  </main>
+    <LoginPage />
 </template>
