@@ -10,14 +10,14 @@ const data = {
     {
       label: 'Examenes resueltos por día esta semana',
       backgroundColor: [`${theme.current.value.colors.secondary}`],
-      data: [15, 5, 6, 23, 2]
-    }
-  ]
+      data: [15, 5, 6, 23, 2],
+    },
+  ],
 }
 
 const options = {
   responsive: true,
-  maintainAspectRatio: false
+  maintainAspectRatio: false,
 }
 </script>
 
