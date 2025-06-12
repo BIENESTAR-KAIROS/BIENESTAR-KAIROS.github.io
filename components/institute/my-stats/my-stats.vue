@@ -1,18 +1,10 @@
 <script setup lang="ts">
 import DailyAnswerVolume from '../dashboard/daily-answer-volume.vue'
-import AnswerByGender from './answer-by-gender.vue'
-import AnswerByAge from './answer-by-age.vue'
-const days = ref([8, 15, 30, 90])
-const selectedDays = ref(30)
+import ResolvedQuizzes from '../dashboard/resolved-quizzes.vue'
+import TerapyBalance from '../dashboard/terapy-balance.vue'
 
-const studentOptions = ref([
-  'Usuario 1',
-  'Usuario 2',
-  'Usuario 3',
-  'Usuario 4',
-  'Usuario 5',
-  'Usuario 6',
-])
+const days = [30, 90, 15, 8]
+const selectedDays = ref(days[0])
 </script>
 
 <template>
@@ -20,15 +12,15 @@ const studentOptions = ref([
     <v-row no-gutters>
       <v-col cols="12">
         <div class="my-4">
-          <h1 class="handlee-regular text-h4 font-weight-thin">Mis usuarios</h1>
+          <h1 class="handlee-regular text-h4 font-weight-thin">
+            Mis estadísticas
+          </h1>
         </div>
       </v-col>
       <v-col cols="12">
         <div class="my-4">
           <h2 class="handlee-regular text-h6 font-weight-thin">
-            Aquí te mostramos la información de tus usuarios, tanto en
-            estadísticas generales como en las particularidades de cada uno de
-            tus usuarios.
+            Aquí podrás crear filtros personalizados para obtener estadísticas más exactas de tu población y su comportamiento.
           </h2>
         </div>
       </v-col>
@@ -166,7 +158,7 @@ const studentOptions = ref([
               </div>
             </v-card>
           </v-col>
-          <v-col cols="12" md="6" lg="4">
+          <v-col cols="12" md="6" lg="3">
             <v-card
               color="purpleShadow pa-4"
               rounded="xl"
@@ -177,15 +169,15 @@ const studentOptions = ref([
                 class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
               >
                 <span class="catamaran-regular font-body-1">
-                  Volumen de respuestas por género
+                  Balance de terapias internas y externas
                 </span>
                 <div class="d-flex flex-row align-center h-85">
-                  <AnswerByGender />
+                  <TerapyBalance />
                 </div>
               </div>
             </v-card>
           </v-col>
-          <v-col cols="12" md="6" lg="4">
+          <v-col cols="12" md="6" lg="3">
             <v-card
               color="purpleShadow pa-4"
               rounded="xl"
@@ -196,57 +188,33 @@ const studentOptions = ref([
                 class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
               >
                 <span class="catamaran-regular font-body-1">
-                  Volumen de respuestas por edad
+                  Balance de cuestionarios resueltos
                 </span>
                 <div class="d-flex flex-row align-center h-85 w-85">
-                  <AnswerByAge />
+                  <ResolvedQuizzes />
                 </div>
               </div>
             </v-card>
           </v-col>
-          <v-col cols="12">
-            <v-row no-gutters>
-              <v-col cols="12" md="" lg="" class="mb-2">
+          <v-col cols="12" md="6" lg="2">
+            <v-card
+              color="purpleShadow pa-4"
+              rounded="xl"
+              height="250"
+              elevation="5"
+            >
+              <div
+                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
+              >
                 <span class="catamaran-regular font-body-1">
-                  Buscador individual por cada uno de los usuarios:
+                  Días desde el último cuestionario
                 </span>
-              </v-col>
-              <v-col cols="12" md="" lg="">
-                <v-autocomplete
-                  label="Ingresa nombre o apellido a buscar"
-                  :items="studentOptions"
-                  variant="solo-filled"
-                  bg-color="purpleShadow"
-                  rounded="xxl"
-                ></v-autocomplete>
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col cols="12">
-            <v-card color="purpleShadow pa-2" rounded="xl" elevation="5">
-              <v-container>
-                <v-row>
-                  <v-col cols="12" md="4">
-                    <span class="catamaran-regular font-body-1">
-                      {Nombre}
-                    </span>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-card class="pa-2" color="purpleShadow" elevation="5">
-                      <span class="catamaran-regular font-body-1">
-                        Resultados de la última respuesta:
-                      </span>
-                    </v-card>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-card class="pa-2" color="purpleShadow" elevation="5">
-                      <span class="catamaran-regular font-body-1">
-                        Citas en agenda del usuario
-                      </span>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </v-container>
+                <div
+                  class="d-flex flex-row align-center justify-center h-85 w-85"
+                >
+                  { value }
+                </div>
+              </div>
             </v-card>
           </v-col>
         </v-row>

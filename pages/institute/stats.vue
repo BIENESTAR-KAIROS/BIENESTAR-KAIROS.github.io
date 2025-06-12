@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MyStats from '~/components/institute/my-stats/my-stats.vue';
+
 definePageMeta({
   layout: "institute",
 });
@@ -6,6 +8,6 @@ definePageMeta({
 
 <template>
   <main>
-    <h1>Mis estadísticas</h1>
+    <MyStats />
   </main>
 </template>

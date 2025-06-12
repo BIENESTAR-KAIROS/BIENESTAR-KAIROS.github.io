@@ -8,7 +8,6 @@ definePageMeta({
 
 <template>
   <main>
-    <h1>Mis usuarios</h1>
     <MyUsersDashboard />
   </main>
 </template>
