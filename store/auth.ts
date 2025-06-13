@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', {
     }
   },
   actions: {
-    async setAuth(auth: ILoginResponse) {
+    async setAuth(accessToken: string) {
       const nuxtApp = useNuxtApp()
 
       // Set new auth
