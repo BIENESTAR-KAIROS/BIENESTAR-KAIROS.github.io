@@ -49,9 +49,9 @@ const login = async () => {
 </script>
 
 <template>
-  <v-container class="h-100">
-    <v-form v-model="isFormValid" @submit.prevent="login">
-      <v-row no-gutters>
+  <v-form v-model="isFormValid" @submit.prevent="login">
+    <v-container class="h-100">
+      <v-row>
         <v-col cols="10" offset="1">
           <v-sheet class="rounded-xxl">
             <v-text-field
@@ -123,7 +123,7 @@ const login = async () => {
         </v-row>
       </v-container>
       <v-container>
-        <v-row no-gutters>
+        <v-row>
           <v-col>
             <div class="d-flex justify-center w-100">
               <v-btn color="primary"> Crear Cuenta </v-btn>
@@ -131,6 +131,6 @@ const login = async () => {
           </v-col>
         </v-row>
       </v-container>
-    </v-form>
-  </v-container>
+    </v-container>
+  </v-form>
 </template>
