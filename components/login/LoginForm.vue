@@ -1,11 +1,8 @@
 <script setup lang="ts">
+import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
+import { USER_TYPE } from '~/interfaces/users/user.interface'
+import { useAuthStore } from '~/store/auth'
 import { required, validEmail } from '~/utils/helpers/form-rules'
-
-const dumpUser = {
-  email: 'bruno@test.com',
-  password: '1234',
-  type: 'admin',
-}
 
 const { $axios, $router } = useNuxtApp()
 
@@ -14,26 +11,27 @@ const password = ref('')
 const isFormValid = ref(false)
 const isLoading = ref(false)
 
+const authStore = useAuthStore()
+
 const login = async () => {
   if (isFormValid.value) {
     try {
       isLoading.value = true
-      /*
       const { data: session } = await $axios.post<ILoginResponse>(
-        "/auth/log-in",
+        '/auth/login',
         {
           email: email.value,
           password: password.value,
-        }
-      );
+        },
+      )
 
-      await authStore.setAuth(session);
-      */
-      if (
-        email.value == dumpUser.email &&
-        password.value == dumpUser.password
-      ) {
-        if (dumpUser.type == 'admin') {
+      await authStore.setAuth(session)
+
+      if (authStore.isAuthenticated) {
+        if (
+          authStore.user?.type === USER_TYPE.INSTITUTION ||
+          authStore.user?.type === USER_TYPE.ADMINISTRATIVE
+        ) {
           $router.push('/institute/dashboard')
         } else {
           $router.push('/user/dashboard')

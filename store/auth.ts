@@ -9,13 +9,17 @@ export const useAuthStore = defineStore('auth', {
       user: null as IUser | null,
       accessToken: '',
       isLoading: false,
+      expiresAt: 0,
     }
   },
   actions: {
-    async setAuth(accessToken: string) {
+    async setAuth(session: ILoginResponse) {
       const nuxtApp = useNuxtApp()
-
-      // Set new auth
+      this.accessToken = session.accessToken
+      this.user = session.user
+      this.user.lastAccess = new Date(this.user.lastAccess)
+      this.expiresAt = this.user.lastAccess.getTime() + 18000
+      // Set new auth1
       /*
       const expiresAtInMs = auth.expiresIn * 1000
       this.auth = {
@@ -56,7 +60,7 @@ export const useAuthStore = defineStore('auth', {
         const now = new Date().getMilliseconds()
 
         if (this.user) {
-          if (now < this.user.lastAccess.getMilliseconds() + 18000) {
+          if (now < this.expiresAt) {
             this.accessToken = auth
 
             // Set axios auth header
@@ -77,10 +81,10 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated(): boolean {
       let response = false
-
       if (this.accessToken && this.user) {
         const now = new Date().getTime()
-        return now < this.user.lastAccess.getMilliseconds() + 18000
+
+        return now < this.expiresAt
       }
 
       return response

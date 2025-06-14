@@ -1,4 +1,4 @@
-import type { IUser, USER_TYPE } from '../users/user.interface'
+import type { IUser } from '../users/user.interface'
 
 export interface ILoginResponse {
   message: string
