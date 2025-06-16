@@ -12,12 +12,12 @@ export interface IUser {
   id: string
   type: USER_TYPE
   email: string
-  password: string
-  registrationDate: Date
-  lastAccess: Date
-  active: boolean
+  password?: string
+  registrationDate?: Date
+  lastAccess?: Date
+  active?: boolean
   // TODO: verify if ObjectID === string
-  institution: string // ID mongo
+  institution?: string // ID mongo
   studentData?: IStudentData
   administrativeData?: IAdministrativeData
   kairosData?: IKairosData

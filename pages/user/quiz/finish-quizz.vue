@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Quiz from '~/components/user/quiz/quiz.vue'
+import FinishQuiz from '~/components/user/quiz/finish-quiz.vue'
 
 definePageMeta({
   layout: 'empty-login',
@@ -7,5 +7,7 @@ definePageMeta({
 </script>
 
 <template>
-  <Quiz />
+  <main>
+    <FinishQuiz />
+  </main>
 </template>

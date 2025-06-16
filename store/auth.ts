@@ -17,8 +17,8 @@ export const useAuthStore = defineStore('auth', {
       const nuxtApp = useNuxtApp()
       this.accessToken = session.accessToken
       this.user = session.user
-      this.user.lastAccess = new Date(this.user.lastAccess)
-      this.expiresAt = this.user.lastAccess.getTime() + 180000
+      this.user.lastAccess = new Date(this.user.lastAccess || 0)
+      this.expiresAt = this.user.lastAccess.getTime() + 360000
       // Set new auth1
       /*
       const expiresAtInMs = auth.expiresIn * 1000
@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', {
       nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
 
       // Set auth on local storage
-      window.localStorage.setItem('auth', JSON.stringify(this.accessToken))
+      window.localStorage.setItem('auth', this.accessToken)
 
       // Set user profile
       //await this.getMyUser()

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { NuxtLink } from '#components'
+import { useAuthStore } from '~/store/auth'
+
+const authStore = useAuthStore()
 
 const options = [
   {
@@ -40,7 +43,9 @@ const options = [
     <v-row>
       <v-col cols="12">
         <div class="my-4">
-          <h1 class="handlee-regular text-h3 font-weight-thin">Buen día,</h1>
+          <h1 class="handlee-regular text-h3 font-weight-thin">
+            Buen día, {{ authStore.user?.studentData?.name }}
+          </h1>
         </div>
       </v-col>
       <v-col cols="12">

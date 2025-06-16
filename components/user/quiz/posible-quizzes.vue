@@ -1,29 +1,45 @@
 <script setup lang="ts">
-const posibleQuizzes = [
-  {
-    title: 'Socioeconómico',
-    description:
-      'Este cuestionario nos ayuda a tomar parámetros estadísticas de tus respuestas. Pero sabemos que lo único inamovible es el cambio, puedes responderlo si sientes que algo en tu vida ha cambiado y quieres que lo sepamos, puedes responder este cuestionario.',
-    id: '1',
-  },
-  {
-    title: 'Para la comunidad',
-    description:
-      'Este es un cuestionario que ha diseñado tu organización para tratar de entenderte mejor. \nContiene algunos parámetros generales que pueden ayudarnos a entender mejor tu estado actual.',
-    id: '2',
-  },
-  {
-    title: 'Personalizado',
-    description:
-      'Este cuestionario ha sido diseñado únicamente para ti con la información que hemos recuperado de tu perfil y hemos podido analizar. \nEs único, como tú, por lo que puedes sentirte libre de responderlo las veces que lo necesites, nuestro modelo aprenderá paulatinamente de ti.',
-    id: '3',
-  },
-]
+import {
+  type IQuizAvaibleResponse,
+  type IQuizzesAvaibleResponse,
+} from '~/interfaces/quizzes/quiz-preview.interface'
+import { useAuthStore } from '~/store/auth'
+
+const posibleQuizzes: Ref<IQuizzesAvaibleResponse> = ref({
+  questionnaires: [] as IQuizAvaibleResponse[],
+  count: 0,
+})
+const { $axios } = useNuxtApp()
+const isLoading = ref(true)
+
+const authStore = useAuthStore()
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    const { data } = await $axios.get<IQuizzesAvaibleResponse>(
+      `/questionnaires/available/${authStore.user?.id}`,
+    )
+    posibleQuizzes.value = data
+  } catch (error) {
+    console.log(error)
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
   <v-container>
-    <v-row>
+    <v-row v-show="isLoading">
+      <v-col cols="12">
+        <v-progress-circular
+          color="primary"
+          indeterminate
+        ></v-progress-circular>
+      </v-col>
+    </v-row>
+    <v-row v-show="!isLoading">
       <v-col cols="12">
         <div class="my-4">
           <h1 class="handlee-regular text-h3 font-weight-thin">
@@ -35,7 +51,7 @@ const posibleQuizzes = [
         <div class="my-3">
           <span class="catamaran-regular text-subtitle-1">
             Actualmente tu organización cuenta con
-            {{ posibleQuizzes.length }} cuestionarios disponibles, puedes
+            {{ posibleQuizzes.count }} cuestionarios disponibles, puedes
             responder aquel que creas que puede ayudarnos a dar mejores
             recomendaciones dependiendo de tu estado de ánimo.
           </span>
@@ -45,7 +61,7 @@ const posibleQuizzes = [
 
     <v-row>
       <v-col
-        v-for="(posibleQuizz, i) in posibleQuizzes"
+        v-for="(posibleQuizz, i) in posibleQuizzes.questionnaires"
         :key="i"
         cols="12"
         md="6"
