@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import navigationList from "~/utils/constants/navigation-list"
-import { useAppStore } from "~/store/app"
-import { useDisplay } from "vuetify"
+import navigationList from '~/utils/constants/navigation-list'
+import { useAppStore } from '~/store/app'
+import { useDisplay } from 'vuetify'
+import { useAuthStore } from '~/store/auth'
 
-const appStore = useAppStore();
-const { mobile } = useDisplay();
+const appStore = useAppStore()
+const { mobile } = useDisplay()
 
 const updateNavBarState = (value: boolean) => {
-  appStore.isNavBarOpen = value;
+  appStore.isNavBarOpen = value
 }
 
 const isOpen = computed(() => {
-  return appStore.isNavBarOpen;
+  return appStore.isNavBarOpen
 })
 
 watch(mobile, () => {
-  if(isOpen.value && mobile.value){
-    appStore.isNavBarOpen = false;
+  if (isOpen.value && mobile.value) {
+    appStore.isNavBarOpen = false
   }
-});
+})
 
 onMounted(() => {
-  if(!mobile.value)
-    updateNavBarState(true)
+  if (!mobile.value) updateNavBarState(true)
 })
 </script>
 

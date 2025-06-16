@@ -35,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
       window.localStorage.setItem('auth', JSON.stringify(this.accessToken))
 
       // Set user profile
-      await this.getMyUser()
+      //await this.getMyUser()
     },
     clearAuth() {
       const nuxtApp = useNuxtApp()
@@ -55,17 +55,25 @@ export const useAuthStore = defineStore('auth', {
       const nuxtApp = useNuxtApp()
       const localAuth = window.localStorage.getItem('auth')
       const auth: string = localAuth ? localAuth : this.accessToken
+      console.log(1111)
 
       if (auth) {
-        const now = new Date().getMilliseconds()
+        console.log('rAuth')
+
+        const now = new Date().getTime()
 
         if (this.user) {
+          console.log('user')
           if (now < this.expiresAt) {
+            console.log('not exp')
+
             this.accessToken = auth
 
             // Set axios auth header
             nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
           } else {
+            console.log('expr')
+
             await this.clearAuth()
           }
         }
@@ -75,7 +83,7 @@ export const useAuthStore = defineStore('auth', {
       const nuxtApp = useNuxtApp()
 
       const user = await nuxtApp.$axios.get<IUser>(`/users/${this.user?.id}`)
-      this.user = user.data
+      this.user = { ...user.data }
     },
   },
   getters: {

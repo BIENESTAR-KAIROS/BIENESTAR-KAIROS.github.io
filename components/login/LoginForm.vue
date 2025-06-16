@@ -29,8 +29,8 @@ const login = async () => {
 
       if (authStore.isAuthenticated) {
         if (
-          authStore.user?.type === USER_TYPE.INSTITUTION ||
-          authStore.user?.type === USER_TYPE.ADMINISTRATIVE
+          authStore.user?.type == USER_TYPE.INSTITUTION ||
+          authStore.user?.type == USER_TYPE.ADMINISTRATIVE
         ) {
           $router.push('/institute/dashboard')
         } else {

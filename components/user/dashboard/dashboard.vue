@@ -1,20 +1,22 @@
 <script setup lang="ts">
+import { NuxtLink } from '#components'
+
 const options = [
   {
     title: 'Queremos conocerte',
     link: '/user/quiz',
     image: '/image-dashboard-16.png',
   },
-//  {
-//    title: 'Prácticas del bienestar',
-//    link: '/user/wellnes-practices',
-//    image: '/image-dashboard-17.png',
-//  },
-//  {
-//    title: 'Maditaciones guiadas',
-//    link: '/user/guided-meditation',
-//    image: '/image-dashboard-18.png',
-//  },
+  //  {
+  //    title: 'Prácticas del bienestar',
+  //    link: '/user/wellnes-practices',
+  //    image: '/image-dashboard-17.png',
+  //  },
+  //  {
+  //    title: 'Maditaciones guiadas',
+  //    link: '/user/guided-meditation',
+  //    image: '/image-dashboard-18.png',
+  //  },
   {
     title: 'Queremos ayudarte',
     link: '/user/get-help',
@@ -38,26 +40,21 @@ const options = [
     <v-row>
       <v-col cols="12">
         <div class="my-4">
-          <h1 class="handlee-regular text-h3 font-weight-thin"> Buen día, </h1>
+          <h1 class="handlee-regular text-h3 font-weight-thin">Buen día,</h1>
         </div>
       </v-col>
       <v-col cols="12">
         <div class="my-4">
           <h2 class="handlee-regular text-h4 font-weight-thin">
-            ¿Qué quieres hacer hoy? 
+            ¿Qué quieres hacer hoy?
           </h2>
         </div>
       </v-col>
     </v-row>
 
     <v-row>
-      <v-col
-        v-for="(option, i) in options"
-        :key="i"
-        cols="12"
-        md="4"
-      >
-        <a :href="option.link" class="text-decoration-none">
+      <v-col v-for="(option, i) in options" :key="i" cols="12" md="4">
+        <NuxtLink :href="option.link" class="text-decoration-none">
           <v-sheet
             rounded="lg"
             height="250"
@@ -65,9 +62,9 @@ const options = [
             :elevation="5"
           >
             <span class="text-h5 catamaran-regular">{{ option.title }}</span>
-            <v-img :src="option.image" height="122" width="122"/>
+            <v-img :src="option.image" height="122" width="122" />
           </v-sheet>
-        </a>
+        </NuxtLink>
       </v-col>
     </v-row>
   </v-container>
