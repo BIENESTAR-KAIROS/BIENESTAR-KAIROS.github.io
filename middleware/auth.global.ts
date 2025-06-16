@@ -24,6 +24,7 @@ const authRoutes: string[] = [
   '/user/recomended-books',
   '/user/guided-maditation',
   '/user/wellnes-practices',
+  '/user/profile',
 ]
 const mainUserAuthRoute = '/user/dashboard'
 const mainInstituteAuthRoute = '/institute/dashboard'

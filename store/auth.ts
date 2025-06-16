@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = session.accessToken
       this.user = session.user
       this.user.lastAccess = new Date(this.user.lastAccess)
-      this.expiresAt = this.user.lastAccess.getTime() + 18000
+      this.expiresAt = this.user.lastAccess.getTime() + 180000
       // Set new auth1
       /*
       const expiresAtInMs = auth.expiresIn * 1000

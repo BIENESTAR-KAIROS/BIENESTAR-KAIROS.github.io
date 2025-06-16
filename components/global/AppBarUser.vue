@@ -2,7 +2,7 @@
 import navigationList from '~/utils/constants/navigation-list'
 import { useAppStore } from '~/store/app'
 import { useDisplay } from 'vuetify'
-import { useAuthStore } from '~/store/auth'
+import { NuxtLink } from '#components'
 
 const appStore = useAppStore()
 const { mobile } = useDisplay()
@@ -33,11 +33,13 @@ onMounted(() => {
     :model-value="isOpen"
     @update:model-value="updateNavBarState"
   >
-    <a href="/user/dashboard">
-      <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
-        <v-img src="/logo-white.png" class="logo-img" />
-      </v-sheet>
-    </a>
+    <v-list-item>
+      <NuxtLink href="/user/dashboard">
+        <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
+          <v-img src="/logo-white.png" class="logo-img" />
+        </v-sheet>
+      </NuxtLink>
+    </v-list-item>
 
     <v-list-item
       v-for="(navOption, i) in navigationList"
