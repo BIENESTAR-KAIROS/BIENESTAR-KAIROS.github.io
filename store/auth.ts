@@ -55,25 +55,17 @@ export const useAuthStore = defineStore('auth', {
       const nuxtApp = useNuxtApp()
       const localAuth = window.localStorage.getItem('auth')
       const auth: string = localAuth ? localAuth : this.accessToken
-      console.log(1111)
 
       if (auth) {
-        console.log('rAuth')
-
         const now = new Date().getTime()
 
         if (this.user) {
-          console.log('user')
           if (now < this.expiresAt) {
-            console.log('not exp')
-
             this.accessToken = auth
 
             // Set axios auth header
             nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
           } else {
-            console.log('expr')
-
             await this.clearAuth()
           }
         }
