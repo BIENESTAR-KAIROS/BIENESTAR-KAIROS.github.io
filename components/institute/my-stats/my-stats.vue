@@ -1,10 +1,41 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import DailyAnswerVolume from '../dashboard/daily-answer-volume.vue'
 import ResolvedQuizzes from '../dashboard/resolved-quizzes.vue'
 import TerapyBalance from '../dashboard/terapy-balance.vue'
+import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
+import { useInstituteStore } from '~/store/institute'
 
 const days = [30, 90, 15, 8]
 const selectedDays = ref(days[0])
+
+const { $axios } = useNuxtApp()
+const authStore = useAuthStore()
+const instituteStore = useInstituteStore()
+
+const isLoading = ref(false)
+
+try {
+  isLoading.value = true
+  const { data } = await $axios.get<IStatsResponse>(
+    `/institute/${authStore.user?.institution?.id}/statistics`,
+  )
+  instituteStore.statistics = data
+} catch (error) {
+  console.log(error)
+} finally {
+  isLoading.value = false
+}
+
+const totalUsers = computed(() => instituteStore.statistics?.users?.total)
+const activeUsers = computed(() => instituteStore.statistics?.users?.active)
+const studentsUsers = computed(() => instituteStore.statistics?.users?.students)
+const administratorUsers = computed(
+  () => instituteStore.statistics?.users?.administrators,
+)
+const adminAvialible = computed(
+  () => instituteStore.statistics?.users?.adminSlotsAvailable,
+)
 </script>
 
 <template>
@@ -20,7 +51,8 @@ const selectedDays = ref(days[0])
       <v-col cols="12">
         <div class="my-4">
           <h2 class="handlee-regular text-h6 font-weight-thin">
-            Aquí podrás crear filtros personalizados para obtener estadísticas más exactas de tu población y su comportamiento.
+            Aquí podrás crear filtros personalizados para obtener estadísticas
+            más exactas de tu población y su comportamiento.
           </h2>
         </div>
       </v-col>
@@ -62,13 +94,15 @@ const selectedDays = ref(days[0])
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Cuestionarios contestados
+                  Total de usuarios
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ totalUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -84,13 +118,15 @@ const selectedDays = ref(days[0])
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Sesiones iniciadas
+                  Usuarios activos
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ activeUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -105,14 +141,14 @@ const selectedDays = ref(days[0])
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
-                <span class="catamaran-regular font-body-1">
-                  Terapeutas agendados
-                </span>
+                <span class="catamaran-regular font-body-1"> Estudiantes </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-error me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-error me-2 text-h3 font-weight-bold">
                     mdi-arrow-down
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ studentsUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -128,13 +164,15 @@ const selectedDays = ref(days[0])
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Meditaciones hechas
+                  Administradores
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ administratorUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -207,12 +245,14 @@ const selectedDays = ref(days[0])
                 class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
               >
                 <span class="catamaran-regular font-body-1">
-                  Días desde el último cuestionario
+                  Espacios de administración disponibles
                 </span>
                 <div
                   class="d-flex flex-row align-center justify-center h-85 w-85"
                 >
-                  { value }
+                  <span class="catamaran-regular text-h3">
+                    {{ adminAvialible }}
+                  </span>
                 </div>
               </div>
             </v-card>
