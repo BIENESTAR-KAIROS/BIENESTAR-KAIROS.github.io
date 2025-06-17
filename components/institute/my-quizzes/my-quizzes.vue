@@ -45,7 +45,7 @@ const actionIcon = ref([
       </v-col>
       <v-col cols="12" md="6" class="d-none d-md-block">
         <div class="my-4 w-100 d-flex justify-end">
-          <a href="/institute/quizzes/add-quiz">
+          <NuxtLink href="/institute/quizzes/add-quiz">
             <v-btn
               color="thirdy"
               rounded="xl"
@@ -53,7 +53,7 @@ const actionIcon = ref([
             >
               Crear un nuevo cuestionario
             </v-btn>
-          </a>
+          </NuxtLink>
         </div>
       </v-col>
       <v-col cols="12">
