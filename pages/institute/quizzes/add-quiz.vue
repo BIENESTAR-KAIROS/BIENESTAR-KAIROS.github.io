@@ -3,11 +3,11 @@ definePageMeta({
   layout: 'institute',
 })
 
-import AddQuiz from '~/components/institute/my-quizzes/add-quiz.vue'
+import AddQuizComp from '~/components/institute/my-quizzes/add-quiz-comp.vue'
 </script>
 
 <template>
   <main>
-    <AddQuiz />
+    <AddQuizComp />
   </main>
 </template>

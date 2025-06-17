@@ -10,6 +10,8 @@ import type { IUser } from '~/interfaces/users/user.interface'
 const days = ref([8, 15, 30, 90])
 const selectedDays = ref(30)
 
+const calendar = ref()
+
 const isLoading = ref(false)
 
 const { $axios } = useNuxtApp()
@@ -70,6 +72,23 @@ async function onSearch() {
           search.value === `${user.profile?.name} ${user.profile?.lastName}`,
       ) || null
   }
+}
+
+const calendarType = ref('month')
+const value = ref([new Date().toISOString().substr(0, 10)])
+function schedule(event) {
+  console.log(event)
+
+  console.log(calendar)
+  console.log(value.value)
+}
+const day = ref(new Date().toISOString().substr(0, 10))
+function viewDay({ date }) {
+  day.value = date
+  calendarType.value = 'day'
+
+  console.log(calendar)
+  console.log(value.value)
 }
 </script>
 
@@ -293,24 +312,85 @@ async function onSearch() {
               <v-container>
                 <v-row>
                   <v-col cols="12" md="4">
-                    <span class="catamaran-regular font-body-1">
+                    <span class="handlee-regular text-h5 font-weight-thin">
                       {{
                         `${selectedUser?.profile?.name} ${selectedUser?.profile?.lastName}`
                       }}
                     </span>
                   </v-col>
                   <v-col cols="12" md="4">
-                    <v-card class="pa-2" color="purpleShadow" elevation="5">
-                      <span class="catamaran-regular font-body-1">
+                    <v-card
+                      class="pa-2 d-flex flex-column justify-center text-center h-100"
+                      color="purpleShadow"
+                      elevation="5"
+                      rounded="xl"
+                    >
+                      <span class="handlee-regular text-h5 font-weight-thin">
                         Resultados de la última respuesta:
+                      </span>
+                      <span class="catamaran-regular text-h6">
+                        4.5 / 5.0 de Bienestar
                       </span>
                     </v-card>
                   </v-col>
                   <v-col cols="12" md="4">
-                    <v-card class="pa-2" color="purpleShadow" elevation="5">
-                      <span class="catamaran-regular font-body-1">
+                    <v-card
+                      class="pa-4"
+                      color="purpleShadow"
+                      elevation="5"
+                      rounded="xl"
+                    >
+                      <span class="handlee-regular text-h5 font-weight-thin">
                         Citas en agenda del usuario
                       </span>
+                      <v-row>
+                        <v-col cols="4" class="justify-center">
+                          <v-img src="/calendar.png" width="40" />
+                        </v-col>
+                        <v-col>
+                          <span
+                            class="catamaran-regular text-subtitle-1 font-weight-thin"
+                          >
+                            1 cita en los próximos días
+                          </span>
+                        </v-col>
+                      </v-row>
+                      <v-card-actions>
+                        <v-spacer />
+                        <v-dialog max-width="700">
+                          <template
+                            v-slot:activator="{ props: activatorProps }"
+                          >
+                            <v-btn
+                              v-bind="activatorProps"
+                              class="bg-thirdy"
+                              elevation="5"
+                              rounded="xl"
+                              variant="flat"
+                            >
+                              Agendar una nueva cita
+                            </v-btn>
+                          </template>
+
+                          <template v-slot:default="{ isActive }">
+                            <v-card title="Citas del mes" class="pa-4">
+                              <v-text-field type="datetime-local" />
+
+                              <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                  text="Agregar"
+                                  @click="isActive.value = false"
+                                ></v-btn>
+                                <v-btn
+                                  text="Cerrar"
+                                  @click="isActive.value = false"
+                                ></v-btn>
+                              </v-card-actions>
+                            </v-card>
+                          </template>
+                        </v-dialog>
+                      </v-card-actions>
                     </v-card>
                   </v-col>
                 </v-row>
