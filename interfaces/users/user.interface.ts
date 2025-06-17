@@ -1,6 +1,7 @@
 import type { IInstitute } from '../institution/institution.interface'
 import type { IAdministrativeData } from './administrative.interface'
 import type { IKairosData } from './kairos.interface'
+import type { IProfile } from './profile.interface'
 import type { IStudentData } from './student.interface'
 
 export enum USER_TYPE {
@@ -22,4 +23,5 @@ export interface IUser {
   studentData?: IStudentData
   administrativeData?: IAdministrativeData
   kairosData?: IKairosData
+  profile?: IProfile
 }

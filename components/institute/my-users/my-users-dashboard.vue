@@ -2,17 +2,75 @@
 import DailyAnswerVolume from '../dashboard/daily-answer-volume.vue'
 import AnswerByGender from './answer-by-gender.vue'
 import AnswerByAge from './answer-by-age.vue'
+import { useAuthStore } from '~/store/auth'
+import { useInstituteStore } from '~/store/institute'
+import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
+import type { IUser } from '~/interfaces/users/user.interface'
+
 const days = ref([8, 15, 30, 90])
 const selectedDays = ref(30)
 
-const studentOptions = ref([
-  'Usuario 1',
-  'Usuario 2',
-  'Usuario 3',
-  'Usuario 4',
-  'Usuario 5',
-  'Usuario 6',
-])
+const isLoading = ref(false)
+
+const { $axios } = useNuxtApp()
+const authStore = useAuthStore()
+const instituteStore = useInstituteStore()
+
+try {
+  isLoading.value = true
+  const { data } = await $axios.get<IStatsResponse>(
+    `/institute/${authStore.user?.institution?.id}/statistics`,
+  )
+  instituteStore.statistics = data
+} catch (error) {
+  console.log(error)
+} finally {
+  isLoading.value = false
+}
+
+const totalUsers = computed(() => instituteStore.statistics?.users?.total)
+const activeUsers = computed(() => instituteStore.statistics?.users?.active)
+const studentsUsers = computed(() => instituteStore.statistics?.users?.students)
+const administratorUsers = computed(
+  () => instituteStore.statistics?.users?.administrators,
+)
+
+const search = ref(null)
+const studentOptions = ref([] as string[])
+const isSearchedUser = ref(false)
+const users = ref([] as IUser[])
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    const { data } = await $axios.get<{ users: IUser[] }>(
+      `/users?institutionId=${authStore.user?.institution?.id}&type=student&active=true`,
+    )
+    users.value = data.users
+    users.value.map((user) =>
+      studentOptions.value.push(
+        `${user.profile?.name} ${user.profile?.lastName}`,
+      ),
+    )
+  } catch (error) {
+    console.log(error)
+  } finally {
+    isLoading.value = false
+  }
+})
+
+const selectedUser = ref(null as IUser | null)
+
+async function onSearch() {
+  if (search.value) {
+    isSearchedUser.value = true
+    selectedUser.value =
+      users.value.find(
+        (user) =>
+          search.value === `${user.profile?.name} ${user.profile?.lastName}`,
+      ) || null
+  }
+}
 </script>
 
 <template>
@@ -70,13 +128,15 @@ const studentOptions = ref([
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Cuestionarios contestados
+                  Total de usuarios
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ totalUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -84,7 +144,7 @@ const studentOptions = ref([
           <v-col cols="12" md="6" lg="3">
             <v-card
               color="purpleShadow pa-4"
-              rounded="xl"
+              rounded="xxl"
               height="110"
               elevation="5"
             >
@@ -92,13 +152,15 @@ const studentOptions = ref([
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Sesiones iniciadas
+                  Usuarios activos
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ activeUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -106,21 +168,21 @@ const studentOptions = ref([
           <v-col cols="12" md="6" lg="3">
             <v-card
               color="purpleShadow pa-4"
-              rounded="xl"
+              rounded="xxl"
               height="110"
               elevation="5"
             >
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
-                <span class="catamaran-regular font-body-1">
-                  Terapeutas agendados
-                </span>
+                <span class="catamaran-regular font-body-1"> Estudiantes </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-error me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-error me-2 text-h3 font-weight-bold">
                     mdi-arrow-down
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ studentsUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -128,7 +190,7 @@ const studentOptions = ref([
           <v-col cols="12" md="6" lg="3">
             <v-card
               color="purpleShadow pa-4"
-              rounded="xl"
+              rounded="xxl"
               height="110"
               elevation="5"
             >
@@ -136,13 +198,15 @@ const studentOptions = ref([
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1">
-                  Meditaciones hechas
+                  Administradores
                 </span>
                 <div class="d-flex flex-row align-center">
-                  <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
                     mdi-arrow-up
-                  </v-icon>
-                  <span class="catamaran-regular text-h5"> { value } </span>
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ administratorUsers }}
+                  </span>
                 </div>
               </div>
             </v-card>
@@ -213,22 +277,26 @@ const studentOptions = ref([
               </v-col>
               <v-col cols="12" md="" lg="">
                 <v-autocomplete
+                  v-model="search"
                   label="Ingresa nombre o apellido a buscar"
                   :items="studentOptions"
                   variant="solo-filled"
                   bg-color="purpleShadow"
                   rounded="xxl"
+                  @update:search="onSearch"
                 ></v-autocomplete>
               </v-col>
             </v-row>
           </v-col>
-          <v-col cols="12">
+          <v-col cols="12" v-if="isSearchedUser">
             <v-card color="purpleShadow pa-2" rounded="xl" elevation="5">
               <v-container>
                 <v-row>
                   <v-col cols="12" md="4">
                     <span class="catamaran-regular font-body-1">
-                      {Nombre}
+                      {{
+                        `${selectedUser?.profile?.name} ${selectedUser?.profile?.lastName}`
+                      }}
                     </span>
                   </v-col>
                   <v-col cols="12" md="4">
