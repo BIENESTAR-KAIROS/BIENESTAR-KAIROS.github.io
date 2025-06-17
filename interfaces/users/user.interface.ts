@@ -1,3 +1,4 @@
+import type { IInstitute } from '../institution/institution.interface'
 import type { IAdministrativeData } from './administrative.interface'
 import type { IKairosData } from './kairos.interface'
 import type { IStudentData } from './student.interface'
@@ -10,14 +11,14 @@ export enum USER_TYPE {
 
 export interface IUser {
   id: string
+  name: string
   type: USER_TYPE
   email: string
   password?: string
   registrationDate?: Date
   lastAccess?: Date
   active?: boolean
-  // TODO: verify if ObjectID === string
-  institution?: string // ID mongo
+  institution?: IInstitute
   studentData?: IStudentData
   administrativeData?: IAdministrativeData
   kairosData?: IKairosData
