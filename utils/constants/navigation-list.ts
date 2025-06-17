@@ -19,10 +19,6 @@ const navigationList = [
     title: 'Aviso de privacidad',
     to: '/privacy-policy',
   },
-  {
-    title: 'Cerrar sesión',
-    to: '/login',
-  },
 ]
 
 export default navigationList
