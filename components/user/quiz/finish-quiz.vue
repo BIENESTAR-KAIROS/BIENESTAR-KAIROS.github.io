@@ -98,7 +98,7 @@ try {
               </v-col>
             </v-row>
             <v-card-actions class="mt-3">
-              <NuxtLink href="/users/dashboard" class="h-100">
+              <NuxtLink href="/user/dashboard" class="h-100">
                 <v-btn
                   class="bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"
                 >

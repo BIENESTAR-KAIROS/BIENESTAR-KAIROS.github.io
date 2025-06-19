@@ -6,15 +6,14 @@ import { useAuthStore } from '~/store/auth'
 import { useInstituteStore } from '~/store/institute'
 import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
 import type { IUser } from '~/interfaces/users/user.interface'
+import { required } from '~/utils/helpers/form-rules'
 
 const days = ref([8, 15, 30, 90])
 const selectedDays = ref(30)
 
-const calendar = ref()
-
 const isLoading = ref(false)
 
-const { $axios } = useNuxtApp()
+const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
 const instituteStore = useInstituteStore()
 
@@ -62,6 +61,7 @@ onMounted(async () => {
 })
 
 const selectedUser = ref(null as IUser | null)
+const userSchedules = ref([])
 
 async function onSearch() {
   if (search.value) {
@@ -71,24 +71,66 @@ async function onSearch() {
         (user) =>
           search.value === `${user.profile?.name} ${user.profile?.lastName}`,
       ) || null
+
+    try {
+      const { data } = await $axios.get(
+        `/calendary/patient/${selectedUser.value?.id}`,
+      )
+      userSchedules.value = data
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
 
-const calendarType = ref('month')
-const value = ref([new Date().toISOString().substr(0, 10)])
-function schedule(event) {
-  console.log(event)
+// ? Add terapy schedule
 
-  console.log(calendar)
-  console.log(value.value)
-}
-const day = ref(new Date().toISOString().substr(0, 10))
-function viewDay({ date }) {
-  day.value = date
-  calendarType.value = 'day'
+const day = ref()
+const startHour = ref()
+const endHour = ref()
 
-  console.log(calendar)
-  console.log(value.value)
+async function saveSchedule() {
+  const calendly: Ref<{
+    patientId: string
+    psychologistId: string
+    appointmentDate: Date
+    duration?: number
+    timezone?: string
+    appointmentType?: string
+    modality?: string
+    reason?: string
+  }> = ref(
+    {} as {
+      patientId: string
+      psychologistId: string
+      appointmentDate: Date
+      duration?: number
+      timezone?: string
+      appointmentType?: string
+      modality?: string
+      reason?: string
+    },
+  )
+
+  if (selectedUser.value) {
+    calendly.value.patientId = selectedUser.value.id
+    calendly.value.psychologistId = selectedUser.value.id
+    calendly.value.appointmentDate = new Date(day.value + 'T' + startHour.value)
+    try {
+      const { data } = await $axios.post(`/calendary`, {
+        ...calendly.value,
+      })
+    } catch (error) {
+      console.log(error)
+    } finally {
+      userSchedules.value.push({
+        appointmentDate: calendly.value.appointmentDate,
+      })
+      $router.push('/institute/my-users')
+    }
+  } else {
+    alert('No hay un usuario seleccionado')
+  }
 }
 </script>
 
@@ -351,7 +393,24 @@ function viewDay({ date }) {
                           <span
                             class="catamaran-regular text-subtitle-1 font-weight-thin"
                           >
-                            1 cita en los próximos días
+                            {{ userSchedules.length }} citas en los próximos
+                            días
+                          </span>
+                        </v-col>
+                        <v-col
+                          v-for="(schedule, i) in userSchedules"
+                          :key="i"
+                          cols="12"
+                        >
+                          <span
+                            class="catamaran-regular text-subtitle-1 font-weight-thin"
+                          >
+                            {{
+                              new Date(
+                                schedule.appointmentDate,
+                              ).toLocaleString()
+                            }}
+                            proxima cita
                           </span>
                         </v-col>
                       </v-row>
@@ -373,39 +432,89 @@ function viewDay({ date }) {
                           </template>
 
                           <template v-slot:default="{ isActive }">
-                            <v-card
-                              title="Citas del mes"
-                              class="pa-4 handlee-regular text-h5 font-weight-thin"
-                            >
+                            <v-card class="px-6 pt-4">
+                              <v-card-title
+                                class="handlee-regular text-h4 font-weight-thin"
+                              >
+                                Agendar nueva cita
+                              </v-card-title>
+                              <span
+                                class="catamaran-regular text-subtitle-1 font-weight-thin"
+                              >
+                                Día de la cita:
+                              </span>
                               <v-text-field
                                 type="date"
-                                step="3600"
+                                label="Día de la cita"
+                                bg-color="purpleShadow"
+                                variant="solo-filled"
+                                clearable
+                                rounded="xxl"
+                                v-model="day"
+                                :rules="[required]"
+                                append-inner-icon="mdi-calendar-outline"
+                                validate-on="lazy input"
                                 class="catamaran-regular text-subtitle-1 font-weight-thin"
                               />
-                              <v-text-field
-                                type="time"
-                                min="8:00"
-                                max="17:00"
-                                step="3600000"
-                                class="catamaran-regular text-subtitle-1 font-weight-thin"
-                              />
-                              <v-text-field
-                                type="time"
-                                step="3600"
-                                class="catamaran-regular text-subtitle-1 font-weight-thin"
-                              />
+                              <div
+                                class="w-100 d-flex flex-row justify-space-between"
+                              >
+                                <div class="w-45">
+                                  <span
+                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                                  >
+                                    Hora de inicio:
+                                  </span>
+                                  <v-text-field
+                                    type="time"
+                                    label="Hora de inicio"
+                                    bg-color="purpleShadow"
+                                    variant="solo-filled"
+                                    clearable
+                                    rounded="xxl"
+                                    v-model="startHour"
+                                    :rules="[required]"
+                                    append-inner-icon="mdi-clock-outline"
+                                    validate-on="lazy input"
+                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                                  />
+                                </div>
+                                <div class="w-45">
+                                  <span
+                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                                  >
+                                    Hora de fin:
+                                  </span>
+                                  <v-text-field
+                                    type="time"
+                                    label="Hora de fin"
+                                    bg-color="purpleShadow"
+                                    variant="solo-filled"
+                                    clearable
+                                    rounded="xxl"
+                                    v-model="endHour"
+                                    append-inner-icon="mdi-clock-outline"
+                                    validate-on="lazy input"
+                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                                  />
+                                </div>
+                              </div>
                               <v-card-actions>
                                 <v-spacer></v-spacer>
                                 <v-btn
-                                  text="Agregar"
-                                  @click="isActive.value = false"
-                                  class="catamaran-regular text-subtitle-1 font-weight-thin"
-                                ></v-btn>
+                                  @click="saveSchedule"
+                                  class="bg-purpleShadow catamaran-regular text-subtitle-1 font-weight-thin"
+                                >
+                                  Agregar
+                                  <v-icon> mdi-plus </v-icon>
+                                </v-btn>
                                 <v-btn
-                                  text="Cerrar"
-                                  class="catamaran-regular text-subtitle-1 font-weight-thin"
+                                  class="ms-2 bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
                                   @click="isActive.value = false"
-                                ></v-btn>
+                                >
+                                  Cerrar
+                                  <v-icon> mdi-close </v-icon>
+                                </v-btn>
                               </v-card-actions>
                             </v-card>
                           </template>

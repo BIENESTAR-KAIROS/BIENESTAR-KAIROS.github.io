@@ -1,13 +1,13 @@
-@forward "vuetify/settings"
+@forward 'vuetify/settings'
   with(
     $application-background: rgba(255, 255, 255, 0),
     $rounded: (
-      "xl": 16px,
-      "xxl": 24px,
-      "xxxl": 64px,
+      'xl': 16px,
+      'xxl': 24px,
+      'xxxl': 64px,
     ),
     $utilities: (
-      "height": (
+      'height': (
         property: height,
         responsive: true,
         class: h,
@@ -19,13 +19,14 @@
           50: 50%,
           75: 75%,
           85: 85%,
-          100: 100%
-        )
+          100: 100%,
+        ),
       ),
-      "width": (
+      'width': (
         values: (
           85: 85%,
-        )
-      )
+          45: 45%,
+        ),
+      ),
     )
   );
