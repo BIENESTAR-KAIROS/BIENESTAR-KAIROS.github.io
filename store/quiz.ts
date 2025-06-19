@@ -31,10 +31,11 @@ export const useQuizStore = defineStore('quiz', {
     async saveQuiz() {
       const nuxtApp = useNuxtApp()
       try {
-        return nuxtApp.$axios.post<INewQuizResponse>(
+        const { data } = await nuxtApp.$axios.post<INewQuizResponse>(
           `/questionnaires`,
           this.newQuiz,
         )
+        return data
       } catch (error) {
         console.error(error)
       }

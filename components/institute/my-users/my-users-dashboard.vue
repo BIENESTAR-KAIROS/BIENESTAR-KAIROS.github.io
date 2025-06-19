@@ -363,7 +363,7 @@ function viewDay({ date }) {
                           >
                             <v-btn
                               v-bind="activatorProps"
-                              class="bg-thirdy"
+                              class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
                               elevation="5"
                               rounded="xl"
                               variant="flat"
@@ -373,17 +373,37 @@ function viewDay({ date }) {
                           </template>
 
                           <template v-slot:default="{ isActive }">
-                            <v-card title="Citas del mes" class="pa-4">
-                              <v-text-field type="datetime-local" />
-
+                            <v-card
+                              title="Citas del mes"
+                              class="pa-4 handlee-regular text-h5 font-weight-thin"
+                            >
+                              <v-text-field
+                                type="date"
+                                step="3600"
+                                class="catamaran-regular text-subtitle-1 font-weight-thin"
+                              />
+                              <v-text-field
+                                type="time"
+                                min="8:00"
+                                max="17:00"
+                                step="3600000"
+                                class="catamaran-regular text-subtitle-1 font-weight-thin"
+                              />
+                              <v-text-field
+                                type="time"
+                                step="3600"
+                                class="catamaran-regular text-subtitle-1 font-weight-thin"
+                              />
                               <v-card-actions>
                                 <v-spacer></v-spacer>
                                 <v-btn
                                   text="Agregar"
                                   @click="isActive.value = false"
+                                  class="catamaran-regular text-subtitle-1 font-weight-thin"
                                 ></v-btn>
                                 <v-btn
                                   text="Cerrar"
+                                  class="catamaran-regular text-subtitle-1 font-weight-thin"
                                   @click="isActive.value = false"
                                 ></v-btn>
                               </v-card-actions>
