@@ -5,32 +5,35 @@ import { useQuizStore } from '~/store/quiz'
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
 
-const calification = computed(() => {
-  const sum = ref(0)
+const sum = ref(0)
+const calification = () => {
   quizStore.quiz.forEach((question) => {
     sum.value += question.answer
   })
 
   return Math.round((sum.value / quizStore.totalQUestions) * 10) / 10
-})
+}
 
 const isLoading = ref(false)
 const recomendations = ref([] as IRecomendations[])
 
-try {
-  isLoading.value = true
-  for (let index = 0; index < 4; index++) {
-    const { data } = await $axios.get<IRecomendations>(
-      `/recommendations/random`,
-    )
-    recomendations.value.push(data)
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    for (let index = 0; index < 4; index++) {
+      const { data } = await $axios.get<IRecomendations>(
+        `/recommendations/random`,
+      )
+
+      recomendations.value.push(data)
+    }
+  } catch (error) {
+    console.log(error)
+    alert('Error al obtener tus recomendaciones.')
+  } finally {
+    isLoading.value = false
   }
-} catch (error) {
-  console.log(error)
-  alert('Error al obtener tus recomendaciones.')
-} finally {
-  isLoading.value = false
-}
+})
 </script>
 
 <template>

@@ -4,4 +4,6 @@ definePageMeta({
 })
 </script>
 
-<template>registrate aqui</template>
+<template>
+  <div>registrate aqui</div>
+</template>

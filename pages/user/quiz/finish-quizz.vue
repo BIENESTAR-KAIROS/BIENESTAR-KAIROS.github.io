@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import FinishQuiz from '~/components/user/quiz/finish-quiz.vue'
-
 definePageMeta({
+  prerender: false,
   layout: 'empty-login',
 })
+
+import FinishQuiz from '~/components/user/quiz/finish-quiz.vue'
 </script>
 
 <template>
