@@ -6,13 +6,13 @@ const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
 
 const sum = ref(0)
-const calification = () => {
+const calification = computed(() => {
   quizStore.quiz.forEach((question) => {
     sum.value += question.answer
   })
 
   return Math.round((sum.value / quizStore.totalQUestions) * 10) / 10
-}
+})
 
 const isLoading = ref(false)
 const recomendations = ref([] as IRecomendations[])

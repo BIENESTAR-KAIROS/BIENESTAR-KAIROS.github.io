@@ -61,7 +61,11 @@ onMounted(async () => {
 })
 
 const selectedUser = ref(null as IUser | null)
-const userSchedules = ref([])
+const userSchedules = ref(
+  [] as {
+    appointmentDate: Date
+  }[],
+)
 
 async function onSearch() {
   if (search.value) {
@@ -353,7 +357,7 @@ async function saveSchedule() {
             <v-card color="purpleShadow pa-2" rounded="xl" elevation="5">
               <v-container>
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="2">
                     <span class="handlee-regular text-h5 font-weight-thin">
                       {{
                         `${selectedUser?.profile?.name} ${selectedUser?.profile?.lastName}`
@@ -375,7 +379,7 @@ async function saveSchedule() {
                       </span>
                     </v-card>
                   </v-col>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <v-card
                       class="pa-4"
                       color="purpleShadow"
@@ -415,7 +419,16 @@ async function saveSchedule() {
                         </v-col>
                       </v-row>
                       <v-card-actions>
-                        <v-spacer />
+                        <NuxtLink href="/institute/my-users/clinic-history">
+                          <v-btn
+                            class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
+                            elevation="5"
+                            rounded="xl"
+                            variant="flat"
+                          >
+                            Conocer historia clínica
+                          </v-btn>
+                        </NuxtLink>
                         <v-dialog max-width="700">
                           <template
                             v-slot:activator="{ props: activatorProps }"
