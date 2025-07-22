@@ -6,14 +6,26 @@ import type {
   ICreateEvaluationConfigurationDto,
 } from '~/interfaces/quizzes/new-quiz.interface'
 
+export enum QuestionType {
+  MULTIPLE_CHOICE = 'multiple_choice',
+  TEXT = 'text',
+  DATE = 'date',
+}
+
+export interface IQuiz {
+  question: string
+  answer: number | Date | string | Array<string>
+  type: QuestionType
+}
+
 export const useQuizStore = defineStore('quiz', {
   state: () => {
     return {
       isLastQuestion: false,
       isFinished: false,
       isDynamic: false,
-      quiz: [{ question: '', answer: 0 }],
-      totalQUestions: 0,
+      quiz: [] as IQuiz[],
+      totalQuestions: 0,
       actualQuestion: 0,
       newQuiz: {
         title: '',

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import QuizNavigation from './quiz-navigation.vue'
-import { useQuizStore } from '~/store/quiz'
+import { useQuizStore, QuestionType } from '~/store/quiz'
 import { useDisplay } from 'vuetify'
-import { wrapInArray } from 'vuetify/lib/util/helpers.mjs'
 import type { IQuiz } from '~/interfaces/quizzes/quiz.interface'
 
 const { mobile } = useDisplay()
@@ -28,22 +27,29 @@ onMounted(async () => {
     const { data: quiz } = await $axios.get<IQuiz>(
       `/questionnaires/${route.params.id}`,
     )
+    console.log(quiz)
 
     quizStore.quiz = []
     for (let i = 0; i < quiz.questionnaire.questions.length; i++) {
       questions.value.push(quiz.questionnaire.questions[i].text)
       quizStore.quiz.push({
         question: quiz.questionnaire.questions[i].text,
+        type: QuestionType[
+          quiz.questionnaire.questions[
+            i
+          ].type.toUpperCase() as keyof typeof QuestionType
+        ],
         answer: 0,
       })
     }
-    quizStore.totalQUestions = quiz.questionnaire.questions.length
+    quizStore.totalQuestions = quiz.questionnaire.questions.length
     totalQuestions.value = quiz.questionnaire.questions.length
   } catch (error) {
     console.log(error)
   } finally {
     isLoading.value = false
   }
+  console.log(quizStore.quiz)
 })
 
 const actualQuestion = computed(() => {
@@ -108,11 +114,13 @@ const actualQuestion = computed(() => {
               order-md="2"
             >
               <v-slider
-                v-model="quizStore.quiz[quizStore.actualQuestion]['answer']"
+                v-model="
+                  quizStore.quiz[quizStore.actualQuestion]['answer'] as number
+                "
                 :max="5"
                 :min="1"
                 :step="1"
-                thumb-label
+                :thumb-label="true"
                 color="secondary"
               ></v-slider>
             </v-col>
