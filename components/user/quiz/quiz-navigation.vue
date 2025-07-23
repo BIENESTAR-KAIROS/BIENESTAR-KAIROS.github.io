@@ -16,7 +16,7 @@ const actualQuestion = computed(() => {
 })
 
 const totalQuesitons = computed(() => {
-  return quizStore.totalQUestions
+  return quizStore.totalQuestions
 })
 
 function selectQuestion(numberQuestion: number) {
@@ -37,7 +37,7 @@ function finalizeQuiz() {
   }
 }
 let isFinished = computed(() => {
-  return quizStore.totalQUestions === countAnsweredQuestions.value
+  return quizStore.totalQuestions === countAnsweredQuestions.value
 })
 const countAnsweredQuestions = computed(() => {
   let count = 0

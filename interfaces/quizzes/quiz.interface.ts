@@ -6,6 +6,7 @@ export interface IQuestionOption {
   value: string
   text: string
   weight: number
+  subquestions?: IQuestion[]
 }
 
 export interface IQuestion {
@@ -36,9 +37,7 @@ export interface IQuiz {
         bienestarGeneral: number
         porcentajeBienestar: number
       }
-      categorias: {
-        'Bienestar Personal': string[]
-      }
+      categorias: string[]
       interpretaciones: {
         bajo: {
           min: number

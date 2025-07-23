@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = session.accessToken
       this.user = session.user
       this.user.lastAccess = new Date(this.user.lastAccess || 0)
-      this.expiresAt = this.user.lastAccess.getTime() + 360000
+      this.expiresAt = new Date().getTime() + 1080000
       // Set new auth1
       /*
       const expiresAtInMs = auth.expiresIn * 1000
@@ -32,7 +32,14 @@ export const useAuthStore = defineStore('auth', {
       nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
 
       // Set auth on local storage
-      window.localStorage.setItem('auth', this.accessToken)
+      window.localStorage.setItem(
+        'auth',
+        JSON.stringify({
+          accessToken: this.accessToken,
+          expiresAt: this.expiresAt,
+          user: this.user,
+        }),
+      )
 
       // Set user profile
       //await this.getMyUser()
@@ -54,25 +61,33 @@ export const useAuthStore = defineStore('auth', {
     async refreshAuth() {
       const nuxtApp = useNuxtApp()
       const localAuth = window.localStorage.getItem('auth')
-      const auth: string = localAuth ? localAuth : this.accessToken
+
+      const auth = localAuth
+        ? JSON.parse(localAuth).accessToken
+        : this.accessToken
+      this.expiresAt = localAuth
+        ? JSON.parse(localAuth).expiresAt
+        : this.expiresAt
 
       if (auth) {
         const now = new Date().getTime()
 
-        if (this.user) {
-          if (now < this.expiresAt) {
-            this.accessToken = auth
+        if (now < this.expiresAt) {
+          this.accessToken = auth
 
-            // Set axios auth header
-            nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
-          } else {
-            await this.clearAuth()
-          }
+          // Set axios auth header
+          nuxtApp.$axios.defaults.headers.common.Authorization = `Bearer ${this.accessToken}`
+          this.getMyUser()
+        } else {
+          await this.clearAuth()
         }
       }
     },
     async getMyUser() {
       const nuxtApp = useNuxtApp()
+      const localAuth = window.localStorage.getItem('auth')
+
+      this.user = localAuth ? JSON.parse(localAuth).user : this.user
 
       const user = await nuxtApp.$axios.get<IUser>(`/users/${this.user?.id}`)
       this.user = { ...user.data }
