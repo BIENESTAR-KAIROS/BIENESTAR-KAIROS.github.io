@@ -124,7 +124,9 @@ const login = async () => {
         <v-row>
           <v-col>
             <div class="d-flex justify-center w-100">
-              <v-btn color="primary"> Crear Cuenta </v-btn>
+              <NuxtLink href="/register">
+                <v-btn color="primary"> Crear Cuenta </v-btn>
+              </NuxtLink>
             </div>
           </v-col>
         </v-row>
