@@ -60,9 +60,9 @@ onMounted(async () => {
             class="px-6 pt-6 d-flex flex-column justify-center align-center"
           >
             <v-card-title class="handlee-regular text-h2 font-weight-bold">
-              Tus resultados:
+              Tus recomendaciones:
             </v-card-title>
-            <div
+            <!-- <div
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
               <span class="handlee-regular text-h4 font-weight-bold">
@@ -71,7 +71,7 @@ onMounted(async () => {
               <h2 class="handlee-regular text-h4 font-weight-regular">
                 Bienestar general
               </h2>
-            </div>
+            </div> -->
             <v-row>
               <v-col
                 v-for="(recomendation, i) in recomendations"
@@ -98,6 +98,22 @@ onMounted(async () => {
                     {{ recomendation.category }}
                   </span>
                 </v-sheet>
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col>
+                <div
+                  class="w-100 h-50 d-flex justify-space-around align-center mb-6"
+                >
+                  <span class="handlee-regular text-h4 font-weight-bold">
+                    Recomendación especial:
+                  </span>
+                  <h2 class="handlee-regular font-weight-regular">
+                    Recuerda que puedes acercarte a la Unidad de Psicología
+                    Clínica de la UP para que te orienten sobre tu bienestar.
+                  </h2>
+                </div>
               </v-col>
             </v-row>
             <v-card-actions class="mt-3">
