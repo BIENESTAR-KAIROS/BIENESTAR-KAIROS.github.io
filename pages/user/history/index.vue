@@ -15,6 +15,8 @@
           "Queremos ayudarte" y tomes alguna de las meditaciones guiadas
           mientras esperas.
           <br /><br /><br />
+          Para volver, da clic en el osito a tu izquierda.
+          <br /><br /><br />
           Recuerda que la Universidad Panamericana pone a tu disposición la
           Unidad de Psicología Clínica para cualquier cosa que necesites.
         </p>
