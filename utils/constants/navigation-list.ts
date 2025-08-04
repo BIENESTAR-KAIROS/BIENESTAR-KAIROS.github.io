@@ -7,14 +7,14 @@ const navigationList = [
     title: 'Histórico',
     to: '/history',
   },
-  {
-    title: 'Actualizar mis datos',
-    to: '/update-my-data',
-  },
-  {
-    title: 'Contactarme con mi institución',
-    to: '/quizzes',
-  },
+  // {
+  //   title: 'Actualizar mis datos',
+  //   to: '/update-my-data',
+  // },
+  // {
+  //   title: 'Contactarme con mi institución',
+  //   to: '/quizzes',
+  // },
   {
     title: 'Aviso de privacidad',
     to: '/privacy-policy',
