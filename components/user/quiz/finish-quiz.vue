@@ -11,7 +11,7 @@ const calification = computed(() => {
   const suma = (question: IQuizResponse): Number => {
     const temp = ref(0)
 
-    temp.value += Number(question.answer) || 0
+    temp.value += Number(question.answer) < 0 ? 0 : Number(question.answer)
     question.options.forEach((option) => {
       option.subquestions?.forEach((sub) => {
         temp.value += Number(suma(sub))
@@ -25,9 +25,7 @@ const calification = computed(() => {
     sum.value += Number(suma(question))
   })
 
-  return Math.abs(
-    Math.round((sum.value / quizStore.totalQuestions / 5) * 10) / 10,
-  )
+  return Number(sum.value)
 })
 console.log(calification.value)
 
@@ -73,11 +71,14 @@ onMounted(async () => {
   }
   try {
     isLoading.value = true
-    for (let index = 0; index < 4; index++) {
+    const { data } = await $axios.get<IRecomendations>(
+      `/recommendations/${category}`,
+    )
+    recomendations.value.push(data)
+    for (let index = 0; index < 3; index++) {
       const { data } = await $axios.get<IRecomendations>(
-        `/recommendations/random?id=${category}`,
+        `/recommendations/random`,
       )
-
       recomendations.value.push(data)
     }
   } catch (error) {
@@ -118,12 +119,12 @@ onMounted(async () => {
             <div
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
-              <span class="handlee-regular text-h4 font-weight-bold">
-                {{ calification }} / 5.0
-              </span>
               <h2 class="handlee-regular text-h4 font-weight-regular">
-                Bienestar general
+                Calificación:
               </h2>
+              <span class="handlee-regular text-h4 font-weight-bold">
+                {{ calification }}
+              </span>
             </div>
             <v-row>
               <v-col
