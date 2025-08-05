@@ -61,9 +61,9 @@ onMounted(async () => {
       category += '0004'
     }
   } else if (category == 'ASST') {
-    if (sum.value < 4) {
+    if (sum.value < 35) {
       category += '0004'
-    } else if (sum.value < 27) {
+    } else if (sum.value < 270) {
       category += '0005'
     } else {
       category += '0006'
@@ -125,7 +125,7 @@ onMounted(async () => {
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
               <h2 class="handlee-regular text-h4 font-weight-regular">
-                Calificación:
+                Puntaje:
               </h2>
               <span class="handlee-regular text-h4 font-weight-bold">
                 {{ calification }}
