@@ -19,6 +19,11 @@ definePageMeta({
           <br /><br /><br />
           Para eso, por favor ayudanos proporcionando de nuevo la información
           del correo electrónico que habías registrado previamente.
+          <br />
+          <br />
+          <br />
+          Una vez que des clic en "Enviar correo de recuperación", revisa tu
+          bandeja de entrada (recuerda revisar la carpeta de spam/no deseado).
         </p>
         <div class="my-4">
           <v-form @submit.prevent="">
