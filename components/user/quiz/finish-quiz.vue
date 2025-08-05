@@ -71,10 +71,12 @@ onMounted(async () => {
   }
   try {
     isLoading.value = true
-    const { data } = await $axios.get<IRecomendations>(
-      `/recommendations/${category}`,
-    )
-    recomendations.value.push(data)
+    if (quizStore.quiz[0].questionnaireId != '687eb71ad314bf6498877687') {
+      const { data } = await $axios.get<IRecomendations>(
+        `/recommendations/${category}`,
+      )
+      recomendations.value.push(data)
+    }
     for (let index = 0; index < 3; index++) {
       const { data } = await $axios.get<IRecomendations>(
         `/recommendations/random`,
@@ -111,12 +113,15 @@ onMounted(async () => {
           <v-card
             elevation="5"
             color="secondary"
-            class="px-6 pt-6 d-flex flex-column justify-center align-center"
+            class="px-6 pt-6 d-flex flex-column align-center overflow-auto"
           >
             <v-card-title class="handlee-regular text-h2 font-weight-bold">
               Tus recomendaciones:
             </v-card-title>
             <div
+              v-if="
+                quizStore.quiz[0].questionnaireId != '687eb71ad314bf6498877687'
+              "
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
               <h2 class="handlee-regular text-h4 font-weight-regular">

@@ -30,9 +30,6 @@ function clickNext() {
 }
 
 async function finalizeQuiz() {
-  console.log(countAnsweredQuestions.value)
-  console.log(isFinished.value)
-
   if (isFinished.value) {
     try {
       await quizStore.sendAnswers()
