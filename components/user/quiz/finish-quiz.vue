@@ -1,28 +1,81 @@
 <script setup lang="ts">
 import type { IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
-import { useQuizStore } from '~/store/quiz'
+import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
 
 const sum = ref(0)
 const calification = computed(() => {
+  sum.value = 0
+  const suma = (question: IQuizResponse): Number => {
+    const temp = ref(0)
+
+    temp.value += Number(question.answer) || 0
+    question.options.forEach((option) => {
+      option.subquestions?.forEach((sub) => {
+        temp.value += Number(suma(sub))
+      })
+    })
+
+    return Number(temp.value)
+  }
+
   quizStore.quiz.forEach((question) => {
-    sum.value += question.answer
+    sum.value += Number(suma(question))
   })
 
-  return Math.round((sum.value / quizStore.totalQUestions) * 10) / 10
+  return Math.abs(
+    Math.round((sum.value / quizStore.totalQuestions / 5) * 10) / 10,
+  )
 })
+console.log(calification.value)
 
 const isLoading = ref(false)
 const recomendations = ref([] as IRecomendations[])
 
+const claves = ref<Record<string, string>>({
+  '6865871136aa0b3c141cf766': 'PHQ',
+  '687f24aa1c222766e367ff24': 'GAD',
+  '687f3d331c222766e367ff26': 'ASST',
+})
+
 onMounted(async () => {
+  var category = claves.value[quizStore.quiz[0].questionnaireId]
+  if (category == 'PHQ') {
+    if (sum.value < 5) {
+      category += '0001'
+    } else if (sum.value < 10) {
+      category += '0002'
+    } else if (sum.value < 15) {
+      category += '0003'
+    } else {
+      category += '0004'
+    }
+  } else if (category == 'GAD') {
+    if (sum.value < 5) {
+      category += '0001'
+    } else if (sum.value < 10) {
+      category += '0002'
+    } else if (sum.value < 15) {
+      category += '0003'
+    } else {
+      category += '0004'
+    }
+  } else if (category == 'ASST') {
+    if (sum.value < 4) {
+      category += '0004'
+    } else if (sum.value < 27) {
+      category += '0005'
+    } else {
+      category += '0006'
+    }
+  }
   try {
     isLoading.value = true
     for (let index = 0; index < 4; index++) {
       const { data } = await $axios.get<IRecomendations>(
-        `/recommendations/random`,
+        `/recommendations/random?id=${category}`,
       )
 
       recomendations.value.push(data)
@@ -62,7 +115,7 @@ onMounted(async () => {
             <v-card-title class="handlee-regular text-h2 font-weight-bold">
               Tus recomendaciones:
             </v-card-title>
-            <!-- <div
+            <div
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
               <span class="handlee-regular text-h4 font-weight-bold">
@@ -71,7 +124,7 @@ onMounted(async () => {
               <h2 class="handlee-regular text-h4 font-weight-regular">
                 Bienestar general
               </h2>
-            </div> -->
+            </div>
             <v-row>
               <v-col
                 v-for="(recomendation, i) in recomendations"

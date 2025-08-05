@@ -29,9 +29,20 @@ function clickNext() {
   else quizStore.actualQuestion += 1
 }
 
-function finalizeQuiz() {
+async function finalizeQuiz() {
+  console.log(countAnsweredQuestions.value)
+  console.log(isFinished.value)
+
   if (isFinished.value) {
-    $router.push('/user/quiz/finish-quizz')
+    try {
+      await quizStore.sendAnswers()
+    } catch (error) {
+      console.error('Error on send answers:', error)
+      alert('Ocurrió un error al enviar tus respuestas.')
+      return
+    } finally {
+      $router.push('/user/quiz/finish-quizz')
+    }
   } else {
     alert('No has contestado todas las preguntas')
   }
@@ -42,7 +53,7 @@ let isFinished = computed(() => {
 const countAnsweredQuestions = computed(() => {
   let count = 0
   quizStore.quiz.map((question) => {
-    if (question.answer !== 0) count++
+    if ((question.answer as number) > -1) count++
   })
   return count
 })

@@ -25,6 +25,8 @@ const responses = ref([
 onMounted(async () => {
   const questionResponse = (question: IQuestion): IQuizResponse => {
     return {
+      questionId: question.id,
+      questionnaireId: route.params.id as string,
       question: question.text,
       options: question.options.map((option) => ({
         option,
@@ -32,7 +34,7 @@ onMounted(async () => {
           ? option.subquestions.map((sub) => questionResponse(sub))
           : [],
       })),
-      answer: 0,
+      answer: -1,
       type: QuestionType[
         question.type.toUpperCase() as keyof typeof QuestionType
       ],

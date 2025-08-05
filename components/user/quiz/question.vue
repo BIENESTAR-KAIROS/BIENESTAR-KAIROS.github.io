@@ -58,18 +58,18 @@ defineProps<{
         class="w-100"
       >
         <v-col cols="12">
-          <v-radio-group v-model="question.answer as string" color="secondary">
+          <v-radio-group v-model="question.answer as number" color="secondary">
             <div
               class="d-flex flex-column align-center justify-space-evenly w-100"
             >
               <div v-for="(option, index) in question.options" :key="index">
                 <v-radio
                   :label="option.option.text"
-                  :value="option.option.value"
+                  :value="option.option.weight"
                   class="catamaran-text text-body-1 font-weight-regular"
                 />
                 <div v-if="option.subquestions" class="">
-                  <div v-show="question.answer === option.option.value">
+                  <div v-show="question.answer === option.option.weight">
                     <div v-for="subOption in option.subquestions">
                       <v-sheet
                         class="w-100 h-100 overflow-auto d-flex flex-column justify-space-evenly align-center"
