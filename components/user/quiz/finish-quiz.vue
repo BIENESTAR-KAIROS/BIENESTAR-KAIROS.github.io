@@ -39,52 +39,58 @@ const claves = ref<Record<string, string>>({
 })
 
 onMounted(async () => {
-  var category = claves.value[quizStore.quiz[0].questionnaireId]
-  if (category == 'PHQ') {
-    if (sum.value < 5) {
-      category += '0001'
-    } else if (sum.value < 10) {
-      category += '0002'
-    } else if (sum.value < 15) {
-      category += '0003'
-    } else {
-      category += '0004'
-    }
-  } else if (category == 'GAD') {
-    if (sum.value < 5) {
-      category += '0001'
-    } else if (sum.value < 10) {
-      category += '0002'
-    } else if (sum.value < 15) {
-      category += '0003'
-    } else {
-      category += '0004'
-    }
-  } else if (category == 'ASST') {
-    if (sum.value < 35) {
-      category += '0004'
-    } else if (sum.value < 270) {
-      category += '0005'
-    } else {
-      category += '0006'
-    }
+  let category = claves.value[quizStore.quiz[0].questionnaireId]
+  if (category === 'PHQ') {
+    if (sum.value < 5) category += '0001'
+    else if (sum.value < 10) category += '0002'
+    else if (sum.value < 15) category += '0003'
+    else category += '0004'
+  } else if (category === 'GAD') {
+    if (sum.value < 5) category += '0001'
+    else if (sum.value < 10) category += '0002'
+    else if (sum.value < 15) category += '0003'
+    else category += '0004'
+  } else if (category === 'ASST') {
+    if (sum.value < 35) category += '0004'
+    else if (sum.value < 270) category += '0005'
+    else category += '0006'
   }
+
   try {
     isLoading.value = true
-    if (quizStore.quiz[0].questionnaireId != '687eb71ad314bf6498877687') {
-      const { data } = await $axios.get<IRecomendations>(
-        `/recommendations/${category}`,
-      )
-      recomendations.value.push(data)
+    let fallback = false
+
+    // Intentar traer recomendación específica si aplica
+    if (
+      quizStore.quiz[0].questionnaireId !== '687eb71ad314bf6498877687' &&
+      category
+    ) {
+      try {
+        const { data } = await $axios.get<IRecomendations>(
+          `/recommendations/${category}`,
+        )
+        recomendations.value.push(data)
+      } catch (err: any) {
+        console.warn(
+          'No se encontró recomendación específica, usando aleatorias.',
+          err,
+        )
+        fallback = true
+      }
+    } else {
+      fallback = true
     }
-    for (let index = 0; index < 3; index++) {
+
+    // Si falló la específica o no aplica, traer 4 aleatorias
+    const count = fallback ? 4 : 3
+    for (let i = 0; i < count; i++) {
       const { data } = await $axios.get<IRecomendations>(
         `/recommendations/random`,
       )
       recomendations.value.push(data)
     }
   } catch (error) {
-    console.log(error)
+    console.error('Error general al obtener recomendaciones:', error)
     alert('Error al obtener tus recomendaciones.')
   } finally {
     isLoading.value = false
