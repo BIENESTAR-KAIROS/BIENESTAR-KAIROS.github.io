@@ -44,6 +44,17 @@ export interface SubmitResponseDto {
   submissionMetadata?: Record<string, any>
 }
 
+// Clase de error personalizada para el 409
+export class AlreadySubmittedError extends Error {
+  statusCode: number
+
+  constructor(message: string = 'Usuario ya respondió el cuestionario') {
+    super(message)
+    this.name = 'AlreadySubmittedError'
+    this.statusCode = 409
+  }
+}
+
 export const useQuizStore = defineStore('quiz', {
   state: () => {
     return {
@@ -78,7 +89,9 @@ export const useQuizStore = defineStore('quiz', {
         console.error(error)
       }
     },
+
     async sendAnswers() {
+      console.log('🎯 STORE - sendAnswers iniciando...')
       const nuxtApp = useNuxtApp()
 
       const cleanAnswer = (ans: IQuizResponse): AnswerDto => {
@@ -103,14 +116,36 @@ export const useQuizStore = defineStore('quiz', {
         answers: this.quiz.map((answer) => cleanAnswer(answer)),
       }
 
+      console.log('🎯 STORE - Datos a enviar:', {
+        questionnaireId: answers.questionnaireId,
+        answersCount: answers.answers.length,
+      })
+
+      console.log('🎯 STORE - Haciendo request POST...')
+
       try {
         const response = await nuxtApp.$axios.post(
           `/questionnaires/${this.quiz[0].questionnaireId}/responses`,
           answers,
+          // SIN validateStatus por ahora
+        )
+
+        console.log(
+          '🎯 STORE - Response recibida exitosamente:',
+          response.status,
         )
         return response.data
-      } catch (error) {
-        console.error(error)
+      } catch (error: any) {
+        console.log('🎯 STORE - Error capturado en sendAnswers')
+        console.error('🎯 STORE - Error completo:', error)
+        console.log('🎯 STORE - Error.message:', error?.message)
+        console.log(
+          '🎯 STORE - Error.response?.status:',
+          error?.response?.status,
+        )
+
+        // Simplemente re-lanzar el error tal como está
+        throw error
       }
     },
   },

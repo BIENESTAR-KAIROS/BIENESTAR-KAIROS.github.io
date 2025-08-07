@@ -4,7 +4,6 @@ import { useDisplay } from 'vuetify'
 
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
-
 const quizStore = useQuizStore()
 
 let isLastQuestion = computed(() => {
@@ -30,23 +29,60 @@ function clickNext() {
 }
 
 async function finalizeQuiz() {
-  if (isFinished.value) {
-    try {
-      await quizStore.sendAnswers()
-    } catch (error) {
-      console.error('Error on send answers:', error)
-      alert('Ocurrió un error al enviar tus respuestas.')
-      return
-    } finally {
-      $router.push('/user/quiz/finish-quizz')
-    }
-  } else {
+  if (!isFinished.value) {
     alert('No has contestado todas las preguntas')
+    return
   }
+
+  // console.log('🎯 INICIO - finalizeQuiz ejecutándose...')
+
+  try {
+    // console.log('🎯 ANTES - Llamando a quizStore.sendAnswers()')
+    await quizStore.sendAnswers()
+
+    // console.log('🎯 DESPUÉS - sendAnswers exitoso, navegando...')
+    await $router.push('/user/quiz/finish-quizz')
+  } catch (error: any) {
+    // console.log('🎯 CATCH - Error capturado en finalizeQuiz')
+    // console.error('⛔️ Error completo:', error)
+    // console.log('⛔️ Error.message:', error?.message)
+    // console.log('⛔️ Error.response:', error?.response)
+    // console.log('⛔️ Error.response.status:', error?.response?.status)
+    // console.log('⛔️ Error.statusCode:', error?.statusCode)
+
+    // Verificar CUALQUIER indicación de 409
+    const hasConflict =
+      error?.response?.status === 409 ||
+      error?.statusCode === 409 ||
+      error?.message?.includes('409') ||
+      error?.message?.includes('status code 409') ||
+      error?.message?.includes('Conflict') ||
+      String(error).includes('409')
+
+    console.log('🎯 ¿Es error 409?', hasConflict)
+
+    if (hasConflict) {
+      console.warn('🚨 DETECTADO - Error 409, redirigiendo...')
+
+      await $router.push({
+        path: '/user/quiz/finish-quizz',
+        query: { alreadySubmitted: 'true' },
+      })
+    } else {
+      console.error('💥 Error NO es 409, mostrando alert')
+      alert(
+        'Ocurrió un error al enviar tus respuestas. Por favor, intenta de nuevo.',
+      )
+    }
+  }
+
+  // console.log('🎯 FIN - finalizeQuiz terminó')
 }
+
 let isFinished = computed(() => {
   return quizStore.totalQuestions === countAnsweredQuestions.value
 })
+
 const countAnsweredQuestions = computed(() => {
   let count = 0
   quizStore.quiz.map((question) => {
@@ -62,11 +98,9 @@ const countAnsweredQuestions = computed(() => {
       <template v-slot:activator="{ props }">
         <v-btn value="recent" v-bind="props">
           <v-icon>mdi-history</v-icon>
-
           <span>Historial</span>
         </v-btn>
       </template>
-
       <v-list>
         <v-list-item
           v-for="i in totalQuesitons"
@@ -74,17 +108,17 @@ const countAnsweredQuestions = computed(() => {
           :value="i - 1"
           @click="selectQuestion(i - 1)"
         >
-          <v-list-item-title>Pregunta {{ i }} </v-list-item-title>
+          <v-list-item-title>Pregunta {{ i }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
+
     <v-btn
       value="finalize"
       :class="isLastQuestion ? 'text-secondary' : 'text-disabled'"
       @click="finalizeQuiz"
     >
       <v-icon>mdi-check</v-icon>
-
       <span>Finalizar</span>
     </v-btn>
 
@@ -93,6 +127,7 @@ const countAnsweredQuestions = computed(() => {
       <span>Siguiente</span>
     </v-btn>
   </v-bottom-navigation>
+
   <div v-show="!mobile">
     <v-container class="pa-0">
       <v-row no-gutters class="mt-1">
@@ -101,11 +136,9 @@ const countAnsweredQuestions = computed(() => {
             <template v-slot:activator="{ props }">
               <v-btn value="recent" v-bind="props" :elevation="8">
                 <v-icon>mdi-history</v-icon>
-
                 <span>Historial</span>
               </v-btn>
             </template>
-
             <v-list>
               <v-list-item
                 v-for="i in totalQuesitons"
@@ -113,16 +146,18 @@ const countAnsweredQuestions = computed(() => {
                 :value="i - 1"
                 @click="selectQuestion(i - 1)"
               >
-                <v-list-item-title>Pregunta {{ i }} </v-list-item-title>
+                <v-list-item-title>Pregunta {{ i }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
         </v-col>
+
         <v-col cols="2" offset="8">
           <v-btn @click="clickNext" color="secondary" v-show="!isLastQuestion">
             Siguiente
             <v-icon class="ms-2">mdi-arrow-right-bold</v-icon>
           </v-btn>
+
           <v-btn
             color="secondary"
             v-show="isLastQuestion"
