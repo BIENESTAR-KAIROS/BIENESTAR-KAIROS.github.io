@@ -98,7 +98,7 @@ const actualQuestion = computed(() => {
         class="d-flex flex-column justify-center align-center h-100 w-100"
       >
         <div class="w-85 text-center text-h5 handlee-regular font-weight-thin">
-          <span> Cargando tu examen </span>
+          <span> Cargando tu prueba </span>
         </div>
         <v-progress-circular
           color="secondary"
