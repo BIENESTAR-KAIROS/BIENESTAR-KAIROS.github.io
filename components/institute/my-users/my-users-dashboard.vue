@@ -17,10 +17,12 @@ const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
 const instituteStore = useInstituteStore()
 
+const instituteId = authStore.user?.institution?.id
+
 try {
   isLoading.value = true
   const { data } = await $axios.get<IStatsResponse>(
-    `/institute/${authStore.user?.institution?.id}/statistics`,
+    `/institute/${instituteId}/statistics`,
   )
   instituteStore.statistics = data
 } catch (error) {
@@ -41,24 +43,23 @@ const studentOptions = ref([] as string[])
 const isSearchedUser = ref(false)
 const users = ref([] as IUser[])
 
-onMounted(async () => {
-  try {
-    isLoading.value = true
-    const { data } = await $axios.get<{ users: IUser[] }>(
-      `/users?institutionId=${authStore.user?.institution?.id}&type=student&active=true`,
-    )
-    users.value = data.users
-    users.value.map((user) =>
-      studentOptions.value.push(
-        `${user.profile?.name} ${user.profile?.lastName}`,
-      ),
-    )
-  } catch (error) {
-    console.log(error)
-  } finally {
-    isLoading.value = false
-  }
-})
+try {
+  isLoading.value = true
+  console.log(authStore.user?.institution)
+  const { data } = await $axios.get<{ users: IUser[] }>(
+    `/users?institutionId=${instituteId}&type=student&active=true`,
+  )
+  users.value = data.users
+  users.value.map((user) =>
+    studentOptions.value.push(
+      `${user.profile?.name} ${user.profile?.lastName}`,
+    ),
+  )
+} catch (error) {
+  console.log(error)
+} finally {
+  isLoading.value = false
+}
 
 const selectedUser = ref(null as IUser | null)
 const userSchedules = ref(
