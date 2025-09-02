@@ -8,7 +8,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="w-85 text-center text-h6 yantramanav-regular">
+  <div class="w-85 text-left text-h6 yantramanav-regular">
     <span>
       {{ question.question }}
     </span>
@@ -60,7 +60,7 @@ defineProps<{
         <v-col cols="12">
           <v-radio-group v-model="question.answer as number" color="secondary">
             <div
-              class="d-flex flex-column align-center justify-space-evenly w-100"
+              class="d-flex flex-column align-start justify-space-evenly w-100"
             >
               <div v-for="(option, index) in question.options" :key="index">
                 <v-radio
@@ -68,6 +68,8 @@ defineProps<{
                   :value="option.option.weight"
                   class="catamaran-text text-body-1 font-weight-regular"
                 />
+              </div>
+              <div v-for="(option, index) in question.options" :key="index">
                 <div v-if="option.subquestions" class="">
                   <div v-show="question.answer === option.option.weight">
                     <div v-for="subOption in option.subquestions">
@@ -79,7 +81,6 @@ defineProps<{
                     </div>
                   </div>
                 </div>
-                <hr />
               </div>
             </div>
           </v-radio-group>

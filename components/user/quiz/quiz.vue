@@ -51,6 +51,7 @@ onMounted(async () => {
     quizStore.isFinished = false
     quizStore.totalQuestions = 0
     quizStore.actualQuestion = 0
+    quizStore.quizName = quiz.questionnaire.title
     for (let i = 0; i < quiz.questionnaire.questions.length; i++) {
       questions.value.push(quiz.questionnaire.questions[i].text)
       quizStore.quiz.push(questionResponse(quiz.questionnaire.questions[i]))
@@ -70,54 +71,51 @@ const actualQuestion = computed(() => {
 </script>
 
 <template>
-  <div
-    :class="
-      (mobile ? 'h-100' : 'h-85') +
-      ' d-flex flex-column justify-space-around align-center'
-    "
-  >
-    <div class="w-85">
-      <v-progress-linear
-        :location="null"
-        bg-color="black"
-        color="secondary"
-        height="12"
-        :max="totalQuestions - 1"
-        :min="1"
-        :model-value="actualQuestion"
-        rounded
-      ></v-progress-linear>
-    </div>
-    <v-sheet
-      class="w-85 h-85 px-4 py-8 overflow-auto"
-      rounded="xl"
-      :elevation="8"
-    >
-      <div
-        v-if="isLoading"
-        class="d-flex flex-column justify-center align-center h-100 w-100"
-      >
-        <div class="w-85 text-center text-h5 handlee-regular font-weight-thin">
-          <span> Cargando tu prueba </span>
-        </div>
-        <v-progress-circular
-          color="secondary"
-          indeterminate
-          class="mt-5"
-        ></v-progress-circular>
-      </div>
-      <div
-        v-else
-        class="d-flex flex-column justify-space-evenly align-center h-100 w-100"
-      >
-        <v-sheet
-          class="w-100 h-100 overflow-auto d-flex flex-column justify-space-evenly align-center"
-        >
-          <Question :question="quizStore.quiz[quizStore.actualQuestion]" />
+  <v-container>
+    <v-row no-gutters>
+      <v-col>
+        <v-sheet class="w-100 px-4 py-8 m-0" rounded="xl" :elevation="8">
+          <div
+            v-if="isLoading"
+            class="d-flex flex-column justify-center align-center h-100 w-100"
+          >
+            <div
+              class="w-85 text-center text-h5 handlee-regular font-weight-thin"
+            >
+              <span> Cargando tu prueba </span>
+            </div>
+            <v-progress-circular
+              color="secondary"
+              indeterminate
+              class="mt-5"
+            ></v-progress-circular>
+          </div>
+          <div
+            v-else
+            class="d-flex flex-column justify-space-evenly align-center w-100"
+          >
+            <v-sheet
+              class="w-100 overflow-auto d-flex flex-column justify-space-evenly align-center"
+            >
+              <Question :question="quizStore.quiz[quizStore.actualQuestion]" />
+            </v-sheet>
+          </div>
+          <hr />
+          <div class="w-100 my-10">
+            <v-progress-linear
+              :location="null"
+              bg-color="black"
+              color="secondary"
+              height="12"
+              :max="totalQuestions - 1"
+              :min="1"
+              :model-value="actualQuestion"
+              rounded
+            ></v-progress-linear>
+          </div>
+          <QuizNavigation />
         </v-sheet>
-      </div>
-    </v-sheet>
-  </div>
-
-  <QuizNavigation />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>

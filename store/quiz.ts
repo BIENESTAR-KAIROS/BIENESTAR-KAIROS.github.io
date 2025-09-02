@@ -64,6 +64,7 @@ export const useQuizStore = defineStore('quiz', {
       quiz: [] as IQuizResponse[],
       totalQuestions: 0,
       actualQuestion: 0,
+      quizName: '',
       newQuiz: {
         title: '',
         description: '',
