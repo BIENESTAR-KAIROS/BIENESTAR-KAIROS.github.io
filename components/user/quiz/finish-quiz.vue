@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
+import { useAuthStore } from '~/store/auth'
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
+const authStore = useAuthStore()
 
 const sum = ref(0)
 const calification = computed(() => {
@@ -83,8 +85,13 @@ onMounted(async () => {
       category
     ) {
       try {
-        const response = await $axios.get(`/recommendations/${category}`)
-        recomendations.value.push(response.data)
+        if (authStore.user) {
+          const response = await $axios.get(
+            `/user-recommendation/${authStore.user.id}/`,
+          )
+          recomendations.value =
+            response.data.userRecommendation.recommendationIds
+        }
       } catch (error: any) {
         if (isError409(error)) {
           console.log('🚨 Ya habías respondido el cuestionario.')
@@ -101,7 +108,7 @@ onMounted(async () => {
     }
 
     // 3. Obtener recomendaciones aleatorias
-    const count = fallback ? 4 : 3
+    /* const count = fallback ? 4 : 3
     for (let i = 0; i < count; i++) {
       try {
         const response = await $axios.get(`/recommendations/random`)
@@ -119,7 +126,7 @@ onMounted(async () => {
           // Continuar con las siguientes recomendaciones aleatorias
         }
       }
-    }
+    } */
   } catch (err: any) {
     console.error('⚠️ Error inesperado:', err)
     // Solo marcar como ya respondido si es específicamente un 409

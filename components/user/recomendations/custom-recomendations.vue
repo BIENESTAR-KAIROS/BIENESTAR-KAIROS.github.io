@@ -1,25 +1,30 @@
 <script setup lang="ts">
 import { type IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
+import { useAuthStore } from '~/store/auth'
 
 const { $axios } = useNuxtApp()
 
 const isLoading = ref(false)
 const recomendations = ref([] as IRecomendations[])
+const authStore = useAuthStore()
 
-try {
-  isLoading.value = true
-  for (let index = 0; index < 4; index++) {
-    const { data } = await $axios.get<IRecomendations>(
-      `/recommendations/random`,
-    )
-    recomendations.value.push(data)
+onMounted(async () => {
+  try {
+    isLoading.value = true
+
+    if (authStore.user) {
+      const response = await $axios.get(
+        `/user-recommendation/${authStore.user.id}/`,
+      )
+      recomendations.value = response.data.userRecommendation.recommendationIds
+    }
+  } catch (error) {
+    console.log(error)
+    alert('Error al obtener tus recomendaciones.')
+  } finally {
+    isLoading.value = false
   }
-} catch (error) {
-  console.log(error)
-  alert('Error al obtener tus recomendaciones.')
-} finally {
-  isLoading.value = false
-}
+})
 </script>
 
 <template>

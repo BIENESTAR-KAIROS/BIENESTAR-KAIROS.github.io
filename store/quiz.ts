@@ -107,8 +107,6 @@ export const useQuizStore = defineStore('quiz', {
         responses: this.answers,
       }
 
-      console.log(payload)
-
       try {
         const response = await nuxtApp.$axios.post(
           `/questionnaire/${this.quiz[0].questionnaireId}/responses`,
