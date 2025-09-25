@@ -4,10 +4,13 @@ import { useQuizStore, QuestionType, type IQuizResponse } from '~/store/quiz'
 import { useDisplay } from 'vuetify'
 import type { IQuestion, IQuiz } from '~/interfaces/quizzes/quiz.interface'
 import Question from './question.vue'
+import { useAuthStore } from '~/store/auth'
 
 const { mobile } = useDisplay()
 const route = useRoute()
 const { $axios } = useNuxtApp()
+
+const authStore = useAuthStore()
 
 const quizStore = useQuizStore()
 const questions = ref([] as string[])
@@ -23,6 +26,10 @@ const responses = ref([
 ])
 
 onMounted(async () => {
+  if (authStore.user) {
+    quizStore.studentId = authStore.user.id
+  }
+
   const questionResponse = (question: IQuestion): IQuizResponse => {
     return {
       questionId: question.id,
@@ -71,10 +78,10 @@ const actualQuestion = computed(() => {
 </script>
 
 <template>
-  <v-container>
+  <v-container class="py-0">
     <v-row no-gutters>
-      <v-col>
-        <v-sheet class="w-100 px-4 py-8 m-0" rounded="xl" :elevation="8">
+      <v-col no-gutters>
+        <v-sheet class="w-100 px-4 py-5 m-0" :elevation="8">
           <div
             v-if="isLoading"
             class="d-flex flex-column justify-center align-center h-100 w-100"
@@ -94,14 +101,17 @@ const actualQuestion = computed(() => {
             v-else
             class="d-flex flex-column justify-space-evenly align-center w-100"
           >
-            <v-sheet
-              class="w-100 overflow-auto d-flex flex-column justify-space-evenly align-center"
+            <v-card
+              class="w-100 d-flex flex-column justify-space-evenly align-center"
+              :elevation="0"
             >
+              <v-card-title class="text-h5 handlee-regular font-weight-thin">
+                {{ quizStore.quizName }}
+              </v-card-title>
               <Question :question="quizStore.quiz[quizStore.actualQuestion]" />
-            </v-sheet>
+            </v-card>
           </div>
-          <hr />
-          <div class="w-100 my-10">
+          <div class="w-100 mt-2 mb-6">
             <v-progress-linear
               :location="null"
               bg-color="black"

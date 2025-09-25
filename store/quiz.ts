@@ -5,6 +5,10 @@ import type {
   INewQuestionDto,
   ICreateEvaluationConfigurationDto,
 } from '~/interfaces/quizzes/new-quiz.interface'
+import type {
+  CreateQuestionnaireAnswerDto,
+  SendQuestionAnswerDto,
+} from '~/interfaces/quizzes/questionnaire-answere.interface'
 import type { IQuestionOption } from '~/interfaces/quizzes/quiz.interface'
 
 export enum QuestionType {
@@ -61,7 +65,9 @@ export const useQuizStore = defineStore('quiz', {
       isLastQuestion: false,
       isFinished: false,
       isDynamic: false,
+      studentId: '',
       quiz: [] as IQuizResponse[],
+      answers: [] as SendQuestionAnswerDto[],
       totalQuestions: 0,
       actualQuestion: 0,
       quizName: '',
@@ -92,60 +98,25 @@ export const useQuizStore = defineStore('quiz', {
     },
 
     async sendAnswers() {
-      console.log('🎯 STORE - sendAnswers iniciando...')
       const nuxtApp = useNuxtApp()
 
-      const cleanAnswer = (ans: IQuizResponse): AnswerDto => {
-        return {
-          questionId: ans.questionId,
-          textResponse: typeof ans.answer === 'string' ? ans.answer : undefined,
-          numericResponse:
-            typeof ans.answer === 'number' ? ans.answer : undefined,
-          multipleResponse: Array.isArray(ans.answer) ? ans.answer : undefined,
-          subanswer: ans.options
-            .map((opt) =>
-              opt.subquestions
-                ? opt.subquestions.map((subq) => cleanAnswer(subq))
-                : [],
-            )
-            .flat(),
-        }
-      }
-
-      const answers: SubmitResponseDto = {
+      const payload: CreateQuestionnaireAnswerDto = {
+        studentId: this.studentId,
         questionnaireId: this.quiz[0].questionnaireId,
-        answers: this.quiz.map((answer) => cleanAnswer(answer)),
+        submittedAt: new Date(),
+        responses: this.answers,
       }
 
-      console.log('🎯 STORE - Datos a enviar:', {
-        questionnaireId: answers.questionnaireId,
-        answersCount: answers.answers.length,
-      })
-
-      console.log('🎯 STORE - Haciendo request POST...')
+      console.log(payload)
 
       try {
         const response = await nuxtApp.$axios.post(
-          `/questionnaires/${this.quiz[0].questionnaireId}/responses`,
-          answers,
-          // SIN validateStatus por ahora
+          `/questionnaire/${this.quiz[0].questionnaireId}/responses`,
+          payload,
         )
 
-        console.log(
-          '🎯 STORE - Response recibida exitosamente:',
-          response.status,
-        )
         return response.data
       } catch (error: any) {
-        console.log('🎯 STORE - Error capturado en sendAnswers')
-        console.error('🎯 STORE - Error completo:', error)
-        console.log('🎯 STORE - Error.message:', error?.message)
-        console.log(
-          '🎯 STORE - Error.response?.status:',
-          error?.response?.status,
-        )
-
-        // Simplemente re-lanzar el error tal como está
         throw error
       }
     },

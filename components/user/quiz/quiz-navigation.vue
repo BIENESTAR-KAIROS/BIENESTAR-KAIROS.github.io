@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useQuizStore } from '~/store/quiz'
+import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 import { useDisplay } from 'vuetify'
+import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
 
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
@@ -28,58 +29,46 @@ function clickNext() {
   else quizStore.actualQuestion += 1
 }
 
+const cleanAnswer = (answer: IQuizResponse): SendQuestionAnswerDto => {
+  return {
+    questionId: answer.questionId,
+    response: new Number(answer.answer) as number,
+  }
+}
+
+const cleanAnswers = (answers: IQuizResponse[]) => {
+  answers.forEach((answer) => {
+    if ((answer.answer as number) > -1)
+      quizStore.answers.push(cleanAnswer(answer))
+
+    if (answer.options.length > 0) {
+      answer.options.forEach((option) => {
+        if (option.subquestions && option.subquestions.length > 0) {
+          cleanAnswers(option.subquestions)
+        }
+      })
+    }
+  })
+}
+
 async function finalizeQuiz() {
   if (!isFinished.value) {
     alert('No has contestado todas las preguntas')
     return
   }
 
-  // console.log('🎯 INICIO - finalizeQuiz ejecutándose...')
-
   try {
-    // console.log('🎯 ANTES - Llamando a quizStore.sendAnswers()')
+    quizStore.answers = []
+    cleanAnswers(quizStore.quiz)
     await quizStore.sendAnswers()
 
-    // console.log('🎯 DESPUÉS - sendAnswers exitoso, navegando...')
     await $router.push('/user/quiz/finish-quizz')
   } catch (error: any) {
-    // console.log('🎯 CATCH - Error capturado en finalizeQuiz')
-    // console.error('⛔️ Error completo:', error)
-    // console.log('⛔️ Error.message:', error?.message)
-    // console.log('⛔️ Error.response:', error?.response)
-    // console.log('⛔️ Error.response.status:', error?.response?.status)
-    // console.log('⛔️ Error.statusCode:', error?.statusCode)
-
-    // Verificar CUALQUIER indicación de 409
-    const hasConflict =
-      error?.response?.status === 409 ||
-      error?.statusCode === 409 ||
-      error?.message?.includes('409') ||
-      error?.message?.includes('status code 409') ||
-      error?.message?.includes('Conflict') ||
-      String(error).includes('409')
-
-    console.log('🎯 ¿Es error 409?', hasConflict)
-
-    if (hasConflict) {
-      console.warn('🚨 DETECTADO - Error 409, redirigiendo...')
-
-      await $router.push({
-        path: '/user/quiz/finish-quizz',
-        query: { alreadySubmitted: 'true' },
-      })
-    } else {
-      console.error('💥 Error NO es 409, mostrando alert')
-      alert(
-        'Ocurrió un error al enviar tus respuestas. Por favor, intenta de nuevo.',
-      )
-    }
+    console.log(error)
   }
-
-  // console.log('🎯 FIN - finalizeQuiz terminó')
 }
 
-let isFinished = computed(() => {
+const isFinished = computed(() => {
   return quizStore.totalQuestions === countAnsweredQuestions.value
 })
 
