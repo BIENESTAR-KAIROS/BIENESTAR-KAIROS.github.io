@@ -53,7 +53,7 @@ export const useUserStore = defineStore('user', {
       }>(`/user/${id}`, payload)
 
       let passed = true
-      if (response.data.statusCode != 204) {
+      if (response.status != 204) {
         alert(
           `Error al actualizar la información del campus: ${response.data.message}`,
         )
