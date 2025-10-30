@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { type ILoginResponse } from '~/interfaces/login/login-response.interface'
-import { type IUser } from '~/interfaces/users/user.interface'
+import type { IUser } from '~/interfaces/user/user.interface'
 
 export const useAuthStore = defineStore('auth', {
   state: () => {
@@ -89,7 +89,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.user = localAuth ? JSON.parse(localAuth).user : this.user
 
-      const user = await nuxtApp.$axios.get<IUser>(`/users/${this.user?.id}`)
+      const user = await nuxtApp.$axios.get<IUser>(`/users/${this.user?._id}`)
       this.user = { ...user.data }
     },
   },
