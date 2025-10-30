@@ -16,10 +16,7 @@ export const useAuthStore = defineStore('auth', {
     async setAuth(session: ILoginResponse) {
       const nuxtApp = useNuxtApp()
       this.accessToken = session.accessToken
-      console.log(session.user)
-
       this.user = session.user
-      console.log(this.user)
 
       this.user.lastAccess = new Date(this.user.lastAccess || 0)
       this.expiresAt = new Date().getTime() + 1080000
