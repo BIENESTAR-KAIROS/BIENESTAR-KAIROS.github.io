@@ -15,6 +15,8 @@ const isLoading = ref(true)
 const authStore = useAuthStore()
 
 onMounted(async () => {
+  authStore.refreshAuth()
+
   try {
     isLoading.value = true
     const { data } = await $axios.get<IQuizzesAvaibleResponse>(
