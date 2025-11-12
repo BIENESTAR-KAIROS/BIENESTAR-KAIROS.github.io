@@ -3,6 +3,7 @@ import navListInstitute from '~/utils/constants/navigation-list-institute'
 import { useAppStore } from '~/store/app'
 import { useDisplay } from 'vuetify'
 import { useAuthStore } from '~/store/auth'
+import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 const { $router } = useNuxtApp()
 const appStore = useAppStore()
@@ -13,6 +14,8 @@ function openNavBar() {
   appStore.isNavBarOpen = true
 }
 
+let roles = authStore.user?.roles || []
+
 async function logout() {
   try {
     authStore.clearAuth()
@@ -21,6 +24,9 @@ async function logout() {
     console.log(error)
   }
 }
+onMounted(() => {
+  roles = authStore.user?.roles || []
+})
 </script>
 
 <template>
@@ -39,6 +45,48 @@ async function logout() {
         >
           <v-list-item-title class="catamaran-text text-h5">
             {{ navOption.title }}
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item
+          v-if="
+            roles.find(
+              (rol: UserRolEnum) =>
+                rol === UserRolEnum.INSTITUTION_ADMIN ||
+                rol === UserRolEnum.INSTITUTION_STAFF ||
+                rol === UserRolEnum.KAIROS_ADMIN,
+            )
+          "
+          class="my-5"
+          variant="text"
+          link
+          :to="'/institute/dashboard'"
+        >
+          <v-list-item-title class="catamaran-text text-h5">
+            Vista de instituto
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item
+          v-if="
+            roles.find((rol: UserRolEnum) => rol === UserRolEnum.KAIROS_ADMIN)
+          "
+          class="my-5"
+          variant="text"
+          link
+          :to="'/admin/dashboard'"
+        >
+          <v-list-item-title class="catamaran-text text-h5">
+            Vista de administrador
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item
+          v-if="roles.find((rol: UserRolEnum) => rol === UserRolEnum.STUDENT)"
+          class="my-5"
+          variant="text"
+          link
+          :to="'/user/dashboard'"
+        >
+          <v-list-item-title class="catamaran-text text-h5">
+            Vista de alumno
           </v-list-item-title>
         </v-list-item>
         <v-list-item @click="logout">

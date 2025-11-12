@@ -15,17 +15,21 @@ const instituteStore = useInstituteStore()
 
 const isLoading = ref(false)
 
-try {
-  isLoading.value = true
-  const { data } = await $axios.get<IStatsResponse>(
-    `/institute/${authStore.user?.institution?.id}/statistics`,
-  )
-  instituteStore.statistics = data
-} catch (error) {
-  console.log(error)
-} finally {
-  isLoading.value = false
-}
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    console.log(authStore.user)
+
+    const { data } = await $axios.get<IStatsResponse>(
+      `/institute/${authStore.user?.institution}/statistics`,
+    )
+    instituteStore.statistics = data
+  } catch (error) {
+    console.log(error)
+  } finally {
+    isLoading.value = false
+  }
+})
 
 const totalUsers = computed(() => instituteStore.statistics?.users?.total)
 const activeUsers = computed(() => instituteStore.statistics?.users?.active)

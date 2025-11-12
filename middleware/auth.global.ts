@@ -1,5 +1,6 @@
 import { useAuthStore } from '~/store/auth'
 import { USER_TYPE } from '~/interfaces/users/user.interface'
+import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 const unAuthRoutes = ['/', '/register', '/institute/login', '/forgot-password']
 
@@ -26,6 +27,9 @@ const authRoutes: string[] = [
   '/user/wellnes-practices',
   '/user/profile',
   '/user/register/campus-info',
+
+  // ? ADMIN links
+  '/admin/dashboard',
 ]
 const mainUserAuthRoute = '/user/dashboard'
 const mainInstituteAuthRoute = '/institute/dashboard'
@@ -87,9 +91,23 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         } else if (isValidRoute(to.path, authRoutes)) {
           // is going to an authenticated route, allow it
           if (
+            to.path.includes('admin') &&
+            authStore.user!.roles.find(
+              (rol) => rol === UserRolEnum.KAIROS_ADMIN,
+            )
+          )
+            return
+          else if (
             to.path.includes('institute') &&
-            (authStore.user?.type === USER_TYPE.INSTITUTION ||
-              authStore.user?.type === USER_TYPE.ADMINISTRATIVE)
+            (authStore.user!.roles.find(
+              (rol) => rol === UserRolEnum.KAIROS_ADMIN,
+            ) ||
+              authStore.user!.roles.find(
+                (rol) => rol === UserRolEnum.INSTITUTION_ADMIN,
+              ) ||
+              authStore.user!.roles.find(
+                (rol) => rol === UserRolEnum.INSTITUTION_STAFF,
+              ))
           )
             return
           else if (to.path.includes('user')) return

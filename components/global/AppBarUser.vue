@@ -4,6 +4,7 @@ import { useAppStore } from '~/store/app'
 import { useDisplay } from 'vuetify'
 import { NuxtLink } from '#components'
 import { useAuthStore } from '~/store/auth'
+import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 const { $router } = useNuxtApp()
 const appStore = useAppStore()
@@ -13,6 +14,8 @@ const { mobile } = useDisplay()
 const updateNavBarState = (value: boolean) => {
   appStore.isNavBarOpen = value
 }
+
+let roles = authStore.user?.roles || []
 
 const isOpen = computed(() => {
   return appStore.isNavBarOpen
@@ -35,6 +38,8 @@ async function logout() {
 
 onMounted(() => {
   if (!mobile.value) updateNavBarState(true)
+
+  roles = authStore.user?.roles || []
 })
 </script>
 
@@ -63,6 +68,35 @@ onMounted(() => {
     >
       <v-list-item-title class="catamaran-text text-h6">
         {{ navOption.title }}
+      </v-list-item-title>
+    </v-list-item>
+    <v-list-item
+      v-if="
+        roles.find(
+          (rol: UserRolEnum) =>
+            rol === UserRolEnum.INSTITUTION_ADMIN ||
+            rol === UserRolEnum.INSTITUTION_STAFF ||
+            rol === UserRolEnum.KAIROS_ADMIN,
+        )
+      "
+      class="my-5"
+      variant="text"
+      link
+      :to="'/institute/dashboard'"
+    >
+      <v-list-item-title class="catamaran-text text-h6">
+        Vista de instituto
+      </v-list-item-title>
+    </v-list-item>
+    <v-list-item
+      v-if="roles.find((rol: UserRolEnum) => rol === UserRolEnum.KAIROS_ADMIN)"
+      class="my-5"
+      variant="text"
+      link
+      :to="'/admin/dashboard'"
+    >
+      <v-list-item-title class="catamaran-text text-h6">
+        Vista de administrador
       </v-list-item-title>
     </v-list-item>
     <v-list-item class="my-5" variant="text" @click="logout">
