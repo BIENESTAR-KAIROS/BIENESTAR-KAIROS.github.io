@@ -36,6 +36,12 @@ const options = [
     image: '/image-dashboard-21.png',
   },*/
 ]
+
+const userName = computed(() => authStore.user?.name)
+
+onMounted(() => {
+  console.log(authStore.user)
+})
 </script>
 
 <template>
@@ -44,7 +50,7 @@ const options = [
       <v-col cols="12">
         <div class="my-4">
           <h1 class="handlee-regular text-h3 font-weight-thin">
-            Buen día, {{ authStore.user?.name }}
+            Buen día, {{ userName }}
           </h1>
         </div>
       </v-col>

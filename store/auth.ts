@@ -95,7 +95,7 @@ export const useAuthStore = defineStore('auth', {
       }
 
       const user = await nuxtApp.$axios.get<IUser>(`/users/${this.user!._id}`)
-      this.user = { ...user.data }
+      this.user = { ...this.user, ...user.data }
     },
   },
   getters: {

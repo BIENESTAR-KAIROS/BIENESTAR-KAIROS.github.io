@@ -36,7 +36,7 @@ async function logout() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!mobile.value) updateNavBarState(true)
 
   roles = authStore.user?.roles || []
