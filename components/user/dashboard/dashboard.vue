@@ -37,7 +37,9 @@ const options = [
   },*/
 ]
 
-const userName = computed(() => authStore.user?.name)
+const userName = computed(
+  () => authStore.user?.name + ' ' + authStore.user?.lastName,
+)
 
 onMounted(() => {
   console.log(authStore.user)

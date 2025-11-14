@@ -1,5 +1,4 @@
 import { useAuthStore } from '~/store/auth'
-import { USER_TYPE } from '~/interfaces/users/user.interface'
 import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 const unAuthRoutes = ['/', '/register', '/institute/login', '/forgot-password']
