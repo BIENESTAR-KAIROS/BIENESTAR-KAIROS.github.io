@@ -43,7 +43,7 @@ const actionIcon = ref([
           </h1>
         </div>
       </v-col>
-      <v-col cols="12" md="6" class="d-none d-md-block">
+      <!-- <v-col cols="12" md="6" class="d-none d-md-block">
         <div class="my-4 w-100 d-flex justify-end">
           <NuxtLink href="/institute/quizzes/add-quiz">
             <v-btn
@@ -55,7 +55,7 @@ const actionIcon = ref([
             </v-btn>
           </NuxtLink>
         </div>
-      </v-col>
+      </v-col> -->
       <v-col cols="12">
         <div class="my-4">
           <h2 class="handlee-regular text-h6 font-weight-thin">
