@@ -96,7 +96,7 @@ const login = async () => {
           </div>
         </v-col>
       </v-row>
-      <v-container>
+      <v-container class="pa-0">
         <v-row no-gutters>
           <v-col offset="1">
             <div
@@ -120,8 +120,8 @@ const login = async () => {
           <v-col cols="1"> </v-col>
         </v-row>
       </v-container>
-      <v-container>
-        <v-row>
+      <v-container class="pa-0">
+        <v-row no-gutters>
           <v-col>
             <div class="d-flex justify-center w-100">
               <NuxtLink href="/register">

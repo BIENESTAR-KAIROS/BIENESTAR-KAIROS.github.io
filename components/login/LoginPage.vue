@@ -23,20 +23,15 @@ const isMobile = computed(() => {
         </div>
         <v-card
           :elevation="4"
-          class="rounded-xxxl h-85 w-100 bg-backgroundSecondary"
+          class="rounded-xxxl h-100 w-100 bg-backgroundSecondary"
         >
-          <v-container class="h-100">
+          <v-container class="pa-0 h-100">
             <v-row class="h-100" no-gutters>
-              <v-col class="d-flex justify-center align-center">
-                <v-card
-                  :elevation="0"
-                  class="rounded-xxl h-85 w-85 bg-white d-flex flex-column justify-space-around"
-                >
-                  <span class="handlee-regular text-center text-h4 mt-2">
-                    ¡Qué gusto verte!
-                  </span>
-                  <LoginForm />
-                </v-card>
+              <v-col class="d-flex flex-column justify-center h-100">
+                <span class="handlee-regular text-center text-h4">
+                  ¡Qué gusto verte!
+                </span>
+                <LoginForm />
               </v-col>
             </v-row>
           </v-container>

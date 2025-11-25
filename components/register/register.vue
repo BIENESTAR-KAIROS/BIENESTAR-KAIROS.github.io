@@ -42,7 +42,7 @@ async function register() {
     <v-row no-gutters>
       <v-col cols="12">
         <v-card class="pa-5 rounded-xxl" outlined elevation="5">
-          <v-card-title class="text-h4 text-center mb-2">
+          <v-card-title class="text-h5 text-center mb-2">
             Registro de Usuario
           </v-card-title>
           <v-form @submit.prevent="register">
