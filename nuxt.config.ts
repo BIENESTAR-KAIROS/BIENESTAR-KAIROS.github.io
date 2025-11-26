@@ -5,6 +5,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     app: {
       newsApiKey: process.env.NUXT_NEWS_API_KEY,
+      gravatarApiKey: process.env.GRAVATAR_API_KEY,
+      gravatarApi: process.env.GRAVATAR_API,
     },
     public: {
       apiBase: `${process.env.API_BASE_URL}`,
@@ -43,7 +45,7 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
 
-  modules: ['@pinia/nuxt', '@vite-pwa/nuxt'],
+  modules: ['@pinia/nuxt', '@vite-pwa/nuxt', '@eurym3d0n/nuxt-gravatar'],
 
   vite: {
     vue: {
