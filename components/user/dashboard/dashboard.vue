@@ -42,7 +42,7 @@ const userName = computed(
 )
 
 onMounted(() => {
-  console.log(authStore.user)
+  authStore.user
 })
 </script>
 

@@ -1,0 +1,6 @@
+export enum HousingSituationEnum {
+  PARENTS = 'WITH_PARENTS',
+  ALONE_RENTED = 'ALONE_RENTED',
+  ALONE_OWNED = 'ALONE_OWNED',
+  ROOMMATES = 'ROOMMATES',
+}

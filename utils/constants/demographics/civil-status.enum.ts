@@ -1,0 +1,7 @@
+export enum CivilStatusEnum {
+  SINGLE = 'SINGLE',
+  MARRIED = 'MARRIED',
+  FREE_UNION = 'FREE_UNION',
+  DIVORCED = 'DIVORCED',
+  WIDOWED = 'WIDOWED',
+}
