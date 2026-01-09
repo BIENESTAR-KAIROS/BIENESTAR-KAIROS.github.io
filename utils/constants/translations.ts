@@ -8,14 +8,14 @@ import { EmploymentStatusEnum } from './demographics/employment-status.enum'
 import { ConsumptionFrequencyEnum } from './demographics/consumption-frecuency.enum'
 import { PhysicalActivityEnum } from './demographics/physical-activity.enum'
 
-export function translateGender(gender: string): string {
+export function translateGender(gender: string): UserGenderEnum {
   const genderTranslations: { [key: string]: UserGenderEnum } = {
     Masculino: UserGenderEnum.MALE,
     Femenino: UserGenderEnum.FEMALE,
     Otro: UserGenderEnum.OTHER,
   }
 
-  return genderTranslations[gender] || ''
+  return genderTranslations[gender]
 }
 
 export const civilStatusTranslations: { [key: string]: CivilStatusEnum } = {

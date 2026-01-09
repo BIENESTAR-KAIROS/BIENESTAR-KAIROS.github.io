@@ -18,12 +18,13 @@ export const useUserStore = defineStore('user', {
 
       user.studentData = {
         ...user.studentData,
-        gender: translateGender(user.studentData!.gender),
+        gender: translateGender(user.studentData!.gender!.toString()),
       }
 
       const response = await nuxtApp.$axios.post<{
         user: IUser
         accessToken: string
+        message?: string
       }>('/user', user)
 
       if (response.status != 201) {
@@ -46,11 +47,11 @@ export const useUserStore = defineStore('user', {
       const nuxtApp = useNuxtApp()
 
       const payload = { studentData: userCampusInfo }
-      console.log(payload)
 
       const response = await nuxtApp.$axios.patch<{
         user: IUser
-      }>(`/user/${id}`, payload)
+        message?: string
+      }>(`/user/${id}/student-data`, payload)
 
       let passed = true
       if (response.status != 204) {

@@ -45,7 +45,12 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
 
-  modules: ['@pinia/nuxt', '@vite-pwa/nuxt', '@eurym3d0n/nuxt-gravatar'],
+  modules: ['@pinia/nuxt', '@vite-pwa/nuxt', '@eurym3d0n/nuxt-gravatar', '@nuxt/eslint'],
+  eslint: {
+    config: {
+      standalone: false // Permite que Nuxt gestione la config
+    }
+  },
 
   vite: {
     vue: {

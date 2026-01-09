@@ -10,6 +10,9 @@ import {
   consumptionFrecuencyTranslations,
   physicalActivityTranslations,
 } from '~/utils/constants/translations'
+import { useUserStore } from '~/store/user'
+
+const userStore = useUserStore()
 
 const postalCode = ref(null)
 const civilStatus = ref(null)
@@ -42,10 +45,11 @@ const tabacoUse = computed(() => {
   }
 })
 
+const isValidForm = ref(false)
 const demographicForm = computed({
   get: () => {
-    return (
-      postalCode.value &&
+    return
+    postalCode.value &&
       civilStatus.value &&
       studyYear.value &&
       housingSituation.value &&
@@ -56,12 +60,32 @@ const demographicForm = computed({
       tabacoUse.value &&
       alcoholCompsumptionFrequency.value &&
       physicalActivityFrequency.value
-    )
   },
   set: (value) => {
-    console.log(value)
+    isValidForm.value = value
   },
 })
+
+const saveAnswers = async () => {
+  try {
+    await $axios.post('/user/demographic', {
+      postalCode: postalCode.value,
+      civilStatus: civilStatus.value,
+      studyYear: studyYear.value,
+      housingSituation: housingSituation.value,
+      personalMonthlyIncome: personalMonthlyIncome.value,
+      familyMonthlyIncome: familyMonthlyIncome.value,
+      employmentStatus: employmentStatus.value,
+      healthChronicDisease: healthChronicDisease.value,
+      tabacoUse: tabacoUse.value,
+      alcoholCompsumptionFrequency: alcoholCompsumptionFrequency.value,
+      physicalActivityFrequency: physicalActivityFrequency.value,
+    })
+    await $router.push('/user/quiz/wellbeing')
+  } catch (error) {
+    console.error('Error saving demographic answers:', error)
+  }
+}
 </script>
 
 <template>
@@ -239,7 +263,8 @@ const demographicForm = computed({
                   <v-btn
                     color="secondary"
                     class="ma-2 handlee-regular text-h2-1"
-                    :disabled="!demographicForm"
+                    :disabled="!isValidForm"
+                    @click="() => saveAnswers()"
                   >
                     Guardar mis respuestas
                   </v-btn>

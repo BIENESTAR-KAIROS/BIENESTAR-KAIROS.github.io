@@ -26,7 +26,7 @@ const demographicSurveyCompleted = computed(() => {
       </v-col>
     </v-row>
     <v-row v-if="!demographicSurveyCompleted" class="my-6">
-      <v-col cols="12" md="6" lg="4">
+      <v-col cols="12" md="6" lg="5">
         <NuxtLink to="/user/quiz/demographic">
           <v-btn color="secondary" class="ma-2 catamaran-regular text-body-1">
             Responder cuestionario sociodemográfico

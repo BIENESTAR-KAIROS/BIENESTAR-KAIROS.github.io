@@ -8,7 +8,7 @@ definePageMeta({
     <v-row>
       <v-col>
         <div class="my-4">
-          <h1 class="handlee-regular text-h2 font-weight-thin">
+     <h1 class="handlee-regular text-h2 font-weight-thin">
             ¿Has olvidado tu contraseña?
           </h1>
         </div>
