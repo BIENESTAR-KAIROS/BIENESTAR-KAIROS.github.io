@@ -11,8 +11,12 @@ import {
   physicalActivityTranslations,
 } from '~/utils/constants/translations'
 import { useUserStore } from '~/store/user'
+import { useAuthStore } from '~/store/auth'
+
+const { $router } = useNuxtApp()
 
 const userStore = useUserStore()
+const authStore = useAuthStore()
 
 const postalCode = ref(null)
 const civilStatus = ref(null)
@@ -68,20 +72,28 @@ const demographicForm = computed({
 
 const saveAnswers = async () => {
   try {
-    await $axios.post('/user/demographic', {
-      postalCode: postalCode.value,
-      civilStatus: civilStatus.value,
-      studyYear: studyYear.value,
-      housingSituation: housingSituation.value,
-      personalMonthlyIncome: personalMonthlyIncome.value,
-      familyMonthlyIncome: familyMonthlyIncome.value,
-      employmentStatus: employmentStatus.value,
-      healthChronicDisease: healthChronicDisease.value,
-      tabacoUse: tabacoUse.value,
-      alcoholCompsumptionFrequency: alcoholCompsumptionFrequency.value,
-      physicalActivityFrequency: physicalActivityFrequency.value,
+    authStore.refreshAuth()
+    const response = await userStore.updateUserStudentData(authStore.user._id, {
+      demographicData: {
+        postalCode: postalCode.value,
+        civilStatus: civilStatusTranslations[civilStatus.value],
+        studyYear: studyYearTranslations[studyYear.value],
+        housingSituation: housingSituationTranslations[housingSituation.value],
+        personalMonthlyIncome:
+          personalMonthlyIncomeTranslations[personalMonthlyIncome.value],
+        familyMonthlyIncome:
+          familyMonthlyIncomeTranslations[familyMonthlyIncome.value],
+        employmentStatus: employmentStatusTranslations[employmentStatus.value],
+        healthChronicDisease: healthChronicDisease.value,
+        tabacoUse: tabacoUse.value,
+        alcoholCompsumptionFrequency:
+          consumptionFrecuencyTranslations[alcoholCompsumptionFrequency.value],
+        physicalActivityFrequency:
+          physicalActivityTranslations[physicalActivityFrequency.value],
+      },
     })
-    await $router.push('/user/quiz/wellbeing')
+    if (response.passed) $router.push('/user/dashboard')
+    else alert('error saving')
   } catch (error) {
     console.error('Error saving demographic answers:', error)
   }
@@ -264,7 +276,7 @@ const saveAnswers = async () => {
                     color="secondary"
                     class="ma-2 handlee-regular text-h2-1"
                     :disabled="!isValidForm"
-                    @click="() => saveAnswers()"
+                    @click="saveAnswers"
                   >
                     Guardar mis respuestas
                   </v-btn>
@@ -276,7 +288,7 @@ const saveAnswers = async () => {
       </v-col>
     </v-row>
   </v-container>
-  <v-footer class="text-center bg-secondary pa-4">
+  <v-footer class="text-center bg-greenShadow pa-4">
     <NuxtLink
       href="/user/privacy-policy"
       class="w-100 text-subtitle-1 catamaran-regular text-white"
