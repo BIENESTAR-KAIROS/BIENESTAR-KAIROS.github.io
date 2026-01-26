@@ -1,9 +1,11 @@
 export interface IQuizAvaibleResponse {
-  id: string
+  _id: string
   title: string
   description: string
-  questionsCount: number
-  estimatedTime: string
+  creatorId: string
+  institution: string
+  active: boolean
+  groupAssignments: string[]
 }
 
 export interface IQuizzesAvaibleResponse {

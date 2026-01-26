@@ -20,7 +20,7 @@ onMounted(async () => {
   try {
     isLoading.value = true
     const { data } = await $axios.get<IQuizzesAvaibleResponse>(
-      `/questionnaires/available/${authStore.user?._id}`,
+      `/questionnaire/available/${authStore.user?._id}`,
     )
     posibleQuizzes.value = data
   } catch (error) {
@@ -83,7 +83,7 @@ onMounted(async () => {
             posibleQuizz.description
           }}</span>
           <NuxtLink
-            :href="'/user/quiz/' + posibleQuizz.id"
+            :href="'/user/quiz/' + posibleQuizz._id"
             class="text-decoration-none"
           >
             <v-btn

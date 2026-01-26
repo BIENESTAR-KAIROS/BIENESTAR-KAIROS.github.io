@@ -59,7 +59,7 @@ onMounted(() => {
       <v-col cols="12">
         <div class="my-4">
           <h2 class="handlee-regular text-h4 font-weight-thin">
-            ¿Qué quieres hacer hoy?
+            ¿Cómo podemos ayudarte hoy?
           </h2>
         </div>
       </v-col>
