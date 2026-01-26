@@ -18,12 +18,10 @@ const isLoading = ref(true)
 
 onMounted(async () => {
   if (authStore.user) {
-    quizStore.studentId = authStore.user.id
+    quizStore.studentId = authStore.user._id
   }
 
   const questionResponse = (question: IQuestion): IQuizResponse => {
-    console.log(question)
-
     return {
       questionId: question.id,
       questionnaireId: route.params.id as string,

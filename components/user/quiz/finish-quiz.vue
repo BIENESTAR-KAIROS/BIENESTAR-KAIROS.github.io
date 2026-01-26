@@ -87,7 +87,7 @@ onMounted(async () => {
       try {
         if (authStore.user) {
           const response = await $axios.get(
-            `/user-recommendation/${authStore.user.id}/`,
+            `/user-recommendation/${authStore.user._id}/`,
           )
           recomendations.value =
             response.data.userRecommendation.recommendationIds
@@ -192,7 +192,7 @@ onMounted(async () => {
             color="secondary"
             class="px-6 pt-6 d-flex flex-column align-center overflow-auto"
           >
-            <v-card-title class="handlee-regular text-h2 font-weight-bold">
+            <v-card-title class="handlee-regular text-h4 font-weight-bold">
               Tus recomendaciones:
             </v-card-title>
 
@@ -210,7 +210,7 @@ onMounted(async () => {
               </span>
             </div>
 
-            <v-row>
+            <v-row no-gutters>
               <v-col
                 v-for="(recomendation, i) in recomendations"
                 :key="i"
@@ -240,22 +240,24 @@ onMounted(async () => {
             </v-row>
 
             <v-row>
-              <v-col>
-                <div
-                  class="w-100 h-50 d-flex justify-space-around align-center mb-6"
-                >
-                  <span class="handlee-regular text-h4 font-weight-bold">
-                    Recomendación especial:
-                  </span>
-                  <h2 class="handlee-regular font-weight-regular">
-                    Recuerda que puedes acercarte a la Unidad de Psicología
-                    Clínica de la UP para que te orienten sobre tu bienestar.
-                  </h2>
-                </div>
+              <v-col
+                class="w-100 h-50 d-flex justify-space-around align-center mb-6"
+              >
+                <span class="handlee-regular text-h4 font-weight-bold">
+                  Recomendación especial:
+                </span>
+              </v-col>
+              <v-col
+                class="w-100 h-50 d-flex justify-space-around align-center mb-6"
+              >
+                <h2 class="handlee-regular font-weight-regular">
+                  Recuerda que puedes acercarte a la Unidad de Psicología
+                  Clínica de la UP para que te orienten sobre tu bienestar.
+                </h2>
               </v-col>
             </v-row>
 
-            <v-card-actions class="mt-3">
+            <v-card-actions class="">
               <NuxtLink href="/user/dashboard" class="h-100">
                 <v-btn
                   class="bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"

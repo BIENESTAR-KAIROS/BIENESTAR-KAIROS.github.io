@@ -14,7 +14,7 @@ onMounted(async () => {
 
     if (authStore.user) {
       const response = await $axios.get(
-        `/user-recommendation/${authStore.user.id}/`,
+        `/user-recommendation/${authStore.user._id}/`,
       )
       recomendations.value = response.data.userRecommendation.recommendationIds
     }
