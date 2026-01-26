@@ -5,6 +5,7 @@ import type { StudentData } from './user-student-data.interface'
 
 export interface IUser {
   _id: string
+  id: string
   name: string
   lastName: string
   surName: string

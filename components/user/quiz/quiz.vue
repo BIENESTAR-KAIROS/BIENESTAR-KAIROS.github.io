@@ -6,7 +6,6 @@ import type { IQuestion, IQuiz } from '~/interfaces/quizzes/quiz.interface'
 import Question from './question.vue'
 import { useAuthStore } from '~/store/auth'
 
-const { mobile } = useDisplay()
 const route = useRoute()
 const { $axios } = useNuxtApp()
 
@@ -16,14 +15,6 @@ const quizStore = useQuizStore()
 const questions = ref([] as string[])
 const totalQuestions = ref(0)
 const isLoading = ref(true)
-const inline = ref(null)
-const responses = ref([
-  'Completamente en desacuerdo',
-  'En desacuerdo',
-  'Neutral',
-  'De acuerdo',
-  'Completamente de acuerdo',
-])
 
 onMounted(async () => {
   if (authStore.user) {
@@ -31,6 +22,8 @@ onMounted(async () => {
   }
 
   const questionResponse = (question: IQuestion): IQuizResponse => {
+    console.log(question)
+
     return {
       questionId: question.id,
       questionnaireId: route.params.id as string,
@@ -51,20 +44,21 @@ onMounted(async () => {
   try {
     isLoading.value = true
     const { data: quiz } = await $axios.get<IQuiz>(
-      `/questionnaires/${route.params.id}`,
+      `/questionnaire/${route.params.id}`,
     )
     quizStore.quiz = []
     quizStore.isLastQuestion = false
     quizStore.isFinished = false
     quizStore.totalQuestions = 0
     quizStore.actualQuestion = 0
-    quizStore.quizName = quiz.questionnaire.title
-    for (let i = 0; i < quiz.questionnaire.questions.length; i++) {
-      questions.value.push(quiz.questionnaire.questions[i].text)
-      quizStore.quiz.push(questionResponse(quiz.questionnaire.questions[i]))
+    quizStore.quizName = quiz.title
+    for (let i = 0; i < quiz.questions.length; i++) {
+      questions.value.push(quiz.questions[i].text)
+      quizStore.quiz.push(questionResponse(quiz.questions[i]))
     }
-    quizStore.totalQuestions = quiz.questionnaire.questions.length
-    totalQuestions.value = quiz.questionnaire.questions.length
+    quizStore.totalQuestions = quiz.questions.length
+    totalQuestions.value = quiz.questions.length
+    console.log(questions)
   } catch (error) {
     console.log(error)
   } finally {

@@ -13,14 +13,14 @@ const onSelectAnswer = () => {
 
 <template>
   <v-container>
-    <v-row>
+    <v-row no-gutters>
       <v-col cols="12">
         <div class="w-100 text-left text-h6 yantramanav-regular">
           <span>
             {{ question.question }}
           </span>
         </div>
-        <v-container class="py-0">
+        <v-container class="py-0 px-0" fluid>
           <v-row no-gutters>
             <div v-if="question.type === QuestionType.RATE" class="w-100">
               <v-col cols="6" md="2">
@@ -64,7 +64,7 @@ const onSelectAnswer = () => {
               v-else-if="question.type === QuestionType.MULTIPLE_CHOICE"
               class="w-100"
             >
-              <v-container>
+              <v-container fluid class="pa-0">
                 <v-row no-gutters>
                   <v-col cols="12">
                     <v-radio-group
@@ -88,6 +88,7 @@ const onSelectAnswer = () => {
                         <div
                           v-for="(option, index) in question.options"
                           :key="index"
+                          class="w-100"
                         >
                           <div v-if="option.subquestions">
                             <div

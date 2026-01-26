@@ -3,7 +3,7 @@ import type { IInstitute } from '../institution/institution.interface'
 import type { IUser } from '../users/user.interface'
 
 export interface IQuestionOption {
-  value: string
+  value: any
   text: string
   weight: number
   subquestions?: IQuestion[]
@@ -11,53 +11,27 @@ export interface IQuestionOption {
 
 export interface IQuestion {
   id: string
-  category: string
-  options: IQuestionOption[]
   text: string
-  type: string
+  type: QuestionTypeEnum
+  options: IQuestionOption[]
+  category?: string
+}
+
+export enum QuestionTypeEnum {
+  MULTIPLE_CHOICE = 'multiple_choice',
+  SINGLE_CHOICE = 'single_choice',
+  TEXT = 'text',
+  NUMBER = 'number',
+  DATE = 'date',
 }
 
 export interface IQuiz {
-  questionnaire: {
-    id: string
-    title: string
-    description: string
-    active: boolean
-    creationDate: Date
-    modificationDate: Date
-    institution: IInstitute
-    creator: IUser
-    questions: IQuestion[]
-    assignedGroups: IGroup[]
-    evaluationConfiguration: {
-      formulas: {
-        autoestima: string
-        autoaceptacion: string
-        resiliencia: string
-        bienestarGeneral: number
-        porcentajeBienestar: number
-      }
-      categorias: string[]
-      interpretaciones: {
-        bajo: {
-          min: number
-          max: number
-          descripcion: string
-          recomendaciones: string
-        }
-        medio: {
-          min: number
-          max: number
-          descripcion: string
-          recomendaciones: string
-        }
-        alto: {
-          min: number
-          max: number
-          descripcion: string
-          recomendaciones: string
-        }
-      }
-    }
-  }
+  id: string
+  title: string
+  description: string
+  creatorId: string
+  institution: string
+  active: boolean
+  groupAssignments: string[]
+  questions: IQuestion[]
 }
