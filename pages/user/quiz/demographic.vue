@@ -1,4 +1,5 @@
 <script setup>
+import { useDisplay } from 'vuetify'
 import { required } from '~/utils/helpers/form-rules'
 import {
   civilStatusTranslations,
@@ -14,6 +15,7 @@ import { useUserStore } from '~/store/user'
 import { useAuthStore } from '~/store/auth'
 
 const { $router } = useNuxtApp()
+const { mobile } = useDisplay()
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -127,6 +129,11 @@ const saveAnswers = async () => {
             <v-container>
               <v-row no-gutters>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      Código postal
+                    </span>
+                  </div>
                   <v-text-field
                     label="Código postal"
                     bg-color="loginInput"
@@ -140,6 +147,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Cuál es tu estado civil?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Cuál es tu estado civil?"
                     bg-color="loginInput"
@@ -153,6 +165,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿En qué año de tus estudios te encuentras actualmente?
+                    </span>
+                  </div>
                   <v-select
                     label="¿En qué año de tus estudios te encuentras actualmente?"
                     bg-color="loginInput"
@@ -166,6 +183,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿En donde vives actualmente?
+                    </span>
+                  </div>
                   <v-select
                     label="¿En donde vives actualmente?"
                     bg-color="loginInput"
@@ -179,6 +201,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿En qué rango están tus ingresos mensuales personales?
+                    </span>
+                  </div>
                   <v-select
                     label="¿En qué rango están tus ingresos mensuales personales?"
                     bg-color="loginInput"
@@ -194,6 +221,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿En qué rango están tus ingresos mensuales familiares?
+                    </span>
+                  </div>
                   <v-select
                     label="¿En qué rango están tus ingresos mensuales familiares?"
                     bg-color="loginInput"
@@ -207,6 +239,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Trabajas mientras realizas tus estudios?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Trabajas mientras realizas tus estudios?"
                     bg-color="loginInput"
@@ -220,6 +257,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Padeces de alguna enfermedad crónica?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Padeces de alguna enfermedad crónica?"
                     bg-color="loginInput"
@@ -233,6 +275,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Consumes tabaco?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Consumes tabaco?"
                     bg-color="loginInput"
@@ -246,6 +293,11 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Consumes alcohol?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Consumes alcohol?"
                     bg-color="loginInput"
@@ -259,6 +311,12 @@ const saveAnswers = async () => {
                   />
                 </v-col>
                 <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Cuántas horas a la semana dedicas a hacer alguna
+                      actividad física?
+                    </span>
+                  </div>
                   <v-select
                     label="¿Cuántas horas a la semana dedicas a hacer alguna actividad física?"
                     bg-color="loginInput"

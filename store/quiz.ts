@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { QuestionnaireAnswerResponseDto } from '~/dto/response/questionnaire/questionnaire-answer.response.dto'
 import type {
   INewQuizResponse,
   INewQuiz,
@@ -108,10 +109,11 @@ export const useQuizStore = defineStore('quiz', {
       }
 
       try {
-        const response = await nuxtApp.$axios.post(
-          `/questionnaire/${this.quiz[0].questionnaireId}/responses`,
-          payload,
-        )
+        const response =
+          await nuxtApp.$axios.post<QuestionnaireAnswerResponseDto>(
+            `/questionnaire/${this.quiz[0].questionnaireId}/responses`,
+            payload,
+          )
 
         return response.data
       } catch (error: any) {

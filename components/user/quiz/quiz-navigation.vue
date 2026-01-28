@@ -60,9 +60,16 @@ async function finalizeQuiz() {
   try {
     quizStore.answers = []
     cleanAnswers(quizStore.quiz)
-    await quizStore.sendAnswers()
+    const response = await quizStore.sendAnswers()
 
-    await $router.push('/user/quiz/finish-quizz')
+    if (!response) {
+      alert('Error al enviar las respuestas')
+      return
+    }
+
+    if (response.hasRecomendations)
+      await $router.push('/user/quiz/finish-quizz')
+    else await $router.push('/user/dashboard')
   } catch (error: any) {
     console.log(error)
   }
