@@ -55,6 +55,7 @@ onMounted(async () => {
       quizStore.quiz.push(questionResponse(quiz.questions[i]))
     }
     quizStore.totalQuestions = quiz.questions.length
+    quizStore.canAccessQuestionHistory = quiz.canAccessQuestionHistory
     totalQuestions.value = quiz.questions.length
     console.log(questions)
   } catch (error) {

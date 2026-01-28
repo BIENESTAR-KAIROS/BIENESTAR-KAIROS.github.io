@@ -19,6 +19,10 @@ const totalQuesitons = computed(() => {
   return quizStore.totalQuestions
 })
 
+const canAccessQuestionHistory = computed(() => {
+  return quizStore.canAccessQuestionHistory
+})
+
 function selectQuestion(numberQuestion: number) {
   quizStore.actualQuestion = numberQuestion
 }
@@ -27,6 +31,11 @@ function clickNext() {
   if (actualQuestion.value === totalQuesitons.value - 1)
     quizStore.isLastQuestion = true
   else quizStore.actualQuestion += 1
+}
+
+function clickPrevious() {
+  if (actualQuestion.value === 0) return
+  else quizStore.actualQuestion -= 1
 }
 
 const cleanAnswer = (answer: IQuizResponse): SendQuestionAnswerDto => {
@@ -90,7 +99,12 @@ const countAnsweredQuestions = computed(() => {
 
 <template>
   <v-bottom-navigation v-show="mobile" :elevation="0" grow>
-    <v-menu>
+    <v-btn value="previous" class="text-secondary" @click="clickPrevious">
+      <v-icon>mdi-arrow-left-bold</v-icon>
+      <span>Anterior</span>
+    </v-btn>
+
+    <v-menu v-if="canAccessQuestionHistory">
       <template v-slot:activator="{ props }">
         <v-btn value="recent" v-bind="props">
           <v-icon>mdi-history</v-icon>
@@ -111,14 +125,20 @@ const countAnsweredQuestions = computed(() => {
 
     <v-btn
       value="finalize"
-      :class="isLastQuestion ? 'text-secondary' : 'text-disabled'"
+      class="text-secondary"
       @click="finalizeQuiz"
+      v-show="isFinished"
     >
       <v-icon>mdi-check</v-icon>
       <span>Finalizar</span>
     </v-btn>
 
-    <v-btn value="next" class="text-secondary" @click="clickNext">
+    <v-btn
+      value="next"
+      class="text-secondary"
+      @click="clickNext"
+      v-show="!isFinished"
+    >
       <v-icon>mdi-arrow-right-bold</v-icon>
       <span>Siguiente</span>
     </v-btn>
@@ -128,7 +148,30 @@ const countAnsweredQuestions = computed(() => {
     <v-container class="pa-0">
       <v-row no-gutters class="mt-1">
         <v-col cols="2">
-          <v-menu>
+          <v-btn @click="clickPrevious" color="thirdy">
+            <v-icon class="ms-2">mdi-arrow-left-bold</v-icon>
+            Anterior
+          </v-btn>
+        </v-col>
+
+        <v-col cols="2">
+          <v-btn @click="clickNext" color="secondary" v-show="!isLastQuestion">
+            Siguiente
+            <v-icon class="ms-2">mdi-arrow-right-bold</v-icon>
+          </v-btn>
+
+          <v-btn
+            color="secondary"
+            v-show="isLastQuestion"
+            @click="finalizeQuiz"
+          >
+            Finalizar
+            <v-icon class="ms-2">mdi-check</v-icon>
+          </v-btn>
+        </v-col>
+
+        <v-col cols="2" offset="6">
+          <v-menu v-if="canAccessQuestionHistory">
             <template v-slot:activator="{ props }">
               <v-btn value="recent" v-bind="props" :elevation="8">
                 <v-icon>mdi-history</v-icon>
@@ -146,22 +189,6 @@ const countAnsweredQuestions = computed(() => {
               </v-list-item>
             </v-list>
           </v-menu>
-        </v-col>
-
-        <v-col cols="2" offset="8">
-          <v-btn @click="clickNext" color="secondary" v-show="!isLastQuestion">
-            Siguiente
-            <v-icon class="ms-2">mdi-arrow-right-bold</v-icon>
-          </v-btn>
-
-          <v-btn
-            color="secondary"
-            v-show="isLastQuestion"
-            @click="finalizeQuiz"
-          >
-            Finalizar
-            <v-icon class="ms-2">mdi-check</v-icon>
-          </v-btn>
         </v-col>
       </v-row>
     </v-container>

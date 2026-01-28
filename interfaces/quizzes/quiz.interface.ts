@@ -34,4 +34,5 @@ export interface IQuiz {
   active: boolean
   groupAssignments: string[]
   questions: IQuestion[]
+  canAccessQuestionHistory: boolean
 }

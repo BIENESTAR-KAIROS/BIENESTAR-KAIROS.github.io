@@ -69,6 +69,7 @@ export const useQuizStore = defineStore('quiz', {
       studentId: '',
       quiz: [] as IQuizResponse[],
       answers: [] as SendQuestionAnswerDto[],
+      canAccessQuestionHistory: true,
       totalQuestions: 0,
       actualQuestion: 0,
       quizName: '',
