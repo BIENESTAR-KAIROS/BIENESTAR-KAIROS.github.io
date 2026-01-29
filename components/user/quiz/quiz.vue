@@ -98,9 +98,13 @@ const actualQuestion = computed(() => {
               class="w-100 d-flex flex-column justify-space-evenly align-center"
               :elevation="0"
             >
-              <v-card-title class="text-h5 handlee-regular font-weight-thin">
-                {{ quizStore.quizName }}
-              </v-card-title>
+              <v-row>
+                <v-col>
+                  <span class="text-h5 handlee-regular font-weight-thin">
+                    {{ quizStore.quizName }}
+                  </span>
+                </v-col>
+              </v-row>
               <Question :question="quizStore.quiz[quizStore.actualQuestion]" />
             </v-card>
           </div>

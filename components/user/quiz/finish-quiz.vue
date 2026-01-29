@@ -210,7 +210,7 @@ onMounted(async () => {
               </span>
             </div>
 
-            <v-row no-gutters>
+            <v-row>
               <v-col
                 v-for="(recomendation, i) in recomendations"
                 :key="i"
