@@ -2,10 +2,13 @@
 import { QuestionType } from '~/store/quiz'
 import type { IQuizResponse } from '~/store/quiz'
 
-defineProps<{
+const props = defineProps<{
   question: IQuizResponse
 }>()
 
+onMounted(() => {
+  //console.log('question mounted', props.question)
+})
 const onSelectAnswer = () => {
   //alert('answer selected')
 }

@@ -93,6 +93,7 @@ const countAnsweredQuestions = computed(() => {
   quizStore.quiz.map((question) => {
     if ((question.answer as number) > -1) count++
   })
+
   return count
 })
 </script>
