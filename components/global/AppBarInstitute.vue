@@ -32,7 +32,14 @@ onMounted(() => {
 <template>
   <v-app-bar :elevation="5" color="thirdy">
     <template v-slot:prepend>
-      <v-img src="/logo-white.png" height="100" width="100" class="nav-logo" />
+      <NuxtLink href="/institute/dashboard" class="h-100">
+        <v-img
+          src="/logo-white.png"
+          height="100"
+          width="100"
+          class="nav-logo"
+        />
+      </NuxtLink>
     </template>
 
     <template v-if="$vuetify.display.mdAndUp" v-slot:append>

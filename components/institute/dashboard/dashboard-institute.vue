@@ -5,6 +5,7 @@ import ResolvedQuizzes from './resolved-quizzes.vue'
 import TerapyBalance from './terapy-balance.vue'
 import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
 import { useInstituteStore } from '~/store/institute'
+import type { IDashboardStatisticsInstituteResponse } from '~/dto/response/institute/dashboard-statistics-institute.response.dto'
 
 const days = [30, 90, 15, 8]
 const selectedDays = ref(days[0])
@@ -20,9 +21,13 @@ onMounted(async () => {
     isLoading.value = true
     console.log(authStore.user)
 
-    const { data } = await $axios.get<IStatsResponse>(
-      `/institute/${authStore.user?.institution}/statistics`,
+    const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
+      `/institute/${authStore.user?.institute?._id}/dashboard-statistics`,
     )
+    // TODO remove log and fix user admnin slots available
+
+    console.log(data)
+
     instituteStore.statistics = data
   } catch (error) {
     console.log(error)
@@ -31,14 +36,14 @@ onMounted(async () => {
   }
 })
 
-const totalUsers = computed(() => instituteStore.statistics?.users?.total)
-const activeUsers = computed(() => instituteStore.statistics?.users?.active)
-const studentsUsers = computed(() => instituteStore.statistics?.users?.students)
+const totalUsers = computed(() => instituteStore.statistics?.totalUsers)
+const activeUsers = computed(() => instituteStore.statistics?.activeUsers)
+const studentsUsers = computed(() => instituteStore.statistics?.studentUsers)
 const administratorUsers = computed(
-  () => instituteStore.statistics?.users?.administrators,
+  () => instituteStore.statistics?.administratorUsers,
 )
 const adminAvialible = computed(
-  () => instituteStore.statistics?.users?.adminSlotsAvailable,
+  () => instituteStore.statistics?.adminSlotsAvailable,
 )
 </script>
 
@@ -48,7 +53,8 @@ const adminAvialible = computed(
       <v-col cols="12">
         <div class="my-4">
           <h1 class="handlee-regular text-h4 font-weight-thin">
-            Bienvenido de nuevo, {{ authStore.user?.name }}
+            ¡Bienvenido de nuevo,
+            {{ authStore.user?.name + ' ' + authStore.user?.lastName }}!
           </h1>
         </div>
       </v-col>
@@ -63,6 +69,7 @@ const adminAvialible = computed(
         </div>
       </v-col>
       <v-container>
+        <!--
         <v-row no-gutters>
           <v-col cols="12">
             <v-row no-gutters>
@@ -88,6 +95,7 @@ const adminAvialible = computed(
             </v-row>
           </v-col>
         </v-row>
+      -->
         <v-row>
           <v-col cols="12" md="6" lg="3">
             <v-card

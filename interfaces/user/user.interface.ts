@@ -1,3 +1,4 @@
+import type { IInstitute } from '../institute/institute.interface'
 import { UserRolEnum } from './enum/user-rol.enum'
 import type { InstituteData } from './user-institute-data.interface'
 import type { KairosData } from './user-kairos-data.interface'
@@ -14,7 +15,7 @@ export interface IUser {
   roles: UserRolEnum[]
   registrationDate: Date
   active: boolean
-  institute?: string
+  institute?: IInstitute
   kairosData?: KairosData
   instituteData?: InstituteData
   studentData?: StudentData

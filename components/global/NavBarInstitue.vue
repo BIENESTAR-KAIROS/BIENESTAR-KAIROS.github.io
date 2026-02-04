@@ -45,7 +45,7 @@ onMounted(() => {
     location="right"
     mobile
   >
-    <a href="/user/dashboard">
+    <a href="/institute/dashboard">
       <v-sheet class="d-flex justify-space-around bg-transparent mt-5 px-6">
         <v-img src="/logo-white.png" class="logo-img" />
       </v-sheet>
