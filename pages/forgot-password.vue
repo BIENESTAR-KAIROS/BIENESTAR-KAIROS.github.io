@@ -2,13 +2,36 @@
 definePageMeta({
   layout: 'empty-login',
 })
+
+const { $axios } = useNuxtApp()
+const email = ref('')
+
+const sendRecoveryEmail = async () => {
+  try {
+    const response = await $axios.post<{ success: boolean }>(
+      '/auth/forgot-password',
+      {
+        email: email.value,
+      },
+    )
+
+    if (response.data.success)
+      alert(
+        'Correo de recuperación enviado. Por favor revisa tu bandeja de entrada.',
+      )
+    else throw new Error('No se pudo enviar el correo de recuperación.')
+  } catch (error) {
+    console.log(error)
+    alert('Error al enviar el correo de recuperación.')
+  }
+}
 </script>
 <template>
   <v-container>
     <v-row>
       <v-col>
         <div class="my-4">
-     <h1 class="handlee-regular text-h2 font-weight-thin">
+          <h1 class="handlee-regular text-h2 font-weight-thin">
             ¿Has olvidado tu contraseña?
           </h1>
         </div>
@@ -33,27 +56,20 @@ definePageMeta({
                   <v-text-field
                     label="Correo Electrónico"
                     type="email"
+                    v-model="email"
                     required
                   />
                 </v-col>
               </v-row>
             </v-container>
           </v-form>
-          <NuxtLink href="/" class="h-100">
-            <v-btn
-              class="bg-greenShadow v-btn v-btn--elevated v-theme--kairos v-btn--density-default v-btn--size-default v-btn--variant-elevated"
-            >
-              Enviar correo de recuperación
-            </v-btn>
-          </NuxtLink>
+          <v-btn class="bg-greenShadow" @click="sendRecoveryEmail">
+            Enviar correo de recuperación
+          </v-btn>
         </div>
         <div class="my-4">
           <NuxtLink href="/" class="h-100">
-            <v-btn
-              class="v-btn v-btn--elevated v-theme--kairos bg-primary v-btn--density-default v-btn--size-default v-btn--variant-elevated"
-            >
-              Prefiero iniciar sesión
-            </v-btn>
+            <v-btn class="bg-primary"> Prefiero iniciar sesión </v-btn>
           </NuxtLink>
         </div>
       </v-col>
