@@ -13,12 +13,16 @@ import {
 } from '~/utils/constants/translations'
 import { useUserStore } from '~/store/user'
 import { useAuthStore } from '~/store/auth'
+import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
 
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const { resolveNextQuestionnaire, getQuestionnaireRoute } =
+  useQuestionnaireQueue()
+const isCheckingQueue = ref(true)
 
 const postalCode = ref(null)
 const civilStatus = ref(null)
@@ -29,6 +33,7 @@ const familyMonthlyIncome = ref(null)
 const employmentStatus = ref(null)
 const healthChronicDiseaseTemp = ref(null)
 const tabacoUseTemp = ref(null)
+const nicotineProductUseTemp = ref(null)
 const alcoholCompsumptionFrequency = ref(null)
 const physicalActivityFrequency = ref(null)
 
@@ -50,7 +55,15 @@ const tabacoUse = computed(() => {
     return null
   }
 })
-
+const nicotineProductUse = computed(() => {
+  if (nicotineProductUseTemp.value === 'Sí') {
+    return true
+  } else if (nicotineProductUseTemp.value === 'No') {
+    return false
+  } else {
+    return null
+  }
+})
 const isValidForm = ref(false)
 const demographicForm = computed({
   get: () => {
@@ -64,6 +77,7 @@ const demographicForm = computed({
       employmentStatus.value &&
       healthChronicDisease.value &&
       tabacoUse.value &&
+      nicotineProductUse.value &&
       alcoholCompsumptionFrequency.value &&
       physicalActivityFrequency.value
   },
@@ -74,7 +88,7 @@ const demographicForm = computed({
 
 const saveAnswers = async () => {
   try {
-    authStore.refreshAuth()
+    await authStore.refreshAuth()
     const response = await userStore.updateUserStudentData(authStore.user._id, {
       demographicData: {
         postalCode: postalCode.value,
@@ -92,18 +106,62 @@ const saveAnswers = async () => {
           consumptionFrecuencyTranslations[alcoholCompsumptionFrequency.value],
         physicalActivityFrequency:
           physicalActivityTranslations[physicalActivityFrequency.value],
+        nicotineProductUse: nicotineProductUse.value,
       },
     })
-    if (response.passed) $router.push('/user/dashboard')
-    else alert('error saving')
+    if (response.passed) {
+      if (authStore.user?.studentData) {
+        authStore.user.studentData.demographicSurveyCompleted = true
+      }
+
+      const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+
+      if (nextQuestionnaireId) {
+        await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
+        return
+      }
+
+      await $router.push('/user/dashboard')
+    } else alert('error saving')
   } catch (error) {
     console.error('Error saving demographic answers:', error)
   }
 }
+
+onMounted(async () => {
+  try {
+    const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+
+    if (!nextQuestionnaireId) {
+      await $router.replace('/user/dashboard')
+      return
+    }
+
+    if (nextQuestionnaireId !== 'demographic') {
+      await $router.replace(getQuestionnaireRoute(nextQuestionnaireId))
+      return
+    }
+  } catch (error) {
+    console.error('Error validating demographic queue:', error)
+  } finally {
+    isCheckingQueue.value = false
+  }
+})
 </script>
 
 <template>
-  <v-container>
+  <v-container v-if="isCheckingQueue">
+    <v-row>
+      <v-col cols="12" class="d-flex justify-center">
+        <v-progress-circular
+          color="primary"
+          indeterminate
+        ></v-progress-circular>
+      </v-col>
+    </v-row>
+  </v-container>
+
+  <v-container v-else>
     <v-row no-gutters>
       <v-col>
         <v-card>
@@ -269,6 +327,26 @@ const saveAnswers = async () => {
                     clearable
                     rounded="xxl"
                     v-model="healthChronicDiseaseTemp"
+                    :rules="[required]"
+                    validate-on="lazy input"
+                    :items="['Sí', 'No']"
+                  />
+                </v-col>
+                <v-col cols="12" md="6" offset-md="3">
+                  <div v-show="mobile" class="ms-2">
+                    <span class="catamaran-regular text-body-1">
+                      ¿Has usado alguna vez productos de nicotina en bolsa como
+                      Velo, Zyn, Snus (que se colocan entre el labio y la encía,
+                      sin necesidad de fumar)?
+                    </span>
+                  </div>
+                  <v-select
+                    label="¿Has usado alguna vez productos de nicotina en bolsa como Velo, Zyn, Snus (que se colocan entre el labio y la encía, sin necesidad de fumar)?"
+                    bg-color="loginInput"
+                    variant="solo-filled"
+                    clearable
+                    rounded="xxl"
+                    v-model="nicotineProductUseTemp"
                     :rules="[required]"
                     validate-on="lazy input"
                     :items="['Sí', 'No']"

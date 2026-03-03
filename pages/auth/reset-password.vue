@@ -11,7 +11,7 @@ const newPassword = ref('')
 const confirmNewPassword = ref('')
 
 const { $axios } = useNuxtApp()
-const sendNewPassword = async (event) => {
+const sendNewPassword = async (event: Event) => {
   event.preventDefault()
   try {
     if (!token) {

@@ -1,18 +1,34 @@
 <script setup lang="ts">
 const specialists = [
-  {
+  /*   {
     title: 'Daniela Alcázar Giordano',
     image: '/image-specialist-22.png',
-    specialities: ['Adultos y adolescentes', 'Experiencia en trauma', 'Trabaja en grupos', 'Sexualidad'],
+    specialities: [
+      'Adultos y adolescentes',
+      'Experiencia en trauma',
+      'Trabaja en grupos',
+      'Sexualidad',
+    ],
     schedule: ['La Condesa, CDMX', 'Virtual (Zoom)'],
     contact: ['5559698752'],
-  },
+  }, */
   {
-    title: 'Adrian San Juan Valois',
+    title: 'Unidad psicoloógica clínica de la UP',
     image: '/image-specialist-22.png',
-    specialities: ['Adolescentes y niños', 'Trabaja en grupos', 'Sexualidad', 'Drogadicción'],
-    schedule: ['GAM, CDMX', 'Ecatepec, Edo. Mex.', 'Virtual (Zoom)'],
-    contact: ['5559698752', 'adri.sjv@outlook.es'],
+    specialities: [
+      'Terapia familiar y de pareja',
+      'Psicoterapia individual',
+      'Evaluaciones neuropsicólogicas',
+      'Sexualidad',
+    ],
+    schedule: [
+      'Jerez 20, esquina Valencia, Col. Insurgentes Mixcoac Delegación Benito Juárez',
+    ],
+    contact: [
+      'mx_psicologiaclinica@up.edu.mx',
+      '5554821600 ext 6430',
+      '5579922313',
+    ],
   },
 ]
 </script>
@@ -30,7 +46,10 @@ const specialists = [
       <v-col cols="12">
         <div class="my-3">
           <span class="catamaran-regular text-subtitle-1">
-            Con base en la información que nos has proporcionado en tus cuestionarios, tenemos algunas recomendaciones de prácticas aprobadas por nuestros especialistas que te ayudarán a mejorar tu bienestar.
+            Con base en la información que nos has proporcionado en tus
+            cuestionarios, tenemos algunas recomendaciones de prácticas
+            aprobadas por nuestros especialistas que te ayudarán a mejorar tu
+            bienestar.
           </span>
         </div>
       </v-col>
@@ -51,19 +70,27 @@ const specialists = [
           :elevation="5"
         >
           <div class="d-flex flex-column justify-center align-center">
-            <v-img :src="specialist.image" height="96" width="96"/>
-            <span class="text-h4 handlee-regular font-weight-thin">{{ specialist.title }}</span>
+            <v-img :src="specialist.image" height="96" width="96" />
+            <span class="text-h4 handlee-regular font-weight-thin">{{
+              specialist.title
+            }}</span>
           </div>
           <div class="d-flex flex-column justify-space-between">
             <div class="d-b">
               <div class="d-flex flex-row align-center">
                 <div>
-                  <v-img src="/image-specialist-23.png" height="40" width="40"/>
+                  <v-img
+                    src="/image-specialist-23.png"
+                    height="40"
+                    width="40"
+                  />
                 </div>
-                <span class="text-subtitle-1 catamaran-regular">Especialidades:</span>
+                <span class="text-subtitle-1 catamaran-regular"
+                  >Especialidades:</span
+                >
               </div>
               <div class="d-flex flex-row align-center flex-wrap">
-                <v-chip 
+                <v-chip
                   v-for="(speciality, j) in specialist.specialities"
                   :key="j"
                   class="bg-thirdy me-2 mt-2 yantramanav-thin"
@@ -75,12 +102,16 @@ const specialists = [
             <div class="mt-5">
               <div class="d-flex flex-row align-center">
                 <div>
-                  <v-img src="/image-specialist-24.png" height="40" width="40"/>
+                  <v-img
+                    src="/image-specialist-24.png"
+                    height="40"
+                    width="40"
+                  />
                 </div>
                 <span class="text-subtitle-1 catamaran-regular">Citas:</span>
               </div>
               <div class="d-flex flex-row align-center flex-wrap">
-                <v-chip 
+                <v-chip
                   v-for="(schedule, j) in specialist.schedule"
                   :key="j"
                   class="bg-thirdy me-2 mt-2 yantramanav-thin"
@@ -92,12 +123,16 @@ const specialists = [
             <div class="mt-5">
               <div class="d-flex flex-row align-center">
                 <div>
-                  <v-img src="/image-specialist-25.png" height="40" width="40"/>
+                  <v-img
+                    src="/image-specialist-25.png"
+                    height="40"
+                    width="40"
+                  />
                 </div>
                 <span class="text-subtitle-1 catamaran-regular">Contacto:</span>
               </div>
               <div class="d-flex flex-row align-center flex-wrap">
-                <v-chip 
+                <v-chip
                   v-for="(contact, j) in specialist.contact"
                   :key="j"
                   class="bg-thirdy me-2 mt-2 yantramanav-thin"

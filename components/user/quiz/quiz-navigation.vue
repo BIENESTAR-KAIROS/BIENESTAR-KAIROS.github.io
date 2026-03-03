@@ -2,10 +2,13 @@
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 import { useDisplay } from 'vuetify'
 import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
+import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
 
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
 const quizStore = useQuizStore()
+const { resolveNextQuestionnaire, getQuestionnaireRoute } =
+  useQuestionnaireQueue()
 
 let isLastQuestion = computed(() => {
   return quizStore.isLastQuestion
@@ -78,7 +81,13 @@ async function finalizeQuiz() {
 
     if (response.hasRecomendations)
       await $router.push('/user/quiz/finish-quizz')
-    else await $router.push('/user/dashboard')
+    else {
+      const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+
+      if (nextQuestionnaireId)
+        await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
+      else await $router.push('/user/dashboard')
+    }
   } catch (error: any) {
     console.log(error)
   }

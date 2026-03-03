@@ -2,10 +2,14 @@
 import type { IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
 import { useAuthStore } from '~/store/auth'
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
+import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
 
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
 const authStore = useAuthStore()
+const { $router } = useNuxtApp()
+const { resolveNextQuestionnaire, getQuestionnaireRoute } =
+  useQuestionnaireQueue()
 
 const sum = ref(0)
 const calification = computed(() => {
@@ -48,6 +52,22 @@ const isError409 = (error: any): boolean => {
     error?.response?.data?.statusCode === 409 ||
     error?.data?.statusCode === 409
   )
+}
+
+const goToNextOrDashboard = async () => {
+  try {
+    const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+
+    if (nextQuestionnaireId) {
+      await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
+      return
+    }
+
+    await $router.push('/user/dashboard')
+  } catch (error) {
+    console.error('Error resolving next questionnaire on finish:', error)
+    await $router.push('/user/dashboard')
+  }
 }
 
 onMounted(async () => {
@@ -179,7 +199,7 @@ onMounted(async () => {
             </p>
             <v-btn
               class="mt-6 bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"
-              to="/user/dashboard"
+              @click="goToNextOrDashboard"
             >
               Volver al inicio
             </v-btn>
@@ -258,13 +278,12 @@ onMounted(async () => {
             </v-row>
 
             <v-card-actions class="">
-              <NuxtLink href="/user/dashboard" class="h-100">
-                <v-btn
-                  class="bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"
-                >
-                  Volver al inicio
-                </v-btn>
-              </NuxtLink>
+              <v-btn
+                class="bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"
+                @click="goToNextOrDashboard"
+              >
+                Volver al inicio
+              </v-btn>
             </v-card-actions>
           </v-card>
         </div>
