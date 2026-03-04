@@ -75,7 +75,6 @@ export const useQuestionnaireQueue = () => {
 
     return `/user/quiz/${questionnaireId}`
   }
-
   return {
     resolveNextQuestionnaire,
     getQuestionnaireRoute,
