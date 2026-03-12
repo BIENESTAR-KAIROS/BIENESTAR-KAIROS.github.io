@@ -2,13 +2,15 @@
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 import { useDisplay } from 'vuetify'
 import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
-import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
+import { useAuthStore } from '~/store/auth'
+import { useUserStore } from '~/store/user'
 
+const route = useRoute()
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
 const quizStore = useQuizStore()
-const { resolveNextQuestionnaire, getQuestionnaireRoute } =
-  useQuestionnaireQueue()
+const authStore = useAuthStore()
+const userStore = useUserStore()
 
 let isLastQuestion = computed(() => {
   return quizStore.isLastQuestion
@@ -82,11 +84,33 @@ async function finalizeQuiz() {
     if (response.hasRecomendations)
       await $router.push('/user/quiz/finish-quizz')
     else {
-      const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+      if (userStore.user) {
+        userStore.user.questionnaireQueue = {
+          queue: userStore.user.questionnaireQueue.queue.map((item) =>
+            item.questionnaireId === route.params.id
+              ? { ...item, solved: true }
+              : item,
+          ),
+        }
 
-      if (nextQuestionnaireId)
-        await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
-      else await $router.push('/user/dashboard')
+        const thisQuiz = userStore.user.questionnaireQueue.queue.find(
+          (item) => item.questionnaireId === route.params.id,
+        )
+
+        if (thisQuiz && thisQuiz.solved) {
+          const nextQuiz = userStore.user.questionnaireQueue.queue.find(
+            (item) => !item.solved,
+          )
+
+          userStore.lastQuizId = route.params.id as string
+
+          if (nextQuiz) {
+            $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
+          } else {
+            $router.push('/user/dashboard')
+          }
+        }
+      }
     }
   } catch (error: any) {
     console.log(error)

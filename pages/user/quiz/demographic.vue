@@ -13,15 +13,12 @@ import {
 } from '~/utils/constants/translations'
 import { useUserStore } from '~/store/user'
 import { useAuthStore } from '~/store/auth'
-import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
 
 const { $router } = useNuxtApp()
 const { mobile } = useDisplay()
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
-const { resolveNextQuestionnaire, getQuestionnaireRoute } =
-  useQuestionnaireQueue()
 const isCheckingQueue = ref(true)
 
 const postalCode = ref(null)
@@ -114,11 +111,23 @@ const saveAnswers = async () => {
         authStore.user.studentData.demographicSurveyCompleted = true
       }
 
-      const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+      if (userStore.user.questionnaireQueue) {
+        userStore.user.questionnaireQueue = {
+          queue: userStore.user.questionnaireQueue.queue.map((item) =>
+            item.questionnaireId === 'demographic'
+              ? { ...item, solved: true }
+              : item,
+          ),
+        }
 
-      if (nextQuestionnaireId) {
-        await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
-        return
+        const nextQuiz = userStore.user.questionnaireQueue.queue.find(
+          (item) => !item.solved,
+        )
+
+        if (nextQuiz) {
+          await $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
+          return
+        }
       }
 
       await $router.push('/user/dashboard')
@@ -128,18 +137,37 @@ const saveAnswers = async () => {
   }
 }
 
+const validateQueue = () => {
+  const demographicQuiz = userStore.user.questionnaireQueue.queue.find(
+    (item) => item.questionnaireId === 'demographic',
+  )
+
+  if (demographicQuiz && demographicQuiz.solved) {
+    const nextQuiz = userStore.user.questionnaireQueue.queue.find(
+      (item) => !item.solved,
+    )
+
+    if (nextQuiz) {
+      $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
+    } else {
+      $router.push('/user/dashboard')
+    }
+  }
+}
+
 onMounted(async () => {
   try {
-    const { nextQuestionnaireId } = await resolveNextQuestionnaire()
-
-    if (!nextQuestionnaireId) {
-      await $router.replace('/user/dashboard')
-      return
-    }
-
-    if (nextQuestionnaireId !== 'demographic') {
-      await $router.replace(getQuestionnaireRoute(nextQuestionnaireId))
-      return
+    if (userStore.user) {
+      if (userStore.user.questionnaireQueue) {
+        validateQueue()
+      } else {
+        await userStore.getUserQuestionnaireQueue()
+        validateQueue()
+      }
+    } else {
+      userStore.user = authStore.user
+      await userStore.getUserQuestionnaireQueue()
+      validateQueue()
     }
   } catch (error) {
     console.error('Error validating demographic queue:', error)

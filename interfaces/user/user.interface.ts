@@ -22,4 +22,19 @@ export interface IUser {
   lastAccess?: Date
   createdAt: Date
   updatedAt: Date
+  questionnaireQueue?: IUserQuestionnaireQueue
+}
+
+export interface IUserQuestionnaireQueue {
+  queue: {
+    order: number
+    questionnaireId: string
+    solved?: boolean
+  }[]
+}
+
+export interface IQuestionnaireQueueReponse {
+  id: string
+  isActive: boolean
+  queue: IUserQuestionnaireQueue
 }

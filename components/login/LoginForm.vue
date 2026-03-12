@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
+import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 import { USER_TYPE } from '~/interfaces/users/user.interface'
 import { useAuthStore } from '~/store/auth'
+import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
 
 const { $axios, $router } = useNuxtApp()
@@ -12,6 +14,7 @@ const isFormValid = ref(false)
 const isLoading = ref(false)
 
 const authStore = useAuthStore()
+const userStore = useUserStore()
 
 const login = async () => {
   if (isFormValid.value) {
@@ -28,9 +31,10 @@ const login = async () => {
       await authStore.setAuth(session)
 
       if (authStore.isAuthenticated) {
+        userStore.user = authStore.user
         if (
-          authStore.user?.type == USER_TYPE.INSTITUTION ||
-          authStore.user?.type == USER_TYPE.ADMINISTRATIVE
+          authStore.user?.roles[1] == UserRolEnum.INSTITUTION_ADMIN ||
+          authStore.user?.roles[2] == UserRolEnum.INSTITUTION_STAFF
         ) {
           $router.push('/institute/dashboard')
         } else {

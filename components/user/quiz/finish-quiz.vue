@@ -2,14 +2,13 @@
 import type { IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
 import { useAuthStore } from '~/store/auth'
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
-import { useQuestionnaireQueue } from '~/composables/useQuestionnaireQueue'
+import { useUserStore } from '~/store/user'
 
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
 const authStore = useAuthStore()
+const userStore = useUserStore()
 const { $router } = useNuxtApp()
-const { resolveNextQuestionnaire, getQuestionnaireRoute } =
-  useQuestionnaireQueue()
 
 const sum = ref(0)
 const calification = computed(() => {
@@ -56,14 +55,35 @@ const isError409 = (error: any): boolean => {
 
 const goToNextOrDashboard = async () => {
   try {
-    const { nextQuestionnaireId } = await resolveNextQuestionnaire()
+    if (userStore.user) {
+      userStore.user.questionnaireQueue = {
+        queue: userStore.user.questionnaireQueue.queue.map((item) =>
+          item.questionnaireId === userStore.lastQuizId
+            ? { ...item, solved: true }
+            : item,
+        ),
+      }
 
-    if (nextQuestionnaireId) {
-      await $router.push(getQuestionnaireRoute(nextQuestionnaireId))
-      return
+      const thisQuiz = userStore.user.questionnaireQueue.queue.find(
+        (item) => item.questionnaireId === userStore.lastQuizId,
+      )
+
+      if (thisQuiz && thisQuiz.solved) {
+        const nextQuiz = userStore.user.questionnaireQueue.queue.find(
+          (item) => !item.solved,
+        )
+
+        if (nextQuiz) {
+          console.log(`next`)
+
+          $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
+        } else {
+          console.log(`dashboard`)
+
+          $router.push('/user/dashboard')
+        }
+      }
     }
-
-    await $router.push('/user/dashboard')
   } catch (error) {
     console.error('Error resolving next questionnaire on finish:', error)
     await $router.push('/user/dashboard')
@@ -282,7 +302,7 @@ onMounted(async () => {
                 class="bg-greenShadow text-subtitle-1 catamaran-regular font-weight-bold"
                 @click="goToNextOrDashboard"
               >
-                Volver al inicio
+                Siguiente
               </v-btn>
             </v-card-actions>
           </v-card>
