@@ -73,6 +73,10 @@ const goToNextOrDashboard = async () => {
           (item) => !item.solved,
         )
 
+        console.log(userStore.user.questionnaireQueue)
+
+        console.log(nextQuiz)
+
         if (nextQuiz) {
           console.log(`next`)
 

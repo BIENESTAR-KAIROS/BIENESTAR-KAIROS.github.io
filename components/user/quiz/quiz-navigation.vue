@@ -81,9 +81,10 @@ async function finalizeQuiz() {
       return
     }
 
-    if (response.hasRecomendations)
+    if (response.hasRecomendations) {
+      userStore.lastQuizId = route.params.id as string
       await $router.push('/user/quiz/finish-quizz')
-    else {
+    } else {
       if (userStore.user) {
         userStore.user.questionnaireQueue = {
           queue: userStore.user.questionnaireQueue.queue.map((item) =>

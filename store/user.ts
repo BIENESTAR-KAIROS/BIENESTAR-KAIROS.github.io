@@ -106,6 +106,10 @@ export const useUserStore = defineStore('user', {
         return null
       }
 
+      if (this.user!.questionnaireQueue) {
+        return this.user!.questionnaireQueue
+      }
+
       const sortedQueue = sortQueue(response.data.queue)
 
       this.user!.questionnaireQueue = sortedQueue
