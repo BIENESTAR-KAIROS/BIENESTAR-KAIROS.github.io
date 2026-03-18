@@ -111,11 +111,11 @@ onMounted(async () => {
       dim_e: '#f472b6',
     }
     const SLABEL = {
-      nucleo_emocional: 'Núcleo',
-      dim_b: 'Dim B',
-      dim_c: 'Dim C',
-      dim_d: 'Dim D',
-      dim_e: 'Dim E',
+      nucleo_emocional: 'Estado de ánimo',
+      dim_b: 'Resilencia',
+      dim_c: 'Relaciones sociales',
+      dim_d: 'Propósito',
+      dim_e: 'Autonomía',
     }
     const subscales = data.subscale_avg
     subscalesData.value = {
