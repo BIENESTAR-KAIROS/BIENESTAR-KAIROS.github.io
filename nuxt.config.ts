@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     public: {
       apiBase: `${process.env.API_BASE_URL}`,
       apiLocalBase: `${process.env.API_LOCAL_BASE_URL}`,
+      apiStatsBase: `${process.env.API_STATS_BASE_URL}`,
+      apiLocalStatsBase: `${process.env.API_LOCAL_STATS_BASE_URL}`,
       apiVersion: `${process.env.API_VERSION}`,
     },
   },
@@ -45,11 +47,16 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
 
-  modules: ['@pinia/nuxt', '@vite-pwa/nuxt', '@eurym3d0n/nuxt-gravatar', '@nuxt/eslint'],
+  modules: [
+    '@pinia/nuxt',
+    '@vite-pwa/nuxt',
+    '@eurym3d0n/nuxt-gravatar',
+    '@nuxt/eslint',
+  ],
   eslint: {
     config: {
-      standalone: false // Permite que Nuxt gestione la config
-    }
+      standalone: false, // Permite que Nuxt gestione la config
+    },
   },
 
   vite: {

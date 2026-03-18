@@ -16,9 +16,23 @@ export default defineNuxtPlugin((nuxtApp) => {
     return config
   })
 
+  const statsApi = axios.create({
+    baseURL: nuxtApp.$config.public.apiStatsBase,
+  })
+
+  statsApi.interceptors.request.use((config) => {
+    if (process.env.PROD) {
+      config.baseURL = nuxtApp.$config.public.apiStatsBase
+    } else {
+      config.baseURL = nuxtApp.$config.public.apiLocalStatsBase
+    }
+    return config
+  })
+
   return {
     provide: {
       axios: api,
+      statsApi: statsApi,
     },
   }
 })

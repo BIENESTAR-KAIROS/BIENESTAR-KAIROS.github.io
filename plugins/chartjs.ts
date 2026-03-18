@@ -9,7 +9,8 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-} from "chart.js";
+  RadialLinearScale,
+} from 'chart.js'
 
 export default defineNuxtPlugin(() => {
   Chart.register(
@@ -22,5 +23,6 @@ export default defineNuxtPlugin(() => {
     Tooltip,
     Legend,
     PointElement,
-  );
-});
+    RadialLinearScale,
+  )
+})
