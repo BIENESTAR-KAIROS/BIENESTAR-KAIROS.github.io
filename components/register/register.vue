@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { UserRegisterRequestDto } from '~/dto/request/user/user-register.request.dto'
-import type AuthRegisterDto from '~/interfaces/register/register.dto'
 import { UserGenderEnum } from '~/interfaces/user/enum/user-gender.enum'
 import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
 
 const userStore = useUserStore()
-const authStore = useAuthStore()
 
 const show = ref(false)
 
@@ -31,8 +29,13 @@ async function register() {
 
   const response = await userStore.registerUser(defaultRegisterData.value)
   if (response.message === 'Usuario registrado correctamente') {
-    await authStore.setAuth(response)
-    nuxtApp.$router.push('/user/register/campus-info')
+    nuxtApp.$Swal.fire({
+      icon: 'success',
+      title: 'Registro Exitoso',
+      text: 'Usuario registrado correctamente. Te llegará un correo de confirmación de cuenta para poder terminar tu registro.',
+    })
+
+    nuxtApp.$router.push('/')
   }
 }
 </script>
