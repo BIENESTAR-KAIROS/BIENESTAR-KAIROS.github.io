@@ -383,7 +383,7 @@ const onMapReady = async () => {
             </v-card>
           </v-col>
           <v-col cols="12">
-            <v-card class="pa-3 h-screen" rounded="xl">
+            <v-card class="pa-3" rounded="xl">
               <v-card-title>
                 <h2 class="handlee-regular text-h6 font-weight-thin">
                   Mapa de salud mental por código postal · CDMX
