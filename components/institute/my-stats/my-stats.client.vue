@@ -104,10 +104,13 @@ const updateHeatMap = async () => {
 }
 
 function mapWeight(s) {
-  const range = Math.max(MAP_SMAX.value - MAP_SMIN.value, 1)
-  const weight = (s - MAP_SMIN.value) / range
-  // Leaflet heat requiere que el peso sea un número entre 0 y 1
-  return Math.max(0.05, Math.min(1, weight || 0))
+  return Math.max(
+    0.05,
+    Math.min(
+      1,
+      (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1),
+    ),
+  )
 }
 
 function mapColor(s) {
@@ -234,11 +237,11 @@ onMounted(async () => {
         const hasLng = typeof p.lng === 'number' && !isNaN(p.lng)
         return hasLat && hasLng
       })
-      .map((p) => [
-        p.lat,
-        p.lng,
-        mapWeight(p.mean), // Intensidad
-      ])
+      .map((p) => ({
+        lat: p.lat,
+        lng: p.lng,
+        intensity: mapWeight(p.mean), // Intensidad
+      }))
     // Solo si hay puntos, intentamos actualizar el mapa
     if (heatPoints.value.length > 0) {
       await updateHeatMap()
@@ -393,7 +396,7 @@ const onMapReady = async () => {
                 <LMap
                   ref="map"
                   :zoom="12"
-                  :center="[19.32, -99.17]"
+                  :center="[19.32, -99.15]"
                   :use-global-leaflet="true"
                   @ready="onMapReady"
                   :bounds="bounds"
