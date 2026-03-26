@@ -76,15 +76,38 @@ const MAP_SMIN = ref(0)
 const MAP_SMAX = ref(150)
 const bounds = ref([])
 const heatPoints = ref([])
+const heatLayer = ref(null)
+
+const updateHeatMap = async () => {
+  if (!map.value?.leafletObject || !heatPoints.value.length) return
+
+  const leafletInstance = map.value.leafletObject
+  leafletInstance.invalidateSize()
+
+  // 2. Convertimos el Proxy a un Array normal de JS
+  const rawPoints = toRaw(heatPoints.value).map((p) => toRaw(p))
+
+  if (heatLayer.value) {
+    leafletInstance.removeLayer(heatLayer.value)
+  }
+
+  try {
+    // 3. Pasamos rawPoints en lugar de heatPoints.value
+    heatLayer.value = await useLHeat({
+      leafletObject: leafletInstance,
+      heatPoints: rawPoints,
+      radius: 30,
+    })
+  } catch (e) {
+    console.error('Error al crear la capa de calor:', e)
+  }
+}
 
 function mapWeight(s) {
-  return Math.max(
-    0.05,
-    Math.min(
-      1,
-      (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1),
-    ),
-  )
+  const range = Math.max(MAP_SMAX.value - MAP_SMIN.value, 1)
+  const weight = (s - MAP_SMIN.value) / range
+  // Leaflet heat requiere que el peso sea un número entre 0 y 1
+  return Math.max(0.05, Math.min(1, weight || 0))
 }
 
 function mapColor(s) {
@@ -188,17 +211,42 @@ onMounted(async () => {
       const sm = sc.reduce((a, b) => a + b, 0) / sc.length
       const lats = MAP_POINTS.value.map((p) => p.lat),
         lngs = MAP_POINTS.value.map((p) => p.lng)
-      bounds.value = [
-        [Math.min(...lats) - 0.05, Math.min(...lngs) - 0.05],
-        [Math.max(...lats) + 0.05, Math.max(...lngs) + 0.05],
-      ]
+      if (lats.length > 0) {
+        bounds.value = [
+          [Math.min(...lats), Math.min(...lngs)],
+          [Math.max(...lats), Math.max(...lngs)],
+        ]
+      } else {
+        // Default a CDMX si no hay puntos
+        bounds.value = [
+          [19.2, -99.3],
+          [19.6, -99.0],
+        ]
+      }
     }
 
-    heatPoints.value = MAP_POINTS.value.map((p) => ({
-      lat: p.lat,
-      lng: p.lng,
-      intensity: mapWeight(p.mean),
-    }))
+    console.log(MAP_POINTS)
+
+    heatPoints.value = MAP_POINTS.value
+      .filter((p) => {
+        // Solo permitimos puntos que tengan lat y lng numéricos y no sean NaN
+        const hasLat = typeof p.lat === 'number' && !isNaN(p.lat)
+        const hasLng = typeof p.lng === 'number' && !isNaN(p.lng)
+        return hasLat && hasLng
+      })
+      .map((p) => [
+        p.lat,
+        p.lng,
+        mapWeight(p.mean), // Intensidad
+      ])
+    // Solo si hay puntos, intentamos actualizar el mapa
+    if (heatPoints.value.length > 0) {
+      await updateHeatMap()
+    } else {
+      console.warn(
+        'No se encontraron puntos geográficos válidos para el heatmap.',
+      )
+    }
   } catch (error) {
     console.error('Error fetching stats:', error)
   } finally {
@@ -207,12 +255,7 @@ onMounted(async () => {
 })
 
 const onMapReady = async () => {
-  const heat = await useLHeat({
-    leafletObject: map.value.leafletObject,
-    heatPoints: heatPoints.value,
-    // (optional) radius : default 50
-    radius: 50,
-  })
+  await updateHeatMap()
 }
 </script>
 
@@ -346,7 +389,7 @@ const onMapReady = async () => {
                   Mapa de salud mental por código postal · CDMX
                 </h2>
               </v-card-title>
-              <div class="h-85">
+              <div style="height: 500px; width: 100%">
                 <LMap
                   ref="map"
                   :zoom="12"
@@ -355,16 +398,11 @@ const onMapReady = async () => {
                   @ready="onMapReady"
                   :bounds="bounds"
                 >
-                  <LWmsTileLayer
-                    url="https://maps.heigit.org/osm-wms/service"
+                  <LTileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="© OpenStreetMap © CARTO"
                     layer-type="base"
                     name="osm-wms.de"
-                    :max-zoom="18"
-                    version="1.3.0"
-                    format="image/png"
-                    :transparent="true"
-                    layers="osm_auto:all"
                   />
                 </LMap>
                 <div id="map-legend">
