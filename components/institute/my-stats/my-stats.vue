@@ -2,6 +2,7 @@
 import { useAuthStore } from '~/store/auth'
 import { useInstituteStore } from '~/store/institute'
 import { Bar, Radar } from 'vue-chartjs'
+import L from 'leaflet'
 
 const days = [30, 90, 15, 8]
 const selectedDays = ref(days[0])
@@ -66,6 +67,35 @@ const subscalesOptions = ref({
   },
   plugins: { legend: { display: false } },
 })
+
+// Demographic /////////////
+
+const map = ref(null) as any
+const MAP_POINTS = ref([])
+const MAP_SMIN = ref(0)
+const MAP_SMAX = ref(150)
+const bounds = ref([])
+const heatPoints = ref([])
+
+function mapWeight(s) {
+  return Math.max(
+    0.05,
+    Math.min(
+      1,
+      (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1),
+    ),
+  )
+}
+
+function mapColor(s) {
+  const t = (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1)
+  if (t > 0.75) return '#38bdf8'
+  if (t > 0.5) return '#34d399'
+  if (t > 0.25) return '#fbbf24'
+  return '#fb923c'
+}
+
+// Demographic /////////////
 
 const isLoading = ref(false)
 onMounted(async () => {
@@ -133,12 +163,57 @@ onMounted(async () => {
         },
       ],
     }
+
+    // Demographic
+    const demographicResponse = await nuxtApp.$statsApi.get(
+      `/api/analytics/BienestarKairosDev/bienestar30/demographic`,
+    )
+
+    const dem = demographicResponse.data
+    const dStudents = dem.students || []
+    const dScores = dStudents.map((s) => s.score_total)
+    const dMean = dScores.length
+      ? dScores.reduce((a, b) => a + b, 0) / dScores.length
+      : 0
+    const dAges = dStudents.filter((s) => s.age).map((s) => s.age)
+    const dCPs = new Set(
+      dStudents.filter((s) => s.zipCode).map((s) => s.zipCode),
+    )
+
+    MAP_POINTS.value = dem.cp_map || []
+    if (MAP_POINTS.value.length) {
+      const sc = MAP_POINTS.value.map((p) => p.mean)
+      MAP_SMIN.value = Math.min(...sc)
+      MAP_SMAX.value = Math.max(...sc)
+      const sm = sc.reduce((a, b) => a + b, 0) / sc.length
+      const lats = MAP_POINTS.value.map((p) => p.lat),
+        lngs = MAP_POINTS.value.map((p) => p.lng)
+      bounds.value = [
+        [Math.min(...lats) - 0.05, Math.min(...lngs) - 0.05],
+        [Math.max(...lats) + 0.05, Math.max(...lngs) + 0.05],
+      ]
+    }
+
+    heatPoints.value = MAP_POINTS.value.map((p) => ({
+      lat: p.lat,
+      lng: p.lng,
+      intensity: mapWeight(p.mean),
+    }))
   } catch (error) {
     console.error('Error fetching stats:', error)
   } finally {
     isLoading.value = false
   }
 })
+
+const onMapReady = async () => {
+  const heat = await useLHeat({
+    leafletObject: map.value.leafletObject,
+    heatPoints: heatPoints.value,
+    // (optional) radius : default 50
+    radius: 50,
+  })
+}
 </script>
 
 <template>
@@ -245,7 +320,7 @@ onMounted(async () => {
             </div>
           </v-col>
           <v-col cols="12" md="6">
-            <v-card class="pa-3" rounded="xl">
+            <v-card class="pa-3 h-100" rounded="xl">
               <v-card-title>
                 <h2 class="handlee-regular text-h6 font-weight-thin">
                   Histograma de scores totales
@@ -255,7 +330,7 @@ onMounted(async () => {
             </v-card>
           </v-col>
           <v-col cols="12" md="6">
-            <v-card class="pa-3" rounded="xl">
+            <v-card class="pa-3 h-100" rounded="xl">
               <v-card-title>
                 <h2 class="handlee-regular text-h6 font-weight-thin">
                   Radar de subescalas (promedio 1–5)
@@ -264,8 +339,95 @@ onMounted(async () => {
               <Radar :data="subscalesData" :options="subscalesOptions" />
             </v-card>
           </v-col>
+          <v-col cols="12">
+            <v-card class="pa-3 h-screen" rounded="xl">
+              <v-card-title>
+                <h2 class="handlee-regular text-h6 font-weight-thin">
+                  Mapa de salud mental por código postal · CDMX
+                </h2>
+              </v-card-title>
+              <div class="h-85">
+                <LMap
+                  ref="map"
+                  :zoom="12"
+                  :center="[19.32, -99.17]"
+                  :use-global-leaflet="true"
+                  @ready="onMapReady"
+                  :bounds="bounds"
+                >
+                  <LWmsTileLayer
+                    url="https://maps.heigit.org/osm-wms/service"
+                    attribution="© OpenStreetMap © CARTO"
+                    layer-type="base"
+                    name="osm-wms.de"
+                    :max-zoom="18"
+                    version="1.3.0"
+                    format="image/png"
+                    :transparent="true"
+                    layers="osm_auto:all"
+                  />
+                </LMap>
+                <div id="map-legend">
+                  <div class="map-leg-title">Score de bienestar</div>
+                  <div class="map-leg-bar"></div>
+                  <div class="map-leg-labels">
+                    <span id="map-leg-min">{{ MAP_SMIN }}</span
+                    ><span id="map-leg-max">{{ MAP_SMAX }}</span>
+                  </div>
+                </div>
+              </div>
+            </v-card>
+          </v-col>
         </v-row>
       </v-container>
     </v-row>
   </v-container>
 </template>
+
+<style>
+#map-legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 999;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  min-width: 170px;
+}
+.map-leg-title {
+  font-family: var(--font-h);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.map-leg-bar {
+  height: 10px;
+  border-radius: 4px;
+  margin-bottom: 0.3rem;
+  background: linear-gradient(to right, #fb923c, #fbbf24, #34d399, #38bdf8);
+}
+.map-leg-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+.leaflet-popup-content-wrapper {
+  background: #111827;
+  border: 1px solid #1e2d40;
+  border-radius: 8px;
+  box-shadow: none;
+  color: #e2e8f0;
+}
+.leaflet-popup-tip {
+  background: #111827;
+}
+.leaflet-popup-content {
+  margin: 10px 14px;
+}
+</style>

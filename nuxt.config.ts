@@ -52,7 +52,11 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
     '@eurym3d0n/nuxt-gravatar',
     '@nuxt/eslint',
+    '@nuxtjs/leaflet',
   ],
+  leaflet: {
+    heat: true,
+  },
   eslint: {
     config: {
       standalone: false, // Permite que Nuxt gestione la config
