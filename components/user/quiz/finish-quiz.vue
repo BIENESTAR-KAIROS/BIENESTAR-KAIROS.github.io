@@ -31,6 +31,29 @@ const calification = computed(() => {
   return Number(sum.value)
 })
 
+const categories = computed(() => {
+  const cats: Record<string, number> = {}
+  quizStore.quiz.forEach((question) => {
+    const category = question.category || 'Sin categoría'
+    if (!cats[category]) {
+      cats[category] = 0
+    }
+    cats[category] += evaluteQuestion(question)
+  })
+  return cats
+})
+
+const evaluteQuestion = (question: IQuizResponse) => {
+  let temp = 0
+  temp += Number(question.answer) < 0 ? 0 : Number(question.answer)
+  question.options.forEach((option) => {
+    option.subquestions?.forEach((sub) => {
+      temp += evaluteQuestion(sub)
+    })
+  })
+  return temp
+}
+
 const isLoading = ref(false)
 const recomendations = ref([] as IRecomendations[])
 const route = useRoute()
@@ -241,9 +264,7 @@ onMounted(async () => {
             </v-card-title>
 
             <div
-              v-if="
-                quizStore.quiz[0].questionnaireId != '687eb71ad314bf6498877687'
-              "
+              v-if="!quizStore.evaluateByCategory"
               class="w-50 h-50 d-flex justify-space-around align-center mb-6"
             >
               <h2 class="handlee-regular text-h4 font-weight-regular">
@@ -252,6 +273,28 @@ onMounted(async () => {
               <span class="handlee-regular text-h4 font-weight-bold">
                 {{ calification }}
               </span>
+            </div>
+
+            <div
+              v-if="quizStore.evaluateByCategory"
+              class="w-100 h-50 d-flex flex-column justify-space-around align-center mb-6"
+            >
+              <div class="mb-4">
+                <h2 class="handlee-regular text-h4 font-weight-bold">
+                  Puntaje:
+                </h2>
+              </div>
+              <div class="d-flex flex-column align-center">
+                <div
+                  v-for="(score, category) in categories"
+                  :key="category"
+                  class="mb-1"
+                >
+                  <span class="handlee-regular text-h5 font-weight-bold">
+                    {{ category }}: {{ score }}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <v-row>

@@ -35,4 +35,5 @@ export interface IQuiz {
   groupAssignments: string[]
   questions: IQuestion[]
   canAccessQuestionHistory: boolean
+  evaluateByCategory: boolean
 }

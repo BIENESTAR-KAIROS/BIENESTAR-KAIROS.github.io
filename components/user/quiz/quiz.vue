@@ -26,6 +26,7 @@ onMounted(async () => {
       questionId: question.id,
       questionnaireId: route.params.id as string,
       question: question.text,
+      category: question.category || null,
       options: question.options.map((option) => ({
         option,
         subquestions: option.subquestions
@@ -50,6 +51,7 @@ onMounted(async () => {
     quizStore.totalQuestions = 0
     quizStore.actualQuestion = 0
     quizStore.quizName = quiz.title
+    quizStore.evaluateByCategory = quiz.evaluateByCategory || false
     for (let i = 0; i < quiz.questions.length; i++) {
       questions.value.push(quiz.questions[i].text)
       quizStore.quiz.push(questionResponse(quiz.questions[i]))

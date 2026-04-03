@@ -31,6 +31,8 @@ export interface IQuizResponse {
   options: IQuizResponseOption[]
   answer: number | Date | string | Array<string>
   type: QuestionType
+  evaluateByCategory?: boolean
+  category?: string | null
 }
 
 export interface AnswerDto {
@@ -73,6 +75,7 @@ export const useQuizStore = defineStore('quiz', {
       totalQuestions: 0,
       actualQuestion: 0,
       quizName: '',
+      evaluateByCategory: false,
       newQuiz: {
         title: '',
         description: '',
