@@ -23,7 +23,8 @@ const campusInfo: Ref<StudentCampusData> = ref({
 const campusesData: Ref<InstituteCampusInformation[]> = ref([])
 
 onMounted(async () => {
-  const instituteId = authStore.user?.institute || '507f1f77bcf86cd799439012'
+  const instituteId =
+    authStore.user?.institute?._id || '507f1f77bcf86cd799439012'
 
   const response = await nuxtApp.$axios.get<IInstitute>(
     `/institute/${instituteId}`,
@@ -33,7 +34,8 @@ onMounted(async () => {
     campusesData.value = response.data.campuses
   }
 
-  if (instituteId === '507f1f77bcf86cd799439012') {
+  // Redirigir si el usuario no pertenece a la UP
+  if (instituteId !== '69751025bc2e095ec7a37e00') {
     nuxtApp.$router.push('/user/dashboard')
   }
 })
