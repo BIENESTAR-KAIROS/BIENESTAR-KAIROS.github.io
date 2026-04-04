@@ -27,23 +27,27 @@ export const useUserStore = defineStore('user', {
         gender: translateGender(user.studentData!.gender!.toString()),
       }
 
-      const response = await nuxtApp.$axios.post<{
-        user: IUser
-        accessToken: string
-        message?: string
-      }>('/user', user)
+      let message = ''
+      const response = await nuxtApp.$axios
+        .post<{
+          user: IUser
+          accessToken: string
+          message?: string
+          statusCode?: number
+        }>('/user', user)
+        .catch((error) => {
+          if (error.response.data.statusCode == 409)
+            message = `El correo electrónico ya está registrado`
+          else
+            message = `Error al registrar el usuario: ${error.response.data.message}`
+        })
 
-      if (response.status != 201) {
-        alert(`Error al registrar el usuario: ${response.data.message}`)
-        console.log(response.data)
-      }
-
-      this.user = response.data.user
+      this.user = response?.data.user || null
 
       return {
-        user: response.data.user,
-        accessToken: response.data.accessToken,
-        message: 'Usuario registrado correctamente',
+        user: response?.data.user || ({} as IUser),
+        accessToken: response?.data.accessToken || '',
+        message: message || 'Usuario registrado correctamente',
       }
     },
     async updateUserStudentData(

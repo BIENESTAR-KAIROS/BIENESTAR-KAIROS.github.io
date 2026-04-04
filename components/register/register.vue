@@ -34,9 +34,21 @@ async function register() {
       title: 'Registro Exitoso',
       text: 'Usuario registrado correctamente. Te llegará un correo de confirmación de cuenta para poder terminar tu registro.',
     })
-
-    nuxtApp.$router.push('/')
+  } else if (response.message === 'El correo electrónico ya está registrado') {
+    nuxtApp.$Swal.fire({
+      icon: 'error',
+      title: 'Error de Registro',
+      text: 'El correo electrónico ya está registrado. Por favor, intenta con otro correo.',
+    })
+  } else {
+    nuxtApp.$Swal.fire({
+      icon: 'error',
+      title: 'Error de Registro',
+      text: 'Ocurrió un error al registrar el usuario. Por favor, intenta nuevamente.',
+    })
   }
+
+  nuxtApp.$router.push('/')
 }
 </script>
 
