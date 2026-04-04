@@ -13,12 +13,12 @@ const specialists = [
     contact: ['5559698752'],
   }, */
   {
-    title: 'Unidad psicoloógica clínica de la UP',
+    title: 'Unidad psicológica clínica de la UP',
     image: '/image-specialist-22.png',
     specialities: [
       'Terapia familiar y de pareja',
       'Psicoterapia individual',
-      'Evaluaciones neuropsicólogicas',
+      'Evaluaciones neuropsicológicas',
       'Sexualidad',
     ],
     schedule: [
@@ -56,16 +56,9 @@ const specialists = [
     </v-row>
 
     <v-row>
-      <v-col
-        v-for="(specialist, i) in specialists"
-        :key="i"
-        cols="12"
-        md="3"
-        lg="4"
-      >
+      <v-col v-for="(specialist, i) in specialists" :key="i" cols="12" md="6">
         <v-sheet
           rounded="xl"
-          height="700"
           class="px-4 py-2 pt-5 d-flex flex-column justify-space-around align-center text-center bg-purpleShadow"
           :elevation="5"
         >
@@ -75,7 +68,7 @@ const specialists = [
               specialist.title
             }}</span>
           </div>
-          <div class="d-flex flex-column justify-space-between">
+          <div class="d-flex flex-column justify-space-between w-100">
             <div class="d-b">
               <div class="d-flex flex-row align-center">
                 <div>
