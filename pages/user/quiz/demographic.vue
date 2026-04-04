@@ -21,6 +21,13 @@ const userStore = useUserStore()
 const authStore = useAuthStore()
 const isCheckingQueue = ref(true)
 
+const userInstituteId = computed(() => {
+  return authStore.user?.instituteId
+})
+const isBlockedForThisUser = computed(() => {
+  return authStore.isBlockedForInstitutes.includes(userInstituteId.value)
+})
+
 const postalCode = ref(null)
 const civilStatus = ref(null)
 const studyYear = ref(null)
@@ -250,7 +257,12 @@ onMounted(async () => {
                     :items="Object.keys(civilStatusTranslations) || []"
                   />
                 </v-col>
-                <v-col cols="12" md="6" offset-md="3">
+                <v-col
+                  v-if="isBlockedForThisUser"
+                  cols="12"
+                  md="6"
+                  offset-md="3"
+                >
                   <div v-show="mobile" class="ms-2">
                     <span class="catamaran-regular text-body-1">
                       ¿En qué año de tus estudios te encuentras actualmente?
@@ -324,7 +336,12 @@ onMounted(async () => {
                     :items="Object.keys(familyMonthlyIncomeTranslations) || []"
                   />
                 </v-col>
-                <v-col cols="12" md="6" offset-md="3">
+                <v-col
+                  v-if="isBlockedForThisUser"
+                  cols="12"
+                  md="6"
+                  offset-md="3"
+                >
                   <div v-show="mobile" class="ms-2">
                     <span class="catamaran-regular text-body-1">
                       ¿Trabajas mientras realizas tus estudios?
@@ -380,7 +397,12 @@ onMounted(async () => {
                     :items="['Sí', 'No']"
                   />
                 </v-col>
-                <v-col cols="12" md="6" offset-md="3">
+                <v-col
+                  v-if="isBlockedForThisUser"
+                  cols="12"
+                  md="6"
+                  offset-md="3"
+                >
                   <div v-show="mobile" class="ms-2">
                     <span class="catamaran-regular text-body-1">
                       ¿Consumes tabaco?
@@ -398,7 +420,12 @@ onMounted(async () => {
                     :items="['Sí', 'No']"
                   />
                 </v-col>
-                <v-col cols="12" md="6" offset-md="3">
+                <v-col
+                  v-if="isBlockedForThisUser"
+                  cols="12"
+                  md="6"
+                  offset-md="3"
+                >
                   <div v-show="mobile" class="ms-2">
                     <span class="catamaran-regular text-body-1">
                       ¿Consumes alcohol?

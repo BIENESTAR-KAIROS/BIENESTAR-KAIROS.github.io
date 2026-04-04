@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', {
       accessToken: '',
       isLoading: false,
       expiresAt: 0,
+      isBlockedForInstitutes: ['69751025bc2e095ec7a37e00'],
     }
   },
   actions: {
