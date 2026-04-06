@@ -24,7 +24,7 @@ const campusesData: Ref<InstituteCampusInformation[]> = ref([])
 
 onMounted(async () => {
   const instituteId =
-    authStore.user?.institute?._id || '507f1f77bcf86cd799439012'
+    (authStore.user?.institute as string) || '507f1f77bcf86cd799439012'
 
   const response = await nuxtApp.$axios.get<IInstitute>(
     `/institute/${instituteId}`,
