@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import DailyAnswerVolume from '../dashboard/daily-answer-volume.vue'
-import AnswerByGender from './answer-by-gender.vue'
-import AnswerByAge from './answer-by-age.vue'
 import { useAuthStore } from '~/store/auth'
 import { useInstituteStore } from '~/store/institute'
-import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
-import type { IUser } from '~/interfaces/users/user.interface'
 import { required } from '~/utils/helpers/form-rules'
-
-const days = ref([8, 15, 30, 90])
-const selectedDays = ref(30)
+import type { IDashboardStatisticsInstituteResponse } from '~/dto/response/institute/dashboard-statistics-institute.response.dto'
+import type {
+  IUserSummary,
+  IPaginatedUsers,
+} from '~/interfaces/user/paginated-users.interface'
 
 const isLoading = ref(false)
 
@@ -17,79 +14,119 @@ const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
 const instituteStore = useInstituteStore()
 
-const instituteId = authStore.user?.institution?.id
+const instituteIdForStats =
+  authStore.user?.institute?._id || authStore.user?.institute
 
-try {
-  isLoading.value = true
-  const { data } = await $axios.get<IStatsResponse>(
-    `/institute/${instituteId}/statistics`,
-  )
-  instituteStore.statistics = data
-} catch (error) {
-  console.log(error)
-} finally {
-  isLoading.value = false
-}
+// Paginated users state
+const users = ref<IUserSummary[]>([])
+const page = ref(1)
+const limit = ref(10)
+const total = ref(0)
+const totalPages = ref(0)
+const searchText = ref('')
+const isLoadingUsers = ref(false)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-const totalUsers = computed(() => instituteStore.statistics?.users?.total)
-const activeUsers = computed(() => instituteStore.statistics?.users?.active)
-const studentsUsers = computed(() => instituteStore.statistics?.users?.students)
-const administratorUsers = computed(
-  () => instituteStore.statistics?.users?.administrators,
-)
+const tableHeaders = [
+  { title: 'Nombre', key: 'fullName', sortable: false },
+  { title: 'Email', key: 'email', sortable: false },
+  { title: 'Rol', key: 'roles', sortable: false },
+  { title: 'Activo', key: 'active', sortable: false },
+  { title: 'Quizzes (6m)', key: 'quizCountLastSixMonths', sortable: false },
+  { title: 'Último acceso', key: 'lastAccess', sortable: false },
+]
 
-const search = ref(null)
-const studentOptions = ref([] as string[])
-const isSearchedUser = ref(false)
-const users = ref([] as IUser[])
-
-try {
-  isLoading.value = true
-  console.log(authStore.user?.institution)
-  const { data } = await $axios.get<{ users: IUser[] }>(
-    `/users?institutionId=${instituteId}&type=student&active=true`,
-  )
-  users.value = data.users
-  users.value.map((user) =>
-    studentOptions.value.push(
-      `${user.profile?.name} ${user.profile?.lastName}`,
-    ),
-  )
-} catch (error) {
-  console.log(error)
-} finally {
-  isLoading.value = false
-}
-
-const selectedUser = ref(null as IUser | null)
-const userSchedules = ref(
-  [] as {
-    appointmentDate: Date
-  }[],
-)
-
-async function onSearch() {
-  if (search.value) {
-    isSearchedUser.value = true
-    selectedUser.value =
-      users.value.find(
-        (user) =>
-          search.value === `${user.profile?.name} ${user.profile?.lastName}`,
-      ) || null
-
-    try {
-      const { data } = await $axios.get(
-        `/calendary/patient/${selectedUser.value?.id}`,
-      )
-      userSchedules.value = data
-    } catch (error) {
-      console.log(error)
+async function fetchUsers() {
+  if (!instituteIdForStats) return
+  try {
+    isLoadingUsers.value = true
+    const params: Record<string, string | number> = {
+      page: page.value,
+      limit: limit.value,
     }
+    if (searchText.value.trim()) {
+      params.search = searchText.value.trim()
+    }
+    const { data } = await $axios.get<IPaginatedUsers>(
+      `/user/institute/${instituteIdForStats}`,
+      { params },
+    )
+    users.value = data.data
+    total.value = data.total
+    totalPages.value = data.totalPages
+  } catch (error) {
+    console.error('Error fetching users', error)
+  } finally {
+    isLoadingUsers.value = false
   }
 }
 
-// ? Add terapy schedule
+function onSearchInput() {
+  searchText.value = ''
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    page.value = 1
+    fetchUsers()
+  }, 400)
+}
 
+function onPageChange(newPage: number) {
+  page.value = newPage
+  fetchUsers()
+}
+
+function getFullName(user: IUserSummary): string {
+  return [user.name, user.lastName, user.surName].filter(Boolean).join(' ')
+}
+
+function formatDate(date?: Date | string): string {
+  if (!date) return 'Sin registro'
+  return new Date(date).toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
+      `/institute/${instituteIdForStats}/dashboard-statistics`,
+    )
+    instituteStore.statistics = data
+  } catch (error) {
+    console.error(error)
+  } finally {
+    isLoading.value = false
+  }
+
+  await fetchUsers()
+})
+
+const totalUsers = computed(() => instituteStore.statistics?.totalUsers)
+const activeUsers = computed(() => instituteStore.statistics?.activeUsers)
+const studentsUsers = computed(() => instituteStore.statistics?.studentUsers)
+const administratorUsers = computed(
+  () => instituteStore.statistics?.administratorUsers,
+)
+
+// Selected user & calendar logic
+const selectedUser = ref<IUserSummary | null>(null)
+const userSchedules = ref<{ appointmentDate: Date }[]>([])
+
+async function onSelectUser(user: IUserSummary) {
+  selectedUser.value = user
+  try {
+    const { data } = await $axios.get(`/calendary/patient/${user._id}`)
+    userSchedules.value = data
+  } catch (error) {
+    console.error(error)
+    userSchedules.value = []
+  }
+}
+
+// Add therapy schedule
 const day = ref()
 const startHour = ref()
 const endHour = ref()
@@ -118,8 +155,8 @@ async function saveSchedule() {
   )
 
   if (selectedUser.value) {
-    calendly.value.patientId = selectedUser.value.id
-    calendly.value.psychologistId = selectedUser.value.id
+    calendly.value.patientId = selectedUser.value._id
+    calendly.value.psychologistId = selectedUser.value._id
     calendly.value.appointmentDate = new Date(day.value + 'T' + startHour.value)
     try {
       const { data } = await $axios.post(`/calendary`, {
@@ -157,39 +194,9 @@ async function saveSchedule() {
         </div>
       </v-col>
       <v-container>
-        <v-row no-gutters>
-          <v-col cols="12">
-            <v-row no-gutters>
-              <v-col cols="5" lg="3">
-                <span class="catamaran-regular font-body-1"
-                  >Datos referenciados de los últimos:</span
-                >
-              </v-col>
-              <v-col cols="3" md="2" lg="1">
-                <v-select
-                  label="días"
-                  :items="days"
-                  variant="solo"
-                  bg-color="purpleShadow"
-                  v-model="selectedDays"
-                  rounded="xxxl"
-                >
-                </v-select>
-              </v-col>
-              <v-col>
-                <span class="ms-2 catamaran-regular font-body-1">días.</span>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
         <v-row>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -208,12 +215,7 @@ async function saveSchedule() {
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xxl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -232,12 +234,7 @@ async function saveSchedule() {
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xxl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -254,12 +251,7 @@ async function saveSchedule() {
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xxl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -277,98 +269,89 @@ async function saveSchedule() {
               </div>
             </v-card>
           </v-col>
-          <v-col cols="12" md="6" lg="4">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Volumen diario de respuestas
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <DailyAnswerVolume />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="4">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Volumen de respuestas por género
-                </span>
-                <div class="d-flex flex-row align-center h-85">
-                  <AnswerByGender />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="4">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Volumen de respuestas por edad
-                </span>
-                <div class="d-flex flex-row align-center h-85 w-85">
-                  <AnswerByAge />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
           <v-col cols="12">
-            <v-row no-gutters>
-              <v-col cols="12" md="" lg="" class="mb-2">
+            <v-row no-gutters class="align-center">
+              <v-col cols="12" md="6" class="mb-2">
                 <span class="catamaran-regular font-body-1">
                   Buscador individual por cada uno de los usuarios:
                 </span>
               </v-col>
-              <v-col cols="12" md="" lg="">
-                <v-autocomplete
-                  v-model="search"
-                  label="Ingresa nombre o apellido a buscar"
-                  :items="studentOptions"
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="searchText"
+                  label="Buscar por nombre, apellido o correo"
                   variant="solo-filled"
-                  bg-color="purpleShadow"
                   rounded="xxl"
-                  @update:search="onSearch"
-                ></v-autocomplete>
+                  prepend-inner-icon="mdi-magnify"
+                  clearable
+                  hide-details
+                  @input="onSearchInput"
+                  @click:clear="onSearchInput()"
+                />
               </v-col>
             </v-row>
           </v-col>
-          <v-col cols="12" v-if="isSearchedUser">
-            <v-card color="purpleShadow pa-2" rounded="xl" elevation="5">
+          <v-col cols="12" class="mt-4">
+            <v-card rounded="xl" elevation="5">
+              <v-data-table
+                :headers="tableHeaders"
+                :items="users"
+                :loading="isLoadingUsers"
+                :items-per-page="limit"
+                hide-default-footer
+                class="catamaran-regular"
+                @click:row="(_event: any, row: any) => onSelectUser(row.item)"
+              >
+                <template #item.fullName="{ item }">
+                  {{ getFullName(item) }}
+                </template>
+                <template #item.roles="{ item }">
+                  <v-chip
+                    v-for="role in item.roles"
+                    :key="role"
+                    size="small"
+                    class="me-1"
+                    color="primary"
+                    variant="tonal"
+                  >
+                    {{ role }}
+                  </v-chip>
+                </template>
+                <template #item.active="{ item }">
+                  <v-icon :color="item.active ? 'success' : 'error'">
+                    {{ item.active ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                  </v-icon>
+                </template>
+                <template #item.lastAccess="{ item }">
+                  {{ formatDate(item.lastAccess) }}
+                </template>
+                <template #bottom>
+                  <div class="d-flex justify-center align-center pa-4">
+                    <v-pagination
+                      :model-value="page"
+                      :length="totalPages"
+                      :total-visible="5"
+                      rounded="circle"
+                      @update:model-value="onPageChange"
+                    />
+                  </div>
+                </template>
+              </v-data-table>
+            </v-card>
+          </v-col>
+          <v-col cols="12" v-if="selectedUser" class="mt-4">
+            <v-card color=" pa-2" rounded="xl" elevation="5">
               <v-container>
                 <v-row>
                   <v-col cols="12" md="2">
                     <span class="handlee-regular text-h5 font-weight-thin">
-                      {{
-                        `${selectedUser?.profile?.name} ${selectedUser?.profile?.lastName}`
-                      }}
+                      {{ getFullName(selectedUser) }}
                     </span>
                   </v-col>
                   <v-col cols="12" md="4">
                     <v-card
                       class="pa-2 d-flex flex-column justify-center text-center h-100"
-                      color="purpleShadow"
+                      color=""
                       elevation="5"
                       rounded="xl"
                     >
@@ -381,12 +364,7 @@ async function saveSchedule() {
                     </v-card>
                   </v-col>
                   <v-col cols="12" md="6">
-                    <v-card
-                      class="pa-4"
-                      color="purpleShadow"
-                      elevation="5"
-                      rounded="xl"
-                    >
+                    <v-card class="pa-4" color="" elevation="5" rounded="xl">
                       <span class="handlee-regular text-h5 font-weight-thin">
                         Citas en agenda del usuario
                       </span>
@@ -419,7 +397,7 @@ async function saveSchedule() {
                           </span>
                         </v-col>
                       </v-row>
-                      <v-card-actions>
+                      <v-card-actions class="d-flex flex-column flex-md-row">
                         <NuxtLink href="/institute/my-users/clinic-history">
                           <v-btn
                             class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
@@ -460,7 +438,7 @@ async function saveSchedule() {
                               <v-text-field
                                 type="date"
                                 label="Día de la cita"
-                                bg-color="purpleShadow"
+                                bg-color=""
                                 variant="solo-filled"
                                 clearable
                                 rounded="xxl"
@@ -482,7 +460,7 @@ async function saveSchedule() {
                                   <v-text-field
                                     type="time"
                                     label="Hora de inicio"
-                                    bg-color="purpleShadow"
+                                    bg-color=""
                                     variant="solo-filled"
                                     clearable
                                     rounded="xxl"
@@ -502,7 +480,7 @@ async function saveSchedule() {
                                   <v-text-field
                                     type="time"
                                     label="Hora de fin"
-                                    bg-color="purpleShadow"
+                                    bg-color=""
                                     variant="solo-filled"
                                     clearable
                                     rounded="xxl"
@@ -517,7 +495,7 @@ async function saveSchedule() {
                                 <v-spacer></v-spacer>
                                 <v-btn
                                   @click="saveSchedule"
-                                  class="bg-purpleShadow catamaran-regular text-subtitle-1 font-weight-thin"
+                                  class="bg- catamaran-regular text-subtitle-1 font-weight-thin"
                                 >
                                   Agregar
                                   <v-icon> mdi-plus </v-icon>

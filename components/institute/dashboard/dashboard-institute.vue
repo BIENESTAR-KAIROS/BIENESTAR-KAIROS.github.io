@@ -24,9 +24,6 @@ onMounted(async () => {
     const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
       `/institute/${authStore.user?.institute?._id}/dashboard-statistics`,
     )
-    // TODO remove log and fix user admnin slots available
-
-    console.log(data)
 
     instituteStore.statistics = data
   } catch (error) {
@@ -42,7 +39,7 @@ const studentsUsers = computed(() => instituteStore.statistics?.studentUsers)
 const administratorUsers = computed(
   () => instituteStore.statistics?.administratorUsers,
 )
-const adminAvialible = computed(
+const adminAvailable = computed(
   () => instituteStore.statistics?.adminSlotsAvailable,
 )
 </script>
@@ -98,12 +95,7 @@ const adminAvialible = computed(
       -->
         <v-row>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -122,12 +114,7 @@ const adminAvialible = computed(
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -146,34 +133,30 @@ const adminAvialible = computed(
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
                 <span class="catamaran-regular font-body-1"> Estudiantes </span>
-                <div class="d-flex flex-row align-center">
+                <div class="d-flex flex-column align-center">
                   <!-- <v-icon class="text-error me-2 text-h3 font-weight-bold">
                     mdi-arrow-down
                   </v-icon> -->
                   <span class="catamaran-regular text-h5">
                     {{ studentsUsers }}
                   </span>
+                  <NuxtLink
+                    class="handlee-regular font-body-2 font-weight-thin"
+                    :href="'/institute/my-users'"
+                  >
+                    Ver detalles
+                  </NuxtLink>
                 </div>
               </div>
             </v-card>
           </v-col>
           <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="110"
-              elevation="5"
-            >
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100"
               >
@@ -191,6 +174,7 @@ const adminAvialible = computed(
               </div>
             </v-card>
           </v-col>
+          <!--
           <v-col cols="12" md="6" lg="4">
             <v-card
               color="purpleShadow pa-4"
@@ -248,24 +232,21 @@ const adminAvialible = computed(
               </div>
             </v-card>
           </v-col>
-          <v-col cols="12" md="6" lg="2">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
+          -->
+          <v-col cols="12" md="6" lg="3">
+            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
               <div
                 class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
               >
                 <span class="catamaran-regular font-body-1">
                   Espacios de administración disponibles
                 </span>
-                <div
-                  class="d-flex flex-row align-center justify-center h-85 w-85"
-                >
-                  <span class="catamaran-regular text-h3">
-                    {{ adminAvialible }}
+                <div class="d-flex flex-row align-center">
+                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
+                    mdi-arrow-up
+                  </v-icon> -->
+                  <span class="catamaran-regular text-h5">
+                    {{ adminAvailable }}
                   </span>
                 </div>
               </div>
