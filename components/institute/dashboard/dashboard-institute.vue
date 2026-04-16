@@ -16,13 +16,16 @@ const instituteStore = useInstituteStore()
 
 const isLoading = ref(false)
 
+const instituteIdForStats =
+  authStore.user?.institute?._id || authStore.user?.institute
+
 onMounted(async () => {
   try {
     isLoading.value = true
     console.log(authStore.user)
 
     const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
-      `/institute/${authStore.user?.institute?._id}/dashboard-statistics`,
+      `/institute/${instituteIdForStats}/dashboard-statistics`,
     )
 
     instituteStore.statistics = data

@@ -34,6 +34,7 @@ const tableHeaders = [
   { title: 'Activo', key: 'active', sortable: false },
   { title: 'Quizzes (6m)', key: 'quizCountLastSixMonths', sortable: false },
   { title: 'Último acceso', key: 'lastAccess', sortable: false },
+  { title: 'Agendar cita', key: 'actions', sortable: false },
 ]
 
 async function fetchUsers() {
@@ -114,8 +115,9 @@ const administratorUsers = computed(
 // Selected user & calendar logic
 const selectedUser = ref<IUserSummary | null>(null)
 const userSchedules = ref<{ appointmentDate: Date }[]>([])
+const showScheduleDialog = ref(false)
 
-async function onSelectUser(user: IUserSummary) {
+async function onOpenSchedule(user: IUserSummary) {
   selectedUser.value = user
   try {
     const { data } = await $axios.get(`/calendary/patient/${user._id}`)
@@ -124,6 +126,11 @@ async function onSelectUser(user: IUserSummary) {
     console.error(error)
     userSchedules.value = []
   }
+}
+
+function onRowClick(_event: any, row: any) {
+  const user = row.item as IUserSummary
+  $router.push(`/institute/my-users/${user._id}`)
 }
 
 // Add therapy schedule
@@ -168,7 +175,7 @@ async function saveSchedule() {
       userSchedules.value.push({
         appointmentDate: calendly.value.appointmentDate,
       })
-      $router.push('/institute/my-users')
+      showScheduleDialog.value = false
     }
   } else {
     alert('No hay un usuario seleccionado')
@@ -300,7 +307,7 @@ async function saveSchedule() {
                 :items-per-page="limit"
                 hide-default-footer
                 class="catamaran-regular"
-                @click:row="(_event: any, row: any) => onSelectUser(row.item)"
+                @click:row="onRowClick"
               >
                 <template #item.fullName="{ item }">
                   {{ getFullName(item) }}
@@ -324,6 +331,16 @@ async function saveSchedule() {
                 </template>
                 <template #item.lastAccess="{ item }">
                   {{ formatDate(item.lastAccess) }}
+                </template>
+                <template #item.actions="{ item }">
+                  <v-btn
+                    icon
+                    variant="text"
+                    size="small"
+                    @click.stop="onOpenSchedule(item)"
+                  >
+                    <v-icon>mdi-calendar-plus</v-icon>
+                  </v-btn>
                 </template>
                 <template #bottom>
                   <div class="d-flex justify-center align-center pa-4">
@@ -408,109 +425,15 @@ async function saveSchedule() {
                             Conocer historia clínica
                           </v-btn>
                         </NuxtLink>
-                        <v-dialog max-width="700">
-                          <template
-                            v-slot:activator="{ props: activatorProps }"
-                          >
-                            <v-btn
-                              v-bind="activatorProps"
-                              class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
-                              elevation="5"
-                              rounded="xl"
-                              variant="flat"
-                            >
-                              Agendar una nueva cita
-                            </v-btn>
-                          </template>
-
-                          <template v-slot:default="{ isActive }">
-                            <v-card class="px-6 pt-4">
-                              <v-card-title
-                                class="handlee-regular text-h4 font-weight-thin"
-                              >
-                                Agendar nueva cita
-                              </v-card-title>
-                              <span
-                                class="catamaran-regular text-subtitle-1 font-weight-thin"
-                              >
-                                Día de la cita:
-                              </span>
-                              <v-text-field
-                                type="date"
-                                label="Día de la cita"
-                                bg-color=""
-                                variant="solo-filled"
-                                clearable
-                                rounded="xxl"
-                                v-model="day"
-                                :rules="[required]"
-                                append-inner-icon="mdi-calendar-outline"
-                                validate-on="lazy input"
-                                class="catamaran-regular text-subtitle-1 font-weight-thin"
-                              />
-                              <div
-                                class="w-100 d-flex flex-row justify-space-between"
-                              >
-                                <div class="w-45">
-                                  <span
-                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                                  >
-                                    Hora de inicio:
-                                  </span>
-                                  <v-text-field
-                                    type="time"
-                                    label="Hora de inicio"
-                                    bg-color=""
-                                    variant="solo-filled"
-                                    clearable
-                                    rounded="xxl"
-                                    v-model="startHour"
-                                    :rules="[required]"
-                                    append-inner-icon="mdi-clock-outline"
-                                    validate-on="lazy input"
-                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                                  />
-                                </div>
-                                <div class="w-45">
-                                  <span
-                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                                  >
-                                    Hora de fin:
-                                  </span>
-                                  <v-text-field
-                                    type="time"
-                                    label="Hora de fin"
-                                    bg-color=""
-                                    variant="solo-filled"
-                                    clearable
-                                    rounded="xxl"
-                                    v-model="endHour"
-                                    append-inner-icon="mdi-clock-outline"
-                                    validate-on="lazy input"
-                                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                                  />
-                                </div>
-                              </div>
-                              <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn
-                                  @click="saveSchedule"
-                                  class="bg- catamaran-regular text-subtitle-1 font-weight-thin"
-                                >
-                                  Agregar
-                                  <v-icon> mdi-plus </v-icon>
-                                </v-btn>
-                                <v-btn
-                                  class="ms-2 bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
-                                  @click="isActive.value = false"
-                                >
-                                  Cerrar
-                                  <v-icon> mdi-close </v-icon>
-                                </v-btn>
-                              </v-card-actions>
-                            </v-card>
-                          </template>
-                        </v-dialog>
+                        <v-btn
+                          class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
+                          elevation="5"
+                          rounded="xl"
+                          variant="flat"
+                          @click="showScheduleDialog = true"
+                        >
+                          Agendar una nueva cita
+                        </v-btn>
                       </v-card-actions>
                     </v-card>
                   </v-col>
@@ -518,6 +441,88 @@ async function saveSchedule() {
               </v-container>
             </v-card>
           </v-col>
+          <!-- Schedule dialog -->
+          <v-dialog v-model="showScheduleDialog" max-width="700">
+            <v-card class="px-6 pt-4">
+              <v-card-title class="handlee-regular text-h4 font-weight-thin">
+                Agendar nueva cita
+              </v-card-title>
+              <v-card-subtitle v-if="selectedUser" class="catamaran-regular">
+                {{ getFullName(selectedUser) }}
+              </v-card-subtitle>
+              <span class="catamaran-regular text-subtitle-1 font-weight-thin">
+                Día de la cita:
+              </span>
+              <v-text-field
+                type="date"
+                label="Día de la cita"
+                variant="solo-filled"
+                clearable
+                rounded="xxl"
+                v-model="day"
+                :rules="[required]"
+                append-inner-icon="mdi-calendar-outline"
+                validate-on="lazy input"
+                class="catamaran-regular text-subtitle-1 font-weight-thin"
+              />
+              <div class="w-100 d-flex flex-row justify-space-between">
+                <div class="w-45">
+                  <span
+                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                  >
+                    Hora de inicio:
+                  </span>
+                  <v-text-field
+                    type="time"
+                    label="Hora de inicio"
+                    variant="solo-filled"
+                    clearable
+                    rounded="xxl"
+                    v-model="startHour"
+                    :rules="[required]"
+                    append-inner-icon="mdi-clock-outline"
+                    validate-on="lazy input"
+                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                  />
+                </div>
+                <div class="w-45">
+                  <span
+                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                  >
+                    Hora de fin:
+                  </span>
+                  <v-text-field
+                    type="time"
+                    label="Hora de fin"
+                    variant="solo-filled"
+                    clearable
+                    rounded="xxl"
+                    v-model="endHour"
+                    append-inner-icon="mdi-clock-outline"
+                    validate-on="lazy input"
+                    class="catamaran-regular text-subtitle-1 font-weight-thin"
+                  />
+                </div>
+              </div>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  @click="saveSchedule"
+                  class="bg- catamaran-regular text-subtitle-1 font-weight-thin"
+                >
+                  Agregar
+                  <v-icon> mdi-plus </v-icon>
+                </v-btn>
+                <v-btn
+                  class="ms-2 bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
+                  @click="showScheduleDialog = false"
+                >
+                  Cerrar
+                  <v-icon> mdi-close </v-icon>
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </v-row>
       </v-container>
     </v-row>
