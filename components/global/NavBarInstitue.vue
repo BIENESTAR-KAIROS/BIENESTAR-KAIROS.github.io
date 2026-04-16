@@ -77,7 +77,7 @@ onMounted(() => {
       link
       :to="'/institute/dashboard'"
     >
-      <v-list-item-title class="catamaran-text text-h5">
+      <v-list-item-title class="catamaran-text text-h6">
         Vista de instituto
       </v-list-item-title>
     </v-list-item>
@@ -88,7 +88,7 @@ onMounted(() => {
       link
       :to="'/admin/dashboard'"
     >
-      <v-list-item-title class="catamaran-text text-h5">
+      <v-list-item-title class="catamaran-text text-h6">
         Vista de administrador
       </v-list-item-title>
     </v-list-item>
@@ -99,7 +99,7 @@ onMounted(() => {
       link
       :to="'/user/dashboard'"
     >
-      <v-list-item-title class="catamaran-text text-h5">
+      <v-list-item-title class="catamaran-text text-h6">
         Vista de alumno
       </v-list-item-title>
     </v-list-item>
