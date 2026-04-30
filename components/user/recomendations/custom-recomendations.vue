@@ -1,26 +1,73 @@
 <script setup lang="ts">
-import { type IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
+import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
+import type { ITrackingToggleResponse } from '~/interfaces/tracking/tracking-toggle.interface'
 import { useAuthStore } from '~/store/auth'
 
 const { $axios } = useNuxtApp()
 
 const isLoading = ref(false)
-const recomendations = ref([] as IRecomendations[])
+const recomendations = ref([] as ITrackingTask[])
+const togglingRecommendationIds = ref([] as string[])
 const authStore = useAuthStore()
+const router = useRouter()
+
+const isToggling = (recommendationId: string): boolean =>
+  togglingRecommendationIds.value.includes(recommendationId)
+
+const getShortRecommendation = (recommendation: string, maxLength = 35): string => {
+  if (recommendation.length <= maxLength) {
+    return recommendation
+  }
+
+  return `${recommendation.slice(0, maxLength)}...`
+}
+
+const goToCalendarView = () => {
+  router.push('/user/recomendations/calendar')
+}
+
+const toggleRecommendation = async (recommendationId: string) => {
+  try {
+    togglingRecommendationIds.value.push(recommendationId)
+
+    const response = await $axios.post(
+      '/tracking/toggle',
+      { recommendationId },
+    )
+
+    const toggleResult = response.data as ITrackingToggleResponse
+
+    recomendations.value = recomendations.value.map((item) => {
+      if (item.recommendationId !== recommendationId) {
+        return item
+      }
+
+      return {
+        ...item,
+        isCompleted: toggleResult.completed,
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    alert('Error al registrar el estado de la recomendacion.')
+  } finally {
+    togglingRecommendationIds.value = togglingRecommendationIds.value.filter(
+      (id) => id !== recommendationId,
+    )
+  }
+}
 
 onMounted(async () => {
   try {
     isLoading.value = true
 
     if (authStore.user) {
-      const response = await $axios.get(
-        `/user-recommendation/${authStore.user._id}/`,
-      )
-      recomendations.value = response.data.userRecommendation.recommendationIds
+      const response = await $axios.get('/tracking/today')
+      recomendations.value = response.data as ITrackingTask[]
     }
   } catch (error) {
     console.log(error)
-    alert('Error al obtener tus recomendaciones.')
+    alert('Error al obtener tus tareas de hoy.')
   } finally {
     isLoading.value = false
   }
@@ -52,30 +99,86 @@ onMounted(async () => {
           </div>
         </v-col>
       </v-row>
+
+      <v-row>
+        <v-col cols="12" class="d-flex justify-end">
+          <v-btn
+            color="greenShadow"
+            class="catamaran-regular font-weight-bold"
+            @click="goToCalendarView"
+          >
+            Vista calendario
+          </v-btn>
+        </v-col>
+      </v-row>
+
       <v-row>
         <v-col
           v-for="(recomendation, i) in recomendations"
-          :key="i"
+          :key="recomendation.recommendationId || i"
           cols="12"
           md="3"
         >
-          <v-sheet
+          <v-card
             rounded="xl"
-            class="px-4 py-4 pt-5 d-flex flex-column justify-space-around align-center text-center h-100"
+            class="px-4 py-4 pt-5 d-none d-md-flex flex-column justify-space-between h-100"
             :elevation="5"
           >
-            <div class="mb-9">
-              <span class="text-body-1 catamaran-regular">
-                {{ recomendation.recommendation }}
-              </span>
+            <div>
+              <div class="mb-5 text-center">
+                <span class="text-body-1 catamaran-regular font-weight-bold">
+                  Basado en: {{ recomendation.category }}
+                </span>
+              </div>
+              <div class="mb-7 text-center">
+                <span class="text-body-1 catamaran-regular">
+                  {{ recomendation.recommendation }}
+                </span>
+              </div>
             </div>
-            <span class="text-body-1 catamaran-regular">
-              <span class="text-body-1 catamaran-regular font-weight-bold">
-                Categoría:
-              </span>
-              {{ recomendation.category }}
-            </span>
-          </v-sheet>
+            <v-btn
+              block
+              color="greenShadow"
+              class="catamaran-regular font-weight-bold"
+              :disabled="recomendation.isCompleted || isToggling(recomendation.recommendationId)"
+              :loading="isToggling(recomendation.recommendationId)"
+              @click="toggleRecommendation(recomendation.recommendationId)"
+            >
+              Hecho!
+            </v-btn>
+          </v-card>
+
+          <v-expansion-panels class="d-md-none">
+            <v-expansion-panel>
+              <v-expansion-panel-title>
+                <div class="w-100 d-flex align-center justify-space-between ga-2">
+                  <div class="d-flex flex-column">
+                    <span class="text-subtitle-2 catamaran-regular font-weight-bold">
+                      Basado en: {{ recomendation.category }}
+                    </span>
+                    <span class="text-body-2 catamaran-regular text-decoration-underline">
+                      {{ getShortRecommendation(recomendation.recommendation, 50) }}
+                    </span>
+                  </div>
+                  <v-btn
+                    size="small"
+                    color="greenShadow"
+                    class="catamaran-regular font-weight-bold"
+                    :disabled="recomendation.isCompleted || isToggling(recomendation.recommendationId)"
+                    :loading="isToggling(recomendation.recommendationId)"
+                    @click.stop="toggleRecommendation(recomendation.recommendationId)"
+                  >
+                    Hecho!
+                  </v-btn>
+                </div>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <span class="text-body-2 catamaran-regular">
+                  {{ recomendation.recommendation }}
+                </span>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-col>
       </v-row>
     </v-container>
