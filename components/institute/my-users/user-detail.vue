@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/store/auth'
+import CalendarRecomendations from '~/components/institute/my-users/recommendations/calendar-recomendations.vue'
 import type {
   IUserDetail,
   IQuestionnaireResultItem,
@@ -21,6 +22,15 @@ const instituteId = authStore.user?.institute?._id || authStore.user?.institute
 const userDetail = ref<IUserDetail | null>(null)
 const isLoading = ref(false)
 const errorMsg = ref('')
+const questionnaireItemsPerPage = ref(5)
+const questionnaireItemsPerPageOptions = [
+  { value: 5, title: '5' },
+  { value: 10, title: '10' },
+  { value: 25, title: '25' },
+  { value: 50, title: '50' },
+  { value: 100, title: '100' },
+  { value: -1, title: 'Todos' },
+]
 
 const resultHeaders = [
   { title: 'Cuestionario', key: 'questionnaireTitle', sortable: false },
@@ -222,7 +232,8 @@ onMounted(() => {
               </v-col>
               <v-col
                 cols="12"
-                class="d-flex justify-end ga-2"
+                md="6"
+                class="d-flex justify-center ga-2"
                 v-if="userDetail.studentData"
               >
                 <v-btn
@@ -235,6 +246,13 @@ onMounted(() => {
                 >
                   Información del campus
                 </v-btn>
+              </v-col>
+              <v-col
+                cols="12"
+                md="6"
+                class="d-flex justify-center ga-2"
+                v-if="userDetail.studentData?.demographicData"
+              >
                 <v-btn
                   color="thirdy"
                   variant="tonal"
@@ -258,7 +276,8 @@ onMounted(() => {
             <v-data-table
               :headers="resultHeaders"
               :items="userDetail.questionnaireResults"
-              :items-per-page="10"
+              v-model:items-per-page="questionnaireItemsPerPage"
+              :items-per-page-options="questionnaireItemsPerPageOptions"
               class="catamaran-regular"
               no-data-text="Este usuario no ha realizado cuestionarios"
             >
@@ -267,6 +286,13 @@ onMounted(() => {
               </template>
             </v-data-table>
           </v-card>
+        </v-col>
+
+        <v-col cols="12">
+          <CalendarRecomendations
+            :user-id="userId"
+            :institute-id="String(instituteId || '')"
+          />
         </v-col>
       </template>
     </v-row>
