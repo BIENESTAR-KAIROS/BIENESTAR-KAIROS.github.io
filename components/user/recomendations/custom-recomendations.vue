@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CalendarRecomendations from '~/components/user/recomendations/calendar-recomendations.vue'
 import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
 import type { ITrackingToggleResponse } from '~/interfaces/tracking/tracking-toggle.interface'
 import { useAuthStore } from '~/store/auth'
@@ -9,12 +10,14 @@ const isLoading = ref(false)
 const recomendations = ref([] as ITrackingTask[])
 const togglingRecommendationIds = ref([] as string[])
 const authStore = useAuthStore()
-const router = useRouter()
 
 const isToggling = (recommendationId: string): boolean =>
   togglingRecommendationIds.value.includes(recommendationId)
 
-const getShortRecommendation = (recommendation: string, maxLength = 35): string => {
+const getShortRecommendation = (
+  recommendation: string,
+  maxLength = 35,
+): string => {
   if (recommendation.length <= maxLength) {
     return recommendation
   }
@@ -22,18 +25,11 @@ const getShortRecommendation = (recommendation: string, maxLength = 35): string 
   return `${recommendation.slice(0, maxLength)}...`
 }
 
-const goToCalendarView = () => {
-  router.push('/user/recomendations/calendar')
-}
-
 const toggleRecommendation = async (recommendationId: string) => {
   try {
     togglingRecommendationIds.value.push(recommendationId)
 
-    const response = await $axios.post(
-      '/tracking/toggle',
-      { recommendationId },
-    )
+    const response = await $axios.post('/tracking/toggle', { recommendationId })
 
     const toggleResult = response.data as ITrackingToggleResponse
 
@@ -82,7 +78,7 @@ onMounted(async () => {
   </div>
   <div v-show="!isLoading">
     <v-container>
-      <v-row>
+      <v-row no-gutters>
         <v-col cols="12">
           <div class="my-4">
             <h1 class="handlee-regular text-h3 font-weight-regular">
@@ -91,7 +87,7 @@ onMounted(async () => {
           </div>
         </v-col>
         <v-col cols="12">
-          <div class="my-4">
+          <div class="my-2">
             <h2 class="handlee-regular text-h5 font-weight-regular">
               Estas son algunas recomendaciones de Kairos con base en tus
               resultados y tu perfil personal
@@ -100,15 +96,19 @@ onMounted(async () => {
         </v-col>
       </v-row>
 
+      <v-row no-gutters>
+        <v-col cols="12">
+          <CalendarRecomendations />
+        </v-col>
+      </v-row>
+
       <v-row>
-        <v-col cols="12" class="d-flex justify-end">
-          <v-btn
-            color="greenShadow"
-            class="catamaran-regular font-weight-bold"
-            @click="goToCalendarView"
-          >
-            Vista calendario
-          </v-btn>
+        <v-col cols="12">
+          <div class="my-2">
+            <h2 class="handlee-regular text-h4 font-weight-bold">
+              Tus recomendaciones
+            </h2>
+          </div>
         </v-col>
       </v-row>
 
@@ -136,37 +136,55 @@ onMounted(async () => {
                 </span>
               </div>
             </div>
-            <v-btn
-              block
-              color="greenShadow"
-              class="catamaran-regular font-weight-bold"
-              :disabled="recomendation.isCompleted || isToggling(recomendation.recommendationId)"
-              :loading="isToggling(recomendation.recommendationId)"
-              @click="toggleRecommendation(recomendation.recommendationId)"
-            >
-              Hecho!
-            </v-btn>
+            <v-card-actions>
+              <v-btn
+                block
+                color="greenShadow"
+                class="catamaran-regular font-weight-bold"
+                :disabled="
+                  recomendation.isCompleted ||
+                  isToggling(recomendation.recommendationId)
+                "
+                :loading="isToggling(recomendation.recommendationId)"
+                @click="toggleRecommendation(recomendation.recommendationId)"
+              >
+                Hecho!
+              </v-btn>
+            </v-card-actions>
           </v-card>
 
           <v-expansion-panels class="d-md-none">
             <v-expansion-panel>
               <v-expansion-panel-title>
-                <div class="w-100 d-flex align-center justify-space-between ga-2">
+                <div
+                  class="w-100 d-flex align-center justify-space-between ga-2"
+                >
                   <div class="d-flex flex-column">
-                    <span class="text-subtitle-2 catamaran-regular font-weight-bold">
+                    <span
+                      class="text-subtitle-2 catamaran-regular font-weight-bold"
+                    >
                       Basado en: {{ recomendation.category }}
                     </span>
-                    <span class="text-body-2 catamaran-regular text-decoration-underline">
-                      {{ getShortRecommendation(recomendation.recommendation, 50) }}
+                    <span
+                      class="text-body-2 catamaran-regular text-decoration-underline"
+                    >
+                      {{
+                        getShortRecommendation(recomendation.recommendation, 50)
+                      }}
                     </span>
                   </div>
                   <v-btn
                     size="small"
                     color="greenShadow"
                     class="catamaran-regular font-weight-bold"
-                    :disabled="recomendation.isCompleted || isToggling(recomendation.recommendationId)"
+                    :disabled="
+                      recomendation.isCompleted ||
+                      isToggling(recomendation.recommendationId)
+                    "
                     :loading="isToggling(recomendation.recommendationId)"
-                    @click.stop="toggleRecommendation(recomendation.recommendationId)"
+                    @click.stop="
+                      toggleRecommendation(recomendation.recommendationId)
+                    "
                   >
                     Hecho!
                   </v-btn>
