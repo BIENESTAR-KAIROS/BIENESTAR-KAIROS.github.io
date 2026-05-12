@@ -57,6 +57,7 @@ const getSafeDate = (value: Date | string): Date => {
 const calendarBaseDate = computed(() => getSafeDate(currentDate.value))
 const currentMonth = computed(() => calendarBaseDate.value.getMonth() + 1)
 const currentYear = computed(() => calendarBaseDate.value.getFullYear())
+const totalRecommendations = computed(() => todayTasks.value.length)
 
 const isSameDay = (a: Date, b: Date): boolean => {
   return (
@@ -161,7 +162,7 @@ const buildCalendarEvents = () => {
     )
 
     events.push({
-      name: `Logradas: ${madeCount}`,
+      name: `Logradas: ${madeCount}/ ${totalRecommendations.value}`,
       start: dayDate,
       end: dayDate,
       allDay: true,
