@@ -22,6 +22,7 @@ const inputText = ref('')
 const isLoading = ref(false)
 const hasStarted = ref(false)
 const alertaRiesgo = ref(false)
+const lastModelResponse = ref<string | undefined>(undefined)
 
 const messagesContainer = ref<HTMLElement | null>(null)
 
@@ -52,6 +53,7 @@ const sendMessage = async (userMessage?: string) => {
       alerta: boolean
     }>(`/assessment-session/${HARDCODED_USER_ID}/message`, {
       questionnaireId: HARDCODED_QUESTIONNAIRE_ID,
+      modelResponse: lastModelResponse.value,
       userMessage: hasStarted.value ? textToSend : undefined,
     })
 
@@ -62,6 +64,9 @@ const sendMessage = async (userMessage?: string) => {
     if (alerta) {
       alertaRiesgo.value = true
     }
+
+    // Store the last model response for the next request
+    lastModelResponse.value = respuestaIa
 
     hasStarted.value = true
   } catch (error) {
