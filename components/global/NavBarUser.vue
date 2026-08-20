@@ -13,9 +13,9 @@ function openNavBar() {
 <template>
   <v-app-bar
     v-if="$vuetify.display.smAndDown"
-    :elevation="4"
-    color="greenShadow"
-    class=" "
+    :elevation="0"
+    color="#065C5D"
+    class="kairos-app-bar"
   >
     <v-btn
       v-if="mobile"
@@ -27,8 +27,15 @@ function openNavBar() {
 
     <template v-if="$vuetify.display.smAndDown" #append>
       <NuxtLink href="/user/dashboard">
-        <v-img src="/logo-white.png" height="60" width="60" class="nav-logo" />
+        <v-img src="/logo-white.png" height="40" width="40" class="nav-logo" />
       </NuxtLink>
     </template>
   </v-app-bar>
 </template>
+
+<style scoped>
+.kairos-app-bar {
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+}
+</style>
