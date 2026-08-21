@@ -1,281 +1,428 @@
 <script setup lang="ts">
-import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
 import type { ITrackingMonthlyStatsResponse } from '~/interfaces/tracking/tracking-stats.interface'
+import { useAuthStore } from '~/store/auth'
+
+interface IAppointment {
+  _id: string
+  appointmentDate: string
+  status: string
+}
 
 const { $axios } = useNuxtApp()
+const authStore = useAuthStore()
 
 const isLoading = ref(false)
-const currentDate = ref<Date | string>(new Date())
-const selectedCalendarDate = ref<Date | null>(null)
-const todayTasks = ref([] as ITrackingTask[])
+const viewDate = ref(new Date())
+const selectedDay = ref<number | null>(new Date().getDate())
 const completedByDay = ref<Record<number, number>>({})
+const recommendationsByDay = ref<Record<number, string[]>>({})
+const appointmentDays = ref<Set<number>>(new Set())
 
-const parseCalendarDateValue = (value: unknown): Date | null => {
-  if (value instanceof Date) {
-    return value
-  }
+const today = new Date()
 
-  if (typeof value === 'string') {
-    const localDateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-    if (localDateMatch) {
-      const [, year, month, day] = localDateMatch
-      return new Date(Number(year), Number(month) - 1, Number(day))
-    }
+const currentMonth = computed(() => viewDate.value.getMonth())
+const currentYear = computed(() => viewDate.value.getFullYear())
 
-    const parsedDate = new Date(value)
-    if (!Number.isNaN(parsedDate.getTime())) {
-      return parsedDate
-    }
-  }
+const monthLabel = computed(() =>
+  viewDate.value
+    .toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+    .replace(/^\w/, (c) => c.toUpperCase()),
+)
 
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    const year = Number(record.year)
-    const month = Number(record.month)
-    const day = Number(record.day)
+const weekdayLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
 
-    if (
-      Number.isInteger(year) &&
-      Number.isInteger(month) &&
-      Number.isInteger(day) &&
-      year > 0 &&
-      month > 0 &&
-      day > 0
-    ) {
-      return new Date(year, month - 1, day)
-    }
-  }
+const daysInMonth = computed(
+  () => new Date(currentYear.value, currentMonth.value + 1, 0).getDate(),
+)
 
-  return null
+const daysInPrevMonth = computed(
+  () => new Date(currentYear.value, currentMonth.value, 0).getDate(),
+)
+
+const firstWeekday = computed(
+  () => new Date(currentYear.value, currentMonth.value, 1).getDay(),
+)
+
+const isCurrentMonthInView = computed(
+  () =>
+    currentYear.value === today.getFullYear() &&
+    currentMonth.value === today.getMonth(),
+)
+
+interface ICalendarCell {
+  day: number
+  inMonth: boolean
+  isToday: boolean
+  count: number
+  hasAppointment: boolean
 }
 
-const getSafeDate = (value: Date | string): Date => {
-  const parsedDate = parseCalendarDateValue(value)
-  return parsedDate ?? new Date()
-}
+const calendarCells = computed<ICalendarCell[]>(() => {
+  const cells: ICalendarCell[] = []
 
-const calendarBaseDate = computed(() => getSafeDate(currentDate.value))
-const currentMonth = computed(() => calendarBaseDate.value.getMonth() + 1)
-const currentYear = computed(() => calendarBaseDate.value.getFullYear())
-const totalRecommendations = computed(() => todayTasks.value.length)
-
-const isSameDay = (a: Date, b: Date): boolean => {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
-}
-
-const selectedDayCompletedCount = computed(() => {
-  if (!selectedCalendarDate.value) {
-    return 0
-  }
-
-  return completedByDay.value[selectedCalendarDate.value.getDate()] ?? 0
-})
-
-const selectedDayLabel = computed(() => {
-  if (!selectedCalendarDate.value) {
-    return ''
-  }
-
-  return selectedCalendarDate.value.toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-})
-
-const selectedDayRecommendations = computed(() => {
-  if (!selectedCalendarDate.value || selectedDayCompletedCount.value <= 0) {
-    return [] as string[]
-  }
-
-  const now = new Date()
-  if (isSameDay(selectedCalendarDate.value, now)) {
-    const completedToday = todayTasks.value
-      .filter((task) => task.isCompleted)
-      .map((task) => task.recommendation)
-
-    if (completedToday.length > 0) {
-      return completedToday
-    }
-  }
-
-  const recommendationCatalog = todayTasks.value.map(
-    (task) => task.recommendation,
-  )
-
-  if (recommendationCatalog.length === 0) {
-    return Array.from(
-      { length: selectedDayCompletedCount.value },
-      () => 'Recomendación registrada',
-    )
-  }
-
-  return Array.from({ length: selectedDayCompletedCount.value }, (_, i) => {
-    return recommendationCatalog[i % recommendationCatalog.length]
-  })
-})
-
-const onCalendarDateClick = (payload: any) => {
-  const clickedDate = parseCalendarDateValue(payload?.date ?? payload)
-  if (!clickedDate) {
-    return
-  }
-
-  selectedCalendarDate.value = clickedDate
-}
-
-const getShortRecommendation = (
-  recommendation: string,
-  maxLength = 35,
-): string => {
-  if (recommendation.length <= maxLength) {
-    return recommendation
-  }
-
-  return `${recommendation.slice(0, maxLength)}...`
-}
-
-const buildCalendarEvents = () => {
-  const events: {
-    name: string
-    start: Date
-    end: Date
-    allDay: boolean
-    color: string
-  }[] = []
-
-  for (const [day, madeCount] of Object.entries(completedByDay.value)) {
-    const dayNumber = Number(day)
-    if (madeCount <= 0) {
-      continue
-    }
-
-    const dayDate = new Date(
-      currentYear.value,
-      calendarBaseDate.value.getMonth(),
-      dayNumber,
-    )
-
-    events.push({
-      name: `Logradas: ${madeCount}/ ${totalRecommendations.value}`,
-      start: dayDate,
-      end: dayDate,
-      allDay: true,
-      color: 'success',
+  for (let i = firstWeekday.value - 1; i >= 0; i--) {
+    cells.push({
+      day: daysInPrevMonth.value - i,
+      inMonth: false,
+      isToday: false,
+      count: 0,
+      hasAppointment: false,
     })
   }
 
-  return events
+  for (let day = 1; day <= daysInMonth.value; day++) {
+    cells.push({
+      day,
+      inMonth: true,
+      isToday: isCurrentMonthInView.value && day === today.getDate(),
+      count: completedByDay.value[day] ?? 0,
+      hasAppointment: appointmentDays.value.has(day),
+    })
+  }
+
+  const trailing = (7 - (cells.length % 7)) % 7
+  for (let day = 1; day <= trailing; day++) {
+    cells.push({
+      day,
+      inMonth: false,
+      isToday: false,
+      count: 0,
+      hasAppointment: false,
+    })
+  }
+
+  return cells
+})
+
+function cellBackground(cell: ICalendarCell): string {
+  if (!cell.inMonth) return 'transparent'
+  if (cell.count >= 3) return '#065C5D'
+  if (cell.count === 2) return '#6CC5CB'
+  if (cell.count === 1) return '#DBF2F4'
+  if (cell.hasAppointment) return '#F0EAF5'
+  return '#f4f8f9'
 }
 
-const calendarEvents = computed(() => buildCalendarEvents())
-
-const fetchTodayTasks = async () => {
-  const todayResponse = await $axios.get('/tracking/today')
-  todayTasks.value = todayResponse.data as ITrackingTask[]
+function cellTextColor(cell: ICalendarCell): string {
+  if (!cell.inMonth) return '#c3ced1'
+  if (cell.count >= 3) return '#fff'
+  if (cell.count === 2) return '#04494a'
+  if (cell.count === 1) return '#065C5D'
+  if (cell.hasAppointment) return '#5c4a75'
+  return '#5c7078'
 }
 
-const fetchMonthlyStats = async () => {
-  const statsResponse = await $axios.get('/tracking/stats', {
-    params: {
-      month: currentMonth.value,
-      year: currentYear.value,
-    },
-  })
+const selectedCell = computed(() =>
+  calendarCells.value.find((cell) => cell.inMonth && cell.day === selectedDay.value),
+)
 
-  const statsData = statsResponse.data as ITrackingMonthlyStatsResponse
-  completedByDay.value = statsData.completedByDay.reduce(
-    (acc, item) => {
-      acc[item.day] = item.count
-      return acc
-    },
-    {} as Record<number, number>,
+const selectedDayLabel = computed(() => {
+  if (!selectedCell.value) return ''
+  const date = new Date(currentYear.value, currentMonth.value, selectedCell.value.day)
+  return date
+    .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
+    .replace(/^\w/, (c) => c.toUpperCase())
+})
+
+const selectedDayRecommendations = computed(() => {
+  if (!selectedCell.value) return [] as string[]
+  return recommendationsByDay.value[selectedCell.value.day] ?? []
+})
+
+function selectDay(cell: ICalendarCell) {
+  if (!cell.inMonth) return
+  selectedDay.value = cell.day
+}
+
+function goToPrevMonth() {
+  viewDate.value = new Date(currentYear.value, currentMonth.value - 1, 1)
+}
+
+function goToNextMonth() {
+  viewDate.value = new Date(currentYear.value, currentMonth.value + 1, 1)
+}
+
+async function fetchMonthlyStats() {
+  const response = await $axios.get<ITrackingMonthlyStatsResponse>(
+    '/tracking/stats',
+    { params: { month: currentMonth.value + 1, year: currentYear.value } },
   )
+
+  const byDay: Record<number, number> = {}
+  const recsByDay: Record<number, string[]> = {}
+
+  for (const item of response.data.completedByDay) {
+    byDay[item.day] = item.count
+    recsByDay[item.day] = item.recommendations ?? []
+  }
+
+  completedByDay.value = byDay
+  recommendationsByDay.value = recsByDay
 }
 
-const fetchData = async () => {
+async function fetchAppointments() {
+  const userId = authStore.user?.id || authStore.user?._id
+  if (!userId) {
+    appointmentDays.value = new Set()
+    return
+  }
+
   try {
-    isLoading.value = true
-    await fetchTodayTasks()
-    await fetchMonthlyStats()
+    const response = await $axios.get<IAppointment[]>(`/calendary/patient/${userId}`)
+    const days = new Set<number>()
+
+    for (const appointment of response.data) {
+      if (appointment.status === 'cancelled') continue
+      const date = new Date(appointment.appointmentDate)
+      if (
+        date.getFullYear() === currentYear.value &&
+        date.getMonth() === currentMonth.value
+      ) {
+        days.add(date.getDate())
+      }
+    }
+
+    appointmentDays.value = days
   } catch (error) {
     console.log(error)
-    alert('Error al cargar el historial de recomendaciones.')
+    appointmentDays.value = new Set()
+  }
+}
+
+async function fetchData() {
+  try {
+    isLoading.value = true
+    await Promise.all([fetchMonthlyStats(), fetchAppointments()])
+  } catch (error) {
+    console.log(error)
   } finally {
     isLoading.value = false
   }
 }
 
-onMounted(async () => {
-  await fetchData()
-})
+onMounted(fetchData)
 
-watch([currentMonth, currentYear], async () => {
-  await fetchMonthlyStats()
-})
-
-watch(currentDate, (newDate) => {
-  selectedCalendarDate.value = getSafeDate(newDate)
+watch([currentMonth, currentYear], () => {
+  fetchData()
 })
 </script>
 
 <template>
-  <div v-show="isLoading" class="w-100 h-100">
-    <div class="w-100 h-100 d-flex justify-center align-center">
-      <v-progress-circular color="primary" indeterminate></v-progress-circular>
+  <div class="calendar-card">
+    <div class="calendar-card__header">
+      <span class="calendar-card__month">{{ monthLabel }}</span>
+      <div class="calendar-card__nav">
+        <button type="button" class="calendar-card__nav-btn" @click="goToPrevMonth">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+        <button type="button" class="calendar-card__nav-btn" @click="goToNextMonth">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="calendar-card__weekdays">
+      <span v-for="(label, i) in weekdayLabels" :key="i">{{ label }}</span>
+    </div>
+
+    <div v-if="isLoading" class="calendar-card__loading">
+      <v-progress-circular color="primary" indeterminate size="28" />
+    </div>
+
+    <div v-else class="calendar-card__grid">
+      <button
+        v-for="(cell, i) in calendarCells"
+        :key="i"
+        type="button"
+        class="calendar-card__cell"
+        :class="{
+          'calendar-card__cell--today': cell.isToday,
+          'calendar-card__cell--selected': cell.inMonth && cell.day === selectedDay,
+          'calendar-card__cell--muted': !cell.inMonth,
+        }"
+        :style="{ background: cellBackground(cell), color: cellTextColor(cell) }"
+        :disabled="!cell.inMonth"
+        @click="selectDay(cell)"
+      >
+        {{ cell.day }}
+      </button>
+    </div>
+
+    <div class="calendar-card__legend">
+      <span class="calendar-card__legend-dot" style="background: #065c5d" />
+      <span class="calendar-card__legend-label">3+ tareas</span>
+      <span class="calendar-card__legend-dot" style="background: #6cc5cb; margin-left: 8px" />
+      <span class="calendar-card__legend-label">1–2 tareas</span>
+      <span class="calendar-card__legend-dot" style="background: #f0eaf5; margin-left: 8px" />
+      <span class="calendar-card__legend-label">Cita</span>
+    </div>
+
+    <div v-if="selectedCell" class="calendar-card__detail">
+      <span class="calendar-card__detail-title">{{ selectedDayLabel }}</span>
+      <span v-if="selectedCell.hasAppointment" class="calendar-card__detail-appointment">
+        Tienes una cita agendada este día.
+      </span>
+      <ul v-if="selectedDayRecommendations.length > 0" class="calendar-card__detail-list">
+        <li v-for="(rec, i) in selectedDayRecommendations" :key="i">{{ rec }}</li>
+      </ul>
+      <span
+        v-else-if="!selectedCell.hasAppointment"
+        class="calendar-card__detail-empty"
+      >
+        Sin tareas completadas este día.
+      </span>
     </div>
   </div>
-
-  <div v-show="!isLoading">
-    <v-container>
-      <v-row>
-        <v-col cols="12">
-          <div class="my-4">
-            <h1 class="handlee-regular text-h3 font-weight-regular">
-              Vista calendario
-            </h1>
-          </div>
-        </v-col>
-      </v-row>
-
-      <v-row>
-        <v-col cols="12">
-          <v-card rounded="xl" :elevation="5" class="pa-4">
-            <v-calendar
-              v-model="currentDate"
-              :events="calendarEvents"
-              @click:date="onCalendarDateClick"
-            ></v-calendar>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <v-row
-        v-if="selectedCalendarDate && selectedDayCompletedCount > 0"
-        class="mt-2"
-      >
-        <v-col cols="12">
-          <v-card rounded="xl" :elevation="3" class="pa-4">
-            <h3 class="text-h6 catamaran-regular font-weight-bold mb-2">
-              Recomendaciones realizadas el {{ selectedDayLabel }}
-            </h3>
-            <ul class="pl-6">
-              <li
-                v-for="(recommendation, index) in selectedDayRecommendations"
-                :key="`${recommendation}-${index}`"
-                class="catamaran-regular mb-1"
-              >
-                {{ getShortRecommendation(recommendation, 50) }}
-              </li>
-            </ul>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-  </div>
 </template>
+
+<style scoped>
+.calendar-card {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #eaf1f2;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.calendar-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-card__month {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.calendar-card__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.calendar-card__nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 0;
+  background: #f4f8f9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-card__nav-btn:hover {
+  background: #dbf2f4;
+}
+
+.calendar-card__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b8189;
+  text-align: center;
+}
+
+.calendar-card__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.calendar-card__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-card__cell {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-family: 'Figtree', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.calendar-card__cell--muted {
+  cursor: default;
+}
+
+.calendar-card__cell--today {
+  box-shadow: inset 0 0 0 2px #0e2a36;
+  font-weight: 800;
+}
+
+.calendar-card__cell--selected:not(.calendar-card__cell--muted) {
+  box-shadow: inset 0 0 0 2px #07979f;
+}
+
+.calendar-card__legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #f0f5f6;
+  flex-wrap: wrap;
+}
+
+.calendar-card__legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+}
+
+.calendar-card__legend-label {
+  font-size: 12px;
+  color: #5c7078;
+}
+
+.calendar-card__detail {
+  background: #f4f8f9;
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-card__detail-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.calendar-card__detail-appointment {
+  font-size: 13px;
+  color: #5c4a75;
+  font-weight: 600;
+}
+
+.calendar-card__detail-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-card__detail-list li {
+  font-size: 13px;
+  color: #31474f;
+}
+
+.calendar-card__detail-empty {
+  font-size: 13px;
+  color: #5f767e;
+}
+</style>
