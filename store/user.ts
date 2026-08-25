@@ -8,6 +8,10 @@ import type {
   IUser,
   IUserQuestionnaireQueue,
 } from '~/interfaces/user/user.interface'
+import type {
+  IDemographicHistory,
+  IDemographicSurveyAvailability,
+} from '~/interfaces/user/demographic-history.interface'
 import { translateGender } from '~/utils/constants/translations'
 
 export const useUserStore = defineStore('user', {
@@ -58,14 +62,14 @@ export const useUserStore = defineStore('user', {
 
       const payload = { studentData: userCampusInfo }
 
-      if (payload.studentData.demographicData) {
-        this.user!.studentData!.demographicSurveyCompleted = true
-      }
-
       const response = await nuxtApp.$axios.patch<{
         user: IUser
         message?: string
       }>(`/user/${id}/student-data`, payload)
+
+      if (payload.studentData.demographicData && this.user?.studentData) {
+        this.user.studentData.demographicSurveyCompleted = true
+      }
 
       let passed = true
 
@@ -119,6 +123,24 @@ export const useUserStore = defineStore('user', {
       this.user!.questionnaireQueue = sortedQueue
 
       return sortedQueue
+    },
+    async getDemographicHistory(): Promise<IDemographicHistory> {
+      const nuxtApp = useNuxtApp()
+
+      const response = await nuxtApp.$axios.get<IDemographicHistory>(
+        '/demographic-history/me',
+      )
+
+      return response.data
+    },
+    async getDemographicSurveyAvailability(): Promise<IDemographicSurveyAvailability> {
+      const nuxtApp = useNuxtApp()
+
+      const response = await nuxtApp.$axios.get<IDemographicSurveyAvailability>(
+        '/demographic-history/me/availability',
+      )
+
+      return response.data
     },
   },
 })

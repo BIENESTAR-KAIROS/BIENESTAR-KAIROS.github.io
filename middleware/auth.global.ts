@@ -33,7 +33,11 @@ const authRoutes: string[] = [
 const mainUserAuthRoute = '/user/dashboard'
 const mainInstituteAuthRoute = '/institute/dashboard'
 
-const publicRoutes: string[] = ['/auth/reset-password', '/user/verification']
+const publicRoutes: string[] = [
+  '/auth/reset-password',
+  '/user/verification',
+  '/chat',
+]
 
 function isValidRoute(path: string, routes: string[]): boolean {
   return routes.some((route) => {
