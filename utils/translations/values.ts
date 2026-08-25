@@ -33,6 +33,22 @@ export const valueLabels: Record<string, string> = {
   '5_TO_8_HOURS_PER_WEEK': '5 a 8 horas por semana',
   MORE_THAN_8_HOURS_PER_WEEK: 'Más de 8 horas por semana',
   NONE: 'Ninguna',
+
+  WITH_PARENTS: 'Vivo con mis padres/familia',
+  ALONE_RENTED: 'Residencia rentada',
+  ALONE_OWNED: 'Residencia propia',
+  MORE_THAN_12000: 'Más de $12,000',
+  LESS_THAN_10000: 'Menos de $10,000',
+  BETWEEN_10000_20000: '$10,000 - $20,000',
+  MORE_THAN_40000: 'Más de $40,000',
+  NOT_WORKING: 'No trabajo mientras estudio',
+  LESS_THAN_8_HOURS_WEEK: 'Menos de 8 horas semanales',
+  BETWEEN_8_AND_12_HOURS_WEEK: 'Entre 8 y 12 horas semanales',
+  BETWEEN_12_AND_20_HOURS_WEEK: 'Entre 12 y 20 horas semanales',
+  LESS_THAN_ONE_PER_MONTH: 'Menos de una vez al mes',
+  MORE_THAN_ONCE_PER_WEEK: 'Más de una vez a la semana',
+  '4_TO_6_HOURS_PER_WEEK': 'De 4 a 6 horas por semana',
+  '6_TO_8_HOURS_PER_WEEK': 'De 6 a 8 horas por semana',
 }
 
 export function translateValue(val: any): string {

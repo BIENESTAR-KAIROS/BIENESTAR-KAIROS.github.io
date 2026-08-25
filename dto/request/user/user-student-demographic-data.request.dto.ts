@@ -9,13 +9,15 @@ import { PhysicalActivityEnum } from '~/utils/constants/demographics/physical-ac
 export interface StudentDemographicDataRequestDto {
   zipCode: string
   civilStatus: CivilStatusEnum
-  studyYear: number
   housingSituation: HousingSituationEnum
   personalMonthlyIncome: PersonalMonthlyIncomeEnum
   familyMonthlyIncome: FamilyMonthlyIncomeEnum
-  employmentStatus: EmploymentStatusEnum
   hasChronicDisease: boolean
-  tobaccoConsumption: boolean
-  alcoholConsumption: ConsumptionFrequencyEnum
+  nicotineProductUse: boolean
   weeklyPhysicalActivity: PhysicalActivityEnum
+  // Only asked by the institutes that opted into the extra questions.
+  studyYear?: number
+  employmentStatus?: EmploymentStatusEnum
+  tobaccoConsumption?: boolean
+  alcoholConsumption?: ConsumptionFrequencyEnum
 }
