@@ -13,9 +13,16 @@ import type {
 import type { IQuestionOption } from '~/interfaces/quizzes/quiz.interface'
 
 export enum QuestionType {
+  /** Legacy name for a single-answer question with options. */
   MULTIPLE_CHOICE = 'multiple_choice',
+  SINGLE_CHOICE = 'single_choice',
+  /** Several answers at once. */
+  CHECKBOX = 'checkbox',
+  /** Single answer picked from a long catalogue. */
+  DROPDOWN = 'dropdown',
   TEXT = 'text',
   DATE = 'date',
+  NUMBER = 'number',
   RATE = 'rate',
 }
 
@@ -29,7 +36,7 @@ export interface IQuizResponse {
   question: string
   questionId: string
   options: IQuizResponseOption[]
-  answer: number | Date | string | Array<string>
+  answer: number | Date | string | Array<string> | Array<number>
   type: QuestionType
   evaluateByCategory?: boolean
   category?: string | null
@@ -60,6 +67,42 @@ export class AlreadySubmittedError extends Error {
     this.name = 'AlreadySubmittedError'
     this.statusCode = 409
   }
+}
+
+/** A question is answered when it holds something other than the `-1` seed. */
+export function isAnswered(question: IQuizResponse): boolean {
+  const { answer } = question
+  if (Array.isArray(answer)) return answer.length > 0
+  if (answer instanceof Date) return true
+  if (typeof answer === 'string') return answer.trim().length > 0
+  return typeof answer === 'number' && answer > -1
+}
+
+/** Option weights the student picked — one for single answers, many for checkboxes. */
+export function selectedWeights(question: IQuizResponse): number[] {
+  const { answer } = question
+  if (Array.isArray(answer)) return answer.map(Number)
+  if (typeof answer === 'number' && answer > -1) return [answer]
+  return []
+}
+
+/** Subquestions hanging off the options the student actually picked. */
+export function activeSubquestions(question: IQuizResponse): IQuizResponse[] {
+  const picked = selectedWeights(question)
+  if (picked.length === 0) return []
+
+  return question.options
+    .filter((option) => picked.includes(option.option.weight))
+    .flatMap((option) => option.subquestions ?? [])
+}
+
+/** The question plus every subquestion the current answers opened, depth first. */
+export function expandQuestion(question: IQuizResponse): IQuizResponse[] {
+  return [question, ...activeSubquestions(question).flatMap(expandQuestion)]
+}
+
+export function expandQuiz(questions: IQuizResponse[]): IQuizResponse[] {
+  return questions.flatMap(expandQuestion)
 }
 
 export const useQuizStore = defineStore('quiz', {

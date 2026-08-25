@@ -52,15 +52,38 @@ definePageMeta({
 </script>
 
 <template>
-  <v-container v-if="isLoading">
-    <v-row>
-      <v-col cols="12" class="d-flex justify-center">
-        <v-progress-circular
-          color="primary"
-          indeterminate
-        ></v-progress-circular>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div v-if="isLoading" class="quiz-loading">
+    <span class="quiz-loading__spinner" />
+    <span>Preparando tu cuestionario…</span>
+  </div>
   <Quiz v-else />
 </template>
+
+<style scoped>
+.quiz-loading {
+  font-family: 'Figtree', sans-serif;
+  background: #f4f8f9;
+  min-height: 100vh;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #5c7078;
+}
+
+.quiz-loading__spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid #dbf2f4;
+  border-top-color: #07979f;
+  animation: quiz-loading-spin 0.8s linear infinite;
+}
+
+@keyframes quiz-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

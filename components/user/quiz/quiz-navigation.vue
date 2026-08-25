@@ -1,231 +1,429 @@
 <script setup lang="ts">
-import { useQuizStore, type IQuizResponse } from '~/store/quiz'
-import { useDisplay } from 'vuetify'
+import {
+  useQuizStore,
+  QuestionType,
+  activeSubquestions,
+  expandQuestion,
+  expandQuiz,
+  isAnswered,
+  type IQuizResponse,
+} from '~/store/quiz'
 import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
-import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
 
 const route = useRoute()
 const { $router } = useNuxtApp()
-const { mobile } = useDisplay()
 const quizStore = useQuizStore()
-const authStore = useAuthStore()
 const userStore = useUserStore()
 
-let isLastQuestion = computed(() => {
-  return quizStore.isLastQuestion
+const isSending = ref(false)
+const errorMessage = ref('')
+const showHistory = ref(false)
+
+const actualQuestion = computed(() => quizStore.actualQuestion)
+
+const canAccessQuestionHistory = computed(
+  () => quizStore.canAccessQuestionHistory,
+)
+
+const isLastQuestion = computed(
+  () => actualQuestion.value === quizStore.quiz.length - 1,
+)
+
+// Kept in sync for anything else in the flow still reading the store flag.
+watch(isLastQuestion, (value) => (quizStore.isLastQuestion = value), {
+  immediate: true,
 })
 
-const actualQuestion = computed(() => {
-  return quizStore.actualQuestion
-})
+const expandedQuiz = computed(() => expandQuiz(quizStore.quiz))
 
-const totalQuesitons = computed(() => {
-  return quizStore.totalQuestions
-})
+const remainingQuestions = computed(
+  () => expandedQuiz.value.filter((question) => !isAnswered(question)).length,
+)
 
-const canAccessQuestionHistory = computed(() => {
-  return quizStore.canAccessQuestionHistory
+const isFinished = computed(() => remainingQuestions.value === 0)
+
+/** Subquestions the answer to the question on screen just opened. */
+const addedQuestions = computed(() => {
+  const question = quizStore.quiz[actualQuestion.value]
+  if (!question) return 0
+  return activeSubquestions(question).flatMap(expandQuestion).length
 })
 
 function selectQuestion(numberQuestion: number) {
   quizStore.actualQuestion = numberQuestion
+  showHistory.value = false
 }
 
 function clickNext() {
-  if (actualQuestion.value === totalQuesitons.value - 1)
-    quizStore.isLastQuestion = true
-  else quizStore.actualQuestion += 1
+  errorMessage.value = ''
+  if (!isLastQuestion.value) quizStore.actualQuestion += 1
 }
 
 function clickPrevious() {
-  if (actualQuestion.value === 0) return
-  else quizStore.actualQuestion -= 1
+  errorMessage.value = ''
+  if (actualQuestion.value > 0) quizStore.actualQuestion -= 1
 }
 
-const cleanAnswer = (answer: IQuizResponse): SendQuestionAnswerDto => {
+const cleanAnswer = (question: IQuizResponse): SendQuestionAnswerDto => {
+  const { answer } = question
+  const keepAsIs =
+    Array.isArray(answer) ||
+    question.type === QuestionType.TEXT ||
+    question.type === QuestionType.DATE
+
   return {
-    questionId: answer.questionId,
-    response: new Number(answer.answer) as number,
+    questionId: question.questionId,
+    response: keepAsIs ? answer : Number(answer),
   }
 }
 
-const cleanAnswers = (answers: IQuizResponse[]) => {
-  answers.forEach((answer) => {
-    if ((answer.answer as number) > -1)
-      quizStore.answers.push(cleanAnswer(answer))
-
-    if (answer.options.length > 0) {
-      answer.options.forEach((option) => {
-        if (option.subquestions && option.subquestions.length > 0) {
-          cleanAnswers(option.subquestions)
-        }
-      })
-    }
-  })
-}
+/**
+ * Only the questions the student actually saw are submitted — answers left
+ * behind on a branch they moved away from are dropped.
+ */
+const collectAnswers = (): SendQuestionAnswerDto[] =>
+  expandQuiz(quizStore.quiz).filter(isAnswered).map(cleanAnswer)
 
 async function finalizeQuiz() {
   if (!isFinished.value) {
-    alert('No has contestado todas las preguntas')
+    errorMessage.value = `Te faltan ${remainingQuestions.value} ${
+      remainingQuestions.value === 1 ? 'pregunta' : 'preguntas'
+    } por responder.`
     return
   }
 
+  errorMessage.value = ''
+  isSending.value = true
+
   try {
-    quizStore.answers = []
-    cleanAnswers(quizStore.quiz)
+    quizStore.answers = collectAnswers()
     const response = await quizStore.sendAnswers()
 
     if (!response) {
-      alert('Error al enviar las respuestas')
+      errorMessage.value = 'No pudimos enviar tus respuestas. Intenta de nuevo.'
       return
     }
 
     if (response.hasRecomendations) {
       userStore.lastQuizId = route.params.id as string
       await $router.push('/user/quiz/finish-quizz')
-    } else {
-      if (userStore.user) {
-        userStore.user.questionnaireQueue = {
-          queue: userStore.user.questionnaireQueue.queue.map((item) =>
-            item.questionnaireId === route.params.id
-              ? { ...item, solved: true }
-              : item,
-          ),
-        }
+      return
+    }
 
-        const thisQuiz = userStore.user.questionnaireQueue.queue.find(
-          (item) => item.questionnaireId === route.params.id,
+    if (userStore.user) {
+      userStore.user.questionnaireQueue = {
+        queue: userStore.user.questionnaireQueue.queue.map((item) =>
+          item.questionnaireId === route.params.id
+            ? { ...item, solved: true }
+            : item,
+        ),
+      }
+
+      const thisQuiz = userStore.user.questionnaireQueue.queue.find(
+        (item) => item.questionnaireId === route.params.id,
+      )
+
+      if (thisQuiz && thisQuiz.solved) {
+        const nextQuiz = userStore.user.questionnaireQueue.queue.find(
+          (item) => !item.solved,
         )
 
-        if (thisQuiz && thisQuiz.solved) {
-          const nextQuiz = userStore.user.questionnaireQueue.queue.find(
-            (item) => !item.solved,
-          )
+        userStore.lastQuizId = route.params.id as string
 
-          userStore.lastQuizId = route.params.id as string
-
-          if (nextQuiz) {
-            $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
-          } else {
-            $router.push('/user/dashboard')
-          }
+        if (nextQuiz) {
+          $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
+        } else {
+          $router.push('/user/dashboard')
         }
       }
     }
   } catch (error: any) {
+    errorMessage.value = 'No pudimos enviar tus respuestas. Intenta de nuevo.'
     console.log(error)
+  } finally {
+    isSending.value = false
   }
 }
-
-const isFinished = computed(() => {
-  return quizStore.totalQuestions === countAnsweredQuestions.value
-})
-
-const countAnsweredQuestions = computed(() => {
-  let count = 0
-  quizStore.quiz.map((question) => {
-    if ((question.answer as number) > -1) count++
-  })
-
-  return count
-})
 </script>
 
 <template>
-  <v-bottom-navigation v-show="mobile" :elevation="0" grow>
-    <v-btn value="previous" class="text-secondary" @click="clickPrevious">
-      <v-icon>mdi-arrow-left-bold</v-icon>
-      <span>Anterior</span>
-    </v-btn>
-
-    <v-menu v-if="canAccessQuestionHistory">
-      <template v-slot:activator="{ props }">
-        <v-btn value="recent" v-bind="props">
-          <v-icon>mdi-history</v-icon>
-          <span>Historial</span>
-        </v-btn>
-      </template>
-      <v-list>
-        <v-list-item
-          v-for="i in totalQuesitons"
-          :key="i"
-          :value="i - 1"
-          @click="selectQuestion(i - 1)"
+  <div class="quiz-nav">
+    <div v-if="showHistory" class="quiz-nav__history">
+      <span class="quiz-nav__history-title">Ir a una pregunta</span>
+      <div class="quiz-nav__history-grid">
+        <button
+          v-for="(question, index) in quizStore.quiz"
+          :key="question.questionId"
+          type="button"
+          class="quiz-nav__chip"
+          :class="{
+            'quiz-nav__chip--done': isAnswered(question),
+            'quiz-nav__chip--current': index === actualQuestion,
+          }"
+          @click="selectQuestion(index)"
         >
-          <v-list-item-title>Pregunta {{ i }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+          {{ index + 1 }}
+        </button>
+      </div>
+    </div>
 
-    <v-btn
-      value="finalize"
-      class="text-secondary"
-      @click="finalizeQuiz"
-      v-show="isFinished"
-    >
-      <v-icon>mdi-check</v-icon>
-      <span>Finalizar</span>
-    </v-btn>
+    <p v-if="errorMessage" class="quiz-nav__error" role="alert">
+      {{ errorMessage }}
+    </p>
 
-    <v-btn
-      value="next"
-      class="text-secondary"
-      @click="clickNext"
-      v-show="!isFinished"
-    >
-      <v-icon>mdi-arrow-right-bold</v-icon>
-      <span>Siguiente</span>
-    </v-btn>
-  </v-bottom-navigation>
+    <div class="quiz-nav__bar">
+      <span class="quiz-nav__note">
+        <template v-if="addedQuestions > 0">
+          Se {{ addedQuestions === 1 ? 'añadió' : 'añadieron' }}
+          {{ addedQuestions }}
+          {{ addedQuestions === 1 ? 'pregunta' : 'preguntas' }} por tu
+          respuesta.
+        </template>
+        <template v-else-if="remainingQuestions > 0">
+          Te {{ remainingQuestions === 1 ? 'falta' : 'faltan' }}
+          {{ remainingQuestions }}
+          {{ remainingQuestions === 1 ? 'pregunta' : 'preguntas' }}.
+        </template>
+        <template v-else> Ya respondiste todas las preguntas. </template>
+      </span>
 
-  <div v-show="!mobile">
-    <v-container class="pa-0">
-      <v-row no-gutters class="mt-1">
-        <v-col cols="2">
-          <v-btn @click="clickPrevious" color="thirdy">
-            <v-icon class="ms-2">mdi-arrow-left-bold</v-icon>
-            Anterior
-          </v-btn>
-        </v-col>
-
-        <v-col cols="2">
-          <v-btn @click="clickNext" color="secondary" v-show="!isLastQuestion">
-            Siguiente
-            <v-icon class="ms-2">mdi-arrow-right-bold</v-icon>
-          </v-btn>
-
-          <v-btn
-            color="secondary"
-            v-show="isLastQuestion"
-            @click="finalizeQuiz"
+      <div class="quiz-nav__actions">
+        <button
+          v-if="canAccessQuestionHistory"
+          type="button"
+          class="quiz-nav__ghost"
+          :aria-expanded="showHistory"
+          @click="showHistory = !showHistory"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            Finalizar
-            <v-icon class="ms-2">mdi-check</v-icon>
-          </v-btn>
-        </v-col>
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 4v4h4M12 8v4l3 2" />
+          </svg>
+          Historial
+        </button>
 
-        <v-col cols="2" offset="6">
-          <v-menu v-if="canAccessQuestionHistory">
-            <template v-slot:activator="{ props }">
-              <v-btn value="recent" v-bind="props" :elevation="8">
-                <v-icon>mdi-history</v-icon>
-                <span>Historial</span>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item
-                v-for="i in totalQuesitons"
-                :key="i"
-                :value="i - 1"
-                @click="selectQuestion(i - 1)"
-              >
-                <v-list-item-title>Pregunta {{ i }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-col>
-      </v-row>
-    </v-container>
+        <button
+          type="button"
+          class="quiz-nav__secondary"
+          :disabled="actualQuestion === 0"
+          @click="clickPrevious"
+        >
+          Anterior
+        </button>
+
+        <button
+          v-if="!isLastQuestion"
+          type="button"
+          class="quiz-nav__primary"
+          @click="clickNext"
+        >
+          Siguiente
+        </button>
+
+        <button
+          v-else
+          type="button"
+          class="quiz-nav__primary"
+          :disabled="isSending"
+          @click="finalizeQuiz"
+        >
+          {{ isSending ? 'Enviando…' : 'Finalizar' }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.quiz-nav {
+  font-family: 'Figtree', sans-serif;
+  color: #0e2a36;
+  padding-top: 16px;
+  border-top: 1px solid #f0f5f6;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quiz-nav__history {
+  background: #f4f8f9;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-nav__history-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5f767e;
+}
+
+.quiz-nav__history-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quiz-nav__chip {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 2px solid #e3ecee;
+  background: #fff;
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4b5f68;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.quiz-nav__chip:hover {
+  border-color: #6cc5cb;
+}
+
+.quiz-nav__chip--done {
+  border-color: #07979f;
+  background: #f0fafa;
+  color: #065c5d;
+}
+
+.quiz-nav__chip--current {
+  border-color: #065c5d;
+  background: #065c5d;
+  color: #fff;
+}
+
+.quiz-nav__error {
+  margin: 0;
+  border-radius: 16px;
+  background: #fdf4e7;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #8a5a17;
+}
+
+.quiz-nav__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quiz-nav__note {
+  flex: 1;
+  min-width: 180px;
+  font-size: 13px;
+  color: #4b5f68;
+}
+
+.quiz-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-nav__ghost,
+.quiz-nav__secondary,
+.quiz-nav__primary {
+  height: 46px;
+  border-radius: 999px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.quiz-nav__ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 0;
+  background: #f4f8f9;
+  color: #4b5f68;
+}
+
+.quiz-nav__ghost svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+
+.quiz-nav__ghost:hover {
+  background: #dbf2f4;
+  color: #065c5d;
+}
+
+.quiz-nav__secondary {
+  padding: 0 22px;
+  border: 2px solid #cfdde1;
+  background: #fff;
+  color: #0e2a36;
+}
+
+.quiz-nav__secondary:hover:not(:disabled) {
+  border-color: #07979f;
+  color: #07979f;
+}
+
+.quiz-nav__secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quiz-nav__primary {
+  padding: 0 26px;
+  border: 0;
+  background: #065c5d;
+  color: #fff;
+}
+
+.quiz-nav__primary:hover:not(:disabled) {
+  background: #07979f;
+}
+
+.quiz-nav__primary:disabled {
+  background: #cfdde1;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .quiz-nav__actions {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .quiz-nav__ghost {
+    padding: 0 14px;
+  }
+
+  .quiz-nav__secondary,
+  .quiz-nav__primary {
+    flex: 1;
+    padding: 0 14px;
+    text-align: center;
+  }
+}
+</style>
