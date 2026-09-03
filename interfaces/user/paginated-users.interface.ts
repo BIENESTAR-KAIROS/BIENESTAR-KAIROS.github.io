@@ -9,6 +9,17 @@ export interface IUserSummary {
   registrationDate: Date
   lastAccess?: Date
   quizCountLastSixMonths: number
+  /** Último score de cuestionario, o null si nunca ha respondido uno. */
+  wellbeingScore: number | null
+}
+
+/** Conteos por chip de filtro, para el ámbito de búsqueda actual. */
+export interface IUserListFacets {
+  all: number
+  students: number
+  staff: number
+  inactive: number
+  attention: number
 }
 
 export interface IPaginatedUsers {
@@ -17,4 +28,5 @@ export interface IPaginatedUsers {
   page: number
   limit: number
   totalPages: number
+  facets: IUserListFacets
 }
