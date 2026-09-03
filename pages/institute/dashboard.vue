@@ -7,7 +7,14 @@ definePageMeta({
 </script>
 
 <template>
-  <main>
+  <main class="institute-page">
     <DashboardInstitute />
   </main>
 </template>
+
+<style scoped>
+.institute-page {
+  min-height: 100vh;
+  background: #f5f4f8;
+}
+</style>

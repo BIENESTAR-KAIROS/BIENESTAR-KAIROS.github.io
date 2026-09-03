@@ -1,14 +1,8 @@
 <script setup lang="ts">
+import { NuxtLink } from '#components'
 import { useAuthStore } from '~/store/auth'
-import DailyAnswerVolume from './daily-answer-volume.vue'
-import ResolvedQuizzes from './resolved-quizzes.vue'
-import TerapyBalance from './terapy-balance.vue'
-import type { IStatsResponse } from '~/interfaces/stats/stats.interface'
 import { useInstituteStore } from '~/store/institute'
 import type { IDashboardStatisticsInstituteResponse } from '~/dto/response/institute/dashboard-statistics-institute.response.dto'
-
-const days = [30, 90, 15, 8]
-const selectedDays = ref(days[0])
 
 const { $axios } = useNuxtApp()
 const authStore = useAuthStore()
@@ -22,7 +16,6 @@ const instituteIdForStats =
 onMounted(async () => {
   try {
     isLoading.value = true
-    console.log(authStore.user)
 
     const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
       `/institute/${instituteIdForStats}/dashboard-statistics`,
@@ -30,233 +23,236 @@ onMounted(async () => {
 
     instituteStore.statistics = data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }
 })
 
-const totalUsers = computed(() => instituteStore.statistics?.totalUsers)
-const activeUsers = computed(() => instituteStore.statistics?.activeUsers)
-const studentsUsers = computed(() => instituteStore.statistics?.studentUsers)
-const administratorUsers = computed(
-  () => instituteStore.statistics?.administratorUsers,
+const formatNumber = (value?: number) =>
+  typeof value === 'number' ? value.toLocaleString('es-MX') : '—'
+
+const initials = computed(() =>
+  [authStore.user?.name, authStore.user?.lastName]
+    .filter(Boolean)
+    .map((part) => part!.charAt(0).toUpperCase())
+    .join(''),
 )
-const adminAvailable = computed(
-  () => instituteStore.statistics?.adminSlotsAvailable,
-)
+
+const activeShare = computed(() => {
+  const { totalUsers, activeUsers } = instituteStore.statistics || {}
+
+  if (!totalUsers || typeof activeUsers !== 'number') return null
+
+  return `${Math.round((activeUsers / totalUsers) * 100)}% de la población`
+})
+
+const adminSlotsLabel = computed(() => {
+  const slots = instituteStore.statistics?.adminSlotsAvailable
+
+  if (typeof slots !== 'number') return null
+
+  return slots === 1 ? '1 espacio libre' : `${slots} espacios libres`
+})
+
+const stats = computed(() => [
+  {
+    label: 'Total usuarios',
+    value: formatNumber(instituteStore.statistics?.totalUsers),
+  },
+  {
+    label: 'Activos',
+    value: formatNumber(instituteStore.statistics?.activeUsers),
+    note: activeShare.value,
+  },
+  {
+    label: 'Estudiantes',
+    value: formatNumber(instituteStore.statistics?.studentUsers),
+    link: { to: '/institute/my-users', text: 'Ver detalles →' },
+  },
+  {
+    label: 'Administradores',
+    value: formatNumber(instituteStore.statistics?.administratorUsers),
+    note: adminSlotsLabel.value,
+  },
+])
 </script>
 
 <template>
-  <v-container>
-    <v-row no-gutters>
-      <v-col cols="12">
-        <div class="my-4">
-          <h1 class="handlee-regular text-h4 font-weight-thin">
-            ¡Bienvenido de nuevo,
-            {{ authStore.user?.name + ' ' + authStore.user?.lastName }}!
-          </h1>
-        </div>
-      </v-col>
-      <v-col cols="12">
-        <div class="my-4">
-          <h2 class="handlee-regular text-h6 font-weight-thin">
-            Esta es la información general de tu población y sus parámetros, son
-            aquellos detalles que Kairos considera que debes de saber de tu
-            población, si quieres ver información a tu medida, accede a “Mis
-            estadísticas”.
-          </h2>
-        </div>
-      </v-col>
-      <v-container>
-        <!--
-        <v-row no-gutters>
-          <v-col cols="12">
-            <v-row no-gutters>
-              <v-col cols="5" lg="3">
-                <span class="catamaran-regular font-body-1">
-                  Datos referenciados de los últimos:
-                </span>
-              </v-col>
-              <v-col cols="3" md="2" lg="1">
-                <v-select
-                  label="días"
-                  :items="days"
-                  variant="solo"
-                  bg-color="purpleShadow"
-                  v-model="selectedDays"
-                  rounded="xxxl"
-                >
-                </v-select>
-              </v-col>
-              <v-col>
-                <span class="ms-2 catamaran-regular font-body-1">días.</span>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
-      -->
-        <v-row>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Total de usuarios
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ totalUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Usuarios activos
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ activeUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1"> Estudiantes </span>
-                <div class="d-flex flex-column align-center">
-                  <!-- <v-icon class="text-error me-2 text-h3 font-weight-bold">
-                    mdi-arrow-down
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ studentsUsers }}
-                  </span>
-                  <NuxtLink
-                    class="handlee-regular font-body-2 font-weight-thin"
-                    :href="'/institute/my-users'"
-                  >
-                    Ver detalles
-                  </NuxtLink>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Administradores
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ administratorUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <!--
-          <v-col cols="12" md="6" lg="4">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Volumen diario de respuestas
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <DailyAnswerVolume />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Balance de terapias internas y externas
-                </span>
-                <div class="d-flex flex-row align-center h-85">
-                  <TerapyBalance />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card
-              color="purpleShadow pa-4"
-              rounded="xl"
-              height="250"
-              elevation="5"
-            >
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Balance de cuestionarios resueltos
-                </span>
-                <div class="d-flex flex-row align-center h-85 w-85">
-                  <ResolvedQuizzes />
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          -->
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100 text-center"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Espacios de administración disponibles
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ adminAvailable }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-row>
-  </v-container>
+  <div class="institute-home">
+    <header class="institute-home__header">
+      <div class="institute-home__heading">
+        <span class="institute-home__eyebrow">Inicio</span>
+        <h1 class="institute-home__title">
+          Bienvenida de nuevo, {{ authStore.user?.name }}
+          {{ authStore.user?.lastName }}
+        </h1>
+      </div>
+      <span v-if="initials" class="institute-home__avatar">{{ initials }}</span>
+    </header>
+
+    <div class="institute-home__body">
+      <p class="institute-home__intro">
+        Esta es la información general de tu población y sus parámetros, son
+        aquellos detalles que Kairos considera que debes de saber de tu
+        población, si quieres ver información a tu medida, accede a
+        “Mis estadísticas”.
+      </p>
+
+      <div class="institute-home__grid">
+        <component
+          :is="stat.link ? NuxtLink : 'div'"
+          v-for="stat in stats"
+          :key="stat.label"
+          :to="stat.link?.to"
+          class="stat-card"
+          :class="{ 'stat-card--link': stat.link }"
+        >
+          <span class="stat-card__label">{{ stat.label }}</span>
+          <span class="stat-card__value">{{ stat.value }}</span>
+          <span v-if="stat.link" class="stat-card__cta">
+            {{ stat.link.text }}
+          </span>
+          <span v-else-if="stat.note" class="stat-card__note">
+            {{ stat.note }}
+          </span>
+        </component>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.institute-home {
+  min-height: 100%;
+  background: #f5f4f8;
+  font-family: 'Figtree', sans-serif;
+  color: #0e2a36;
+}
+
+.institute-home__header {
+  background: #fff;
+  border-bottom: 1px solid #eae6f0;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.institute-home__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.institute-home__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9b8fb0;
+}
+
+.institute-home__title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.institute-home__avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 999px;
+  background: #cbadd8;
+  color: #3c2f52;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.institute-home__body {
+  padding: 24px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.institute-home__intro {
+  margin: 0;
+  max-width: 780px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #6b6080;
+}
+
+.institute-home__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #efebf5;
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 104px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.stat-card--link:hover {
+  border-color: #8475a0;
+}
+
+.stat-card__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9b8fb0;
+}
+
+.stat-card__value {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-card__note {
+  font-size: 12px;
+  color: #7d7391;
+}
+
+.stat-card__cta {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8475a0;
+}
+
+@media (max-width: 1100px) {
+  .institute-home__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .institute-home__header,
+  .institute-home__body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .institute-home__grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
