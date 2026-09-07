@@ -1,4 +1,5 @@
 export { genderLabels } from './gender'
 export { campusLabels } from './campus'
 export { demoLabels } from './demographic'
+export { roleLabels } from './roles'
 export { valueLabels, translateValue } from './values'

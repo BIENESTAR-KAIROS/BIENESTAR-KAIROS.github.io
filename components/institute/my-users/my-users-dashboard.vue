@@ -1,69 +1,194 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/store/auth'
-import { useInstituteStore } from '~/store/institute'
-import { required } from '~/utils/helpers/form-rules'
-import type { IDashboardStatisticsInstituteResponse } from '~/dto/response/institute/dashboard-statistics-institute.response.dto'
+import { roleLabels } from '~/utils/translations'
 import type {
   IUserSummary,
   IPaginatedUsers,
+  IUserListFacets,
 } from '~/interfaces/user/paginated-users.interface'
-
-const isLoading = ref(false)
 
 const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
-const instituteStore = useInstituteStore()
 
-const instituteIdForStats =
-  authStore.user?.institute?._id || authStore.user?.institute
+const instituteId = authStore.user?.institute?._id || authStore.user?.institute
 
-// Paginated users state
+const isLoadingUsers = ref(false)
+const usersError = ref('')
+
 const users = ref<IUserSummary[]>([])
 const page = ref(1)
 const limit = ref(10)
 const total = ref(0)
 const totalPages = ref(0)
 const searchText = ref('')
-const isLoadingUsers = ref(false)
+const facets = ref<IUserListFacets | null>(null)
+
+/** Umbral de atención; coincide con WELLBEING_ATTENTION_THRESHOLD del backend. */
+const ATTENTION_THRESHOLD = 2.5
+const MAX_SCORE = 5
+
+type FilterKey = 'all' | 'students' | 'staff' | 'inactive' | 'attention'
+
+const activeFilter = ref<FilterKey>('all')
+
+/** Cada chip se traduce a los params `role` / `status` del endpoint. */
+const filterParams: Record<FilterKey, { role?: string; status?: string }> = {
+  all: {},
+  students: { role: 'STUDENT' },
+  staff: { role: 'STAFF' },
+  inactive: { status: 'INACTIVE' },
+  attention: { status: 'ATTENTION' },
+}
+
+const chips = computed(() => [
+  { key: 'all' as FilterKey, label: 'Todos', count: facets.value?.all },
+  {
+    key: 'students' as FilterKey,
+    label: 'Estudiantes',
+    count: facets.value?.students,
+  },
+  { key: 'staff' as FilterKey, label: 'Staff', count: facets.value?.staff },
+  {
+    key: 'inactive' as FilterKey,
+    label: 'Sin actividad',
+    count: facets.value?.inactive,
+  },
+  {
+    key: 'attention' as FilterKey,
+    label: 'Requieren atención',
+    count: facets.value?.attention,
+    warn: true,
+  },
+])
+
+function selectFilter(key: FilterKey) {
+  if (activeFilter.value === key) return
+  activeFilter.value = key
+  page.value = 1
+  fetchUsers()
+}
+
+const needsAttention = (user: IUserSummary) =>
+  user.wellbeingScore !== null && user.wellbeingScore < ATTENTION_THRESHOLD
+
+const scoreWidth = (score: number) =>
+  `${Math.min(100, Math.max(0, Math.round((score / MAX_SCORE) * 100)))}%`
+
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-const tableHeaders = [
-  { title: 'Nombre', key: 'fullName', sortable: false },
-  { title: 'Email', key: 'email', sortable: false },
-  { title: 'Rol', key: 'roles', sortable: false },
-  { title: 'Activo', key: 'active', sortable: false },
-  { title: 'Quizzes (6m)', key: 'quizCountLastSixMonths', sortable: false },
-  { title: 'Último acceso', key: 'lastAccess', sortable: false },
-  { title: 'Agendar cita', key: 'actions', sortable: false },
-]
+const formatNumber = (value?: number) =>
+  typeof value === 'number' ? value.toLocaleString('es-MX') : '—'
+
+/**
+ * El título cuenta la institución completa, no el resultado filtrado: los
+ * chips no deben cambiar la frase "N personas en tu institución".
+ */
+const headerTitle = computed(() => {
+  const count = facets.value?.all ?? total.value
+  if (!count) return 'Personas en tu institución'
+  const people = count === 1 ? 'persona' : 'personas'
+  return `${formatNumber(count)} ${people} en tu institución`
+})
+
+function getFullName(user: {
+  name: string
+  lastName: string
+  surName?: string
+}) {
+  return [user.name, user.lastName, user.surName].filter(Boolean).join(' ')
+}
+
+function getInitials(user: { name: string; lastName: string }) {
+  return [user.name, user.lastName]
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+}
+
+const isStudent = (user: IUserSummary) => user.roles.includes('STUDENT')
+
+/** El diseño muestra una sola etiqueta por persona, no todos sus roles. */
+function roleLabel(user: IUserSummary) {
+  const primary = isStudent(user)
+    ? 'STUDENT'
+    : (user.roles.find((role) => role !== 'STUDENT') ?? '')
+
+  return roleLabels[primary] || primary || 'Sin rol'
+}
+
+/**
+ * El diseño muestra el último acceso en relativo: "Hoy, 08:12",
+ * "Ayer, 17:40", "Hace 21 días".
+ */
+function formatLastAccess(date?: Date | string) {
+  if (!date) return 'Sin registro'
+
+  const value = new Date(date)
+  if (Number.isNaN(value.getTime())) return 'Sin registro'
+
+  const time = value.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const startOfDay = (input: Date) =>
+    new Date(input.getFullYear(), input.getMonth(), input.getDate()).getTime()
+
+  const days = Math.round(
+    (startOfDay(new Date()) - startOfDay(value)) / 86400000,
+  )
+
+  if (days === 0) return `Hoy, ${time}`
+  if (days === 1) return `Ayer, ${time}`
+  if (days < 30) return `Hace ${days} días`
+
+  return value.toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 async function fetchUsers() {
-  if (!instituteIdForStats) return
+  if (!instituteId) return
   try {
     isLoadingUsers.value = true
+    usersError.value = ''
+
     const params: Record<string, string | number> = {
       page: page.value,
       limit: limit.value,
     }
-    if (searchText.value.trim()) {
-      params.search = searchText.value.trim()
-    }
+
+    const search = searchText.value.trim()
+    if (search) params.search = search
+
+    const { role, status } = filterParams[activeFilter.value]
+    if (role) params.role = role
+    if (status) params.status = status
+
     const { data } = await $axios.get<IPaginatedUsers>(
-      `/user/institute/${instituteIdForStats}`,
+      `/user/institute/${instituteId}`,
       { params },
     )
+
     users.value = data.data
     total.value = data.total
     totalPages.value = data.totalPages
+    facets.value = data.facets ?? null
   } catch (error) {
     console.error('Error fetching users', error)
+    usersError.value =
+      'No pudimos cargar la lista de usuarios. Intenta de nuevo.'
+    users.value = []
+    total.value = 0
+    totalPages.value = 0
   } finally {
     isLoadingUsers.value = false
   }
 }
 
 function onSearchInput() {
-  searchText.value = ''
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     page.value = 1
@@ -71,460 +196,673 @@ function onSearchInput() {
   }, 400)
 }
 
-function onPageChange(newPage: number) {
+function clearSearch() {
+  searchText.value = ''
+  if (searchTimeout) clearTimeout(searchTimeout)
+  page.value = 1
+  fetchUsers()
+}
+
+function goToPage(newPage: number) {
+  if (newPage < 1 || newPage > totalPages.value || newPage === page.value)
+    return
   page.value = newPage
   fetchUsers()
 }
 
-function getFullName(user: IUserSummary): string {
-  return [user.name, user.lastName, user.surName].filter(Boolean).join(' ')
-}
+/**
+ * Paginación del diseño: primeras páginas, elipsis y última.
+ */
+const pageItems = computed<(number | 'gap')[]>(() => {
+  const length = totalPages.value
+  if (length <= 1) return []
+  if (length <= 6) return Array.from({ length }, (_, i) => i + 1)
 
-function formatDate(date?: Date | string): string {
-  if (!date) return 'Sin registro'
-  return new Date(date).toLocaleDateString('es-MX', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+  const current = page.value
+  const items: (number | 'gap')[] = []
+  const window = new Set<number>([1, length, current])
 
-onMounted(async () => {
-  try {
-    isLoading.value = true
-    const { data } = await $axios.get<IDashboardStatisticsInstituteResponse>(
-      `/institute/${instituteIdForStats}/dashboard-statistics`,
-    )
-    instituteStore.statistics = data
-  } catch (error) {
-    console.error(error)
-  } finally {
-    isLoading.value = false
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < length) window.add(i)
   }
+  if (current <= 3) [2, 3].forEach((i) => window.add(i))
+  if (current >= length - 2)
+    [length - 1, length - 2].forEach((i) => window.add(i))
 
-  await fetchUsers()
+  const sorted = [...window]
+    .filter((i) => i >= 1 && i <= length)
+    .sort((a, b) => a - b)
+
+  sorted.forEach((value, index) => {
+    if (index > 0 && value - sorted[index - 1] > 1) items.push('gap')
+    items.push(value)
+  })
+
+  return items
 })
 
-const totalUsers = computed(() => instituteStore.statistics?.totalUsers)
-const activeUsers = computed(() => instituteStore.statistics?.activeUsers)
-const studentsUsers = computed(() => instituteStore.statistics?.studentUsers)
-const administratorUsers = computed(
-  () => instituteStore.statistics?.administratorUsers,
-)
+const rangeLabel = computed(() => {
+  if (!total.value) return 'Sin resultados'
+  const from = (page.value - 1) * limit.value + 1
+  const to = Math.min(page.value * limit.value, total.value)
+  return `Mostrando ${from}–${to} de ${formatNumber(total.value)}`
+})
 
-// Selected user & calendar logic
-const selectedUser = ref<IUserSummary | null>(null)
-const userSchedules = ref<{ appointmentDate: Date }[]>([])
-const showScheduleDialog = ref(false)
-
-async function onOpenSchedule(user: IUserSummary) {
-  selectedUser.value = user
-  try {
-    const { data } = await $axios.get(`/calendary/patient/${user._id}`)
-    userSchedules.value = data
-  } catch (error) {
-    console.error(error)
-    userSchedules.value = []
-  }
-}
-
-function onRowClick(_event: any, row: any) {
-  const user = row.item as IUserSummary
+function goToDetail(user: IUserSummary) {
   $router.push(`/institute/my-users/${user._id}`)
 }
 
-// Add therapy schedule
-const day = ref()
-const startHour = ref()
-const endHour = ref()
+onMounted(fetchUsers)
 
-async function saveSchedule() {
-  const calendly: Ref<{
-    patientId: string
-    psychologistId: string
-    appointmentDate: Date
-    duration?: number
-    timezone?: string
-    appointmentType?: string
-    modality?: string
-    reason?: string
-  }> = ref(
-    {} as {
-      patientId: string
-      psychologistId: string
-      appointmentDate: Date
-      duration?: number
-      timezone?: string
-      appointmentType?: string
-      modality?: string
-      reason?: string
-    },
-  )
-
-  if (selectedUser.value) {
-    calendly.value.patientId = selectedUser.value._id
-    calendly.value.psychologistId = selectedUser.value._id
-    calendly.value.appointmentDate = new Date(day.value + 'T' + startHour.value)
-    try {
-      const { data } = await $axios.post(`/calendary`, {
-        ...calendly.value,
-      })
-    } catch (error) {
-      console.log(error)
-    } finally {
-      userSchedules.value.push({
-        appointmentDate: calendly.value.appointmentDate,
-      })
-      showScheduleDialog.value = false
-    }
-  } else {
-    alert('No hay un usuario seleccionado')
-  }
-}
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+})
 </script>
 
 <template>
-  <v-container>
-    <v-row no-gutters>
-      <v-col cols="12">
-        <div class="my-4">
-          <h1 class="handlee-regular text-h4 font-weight-thin">Mis usuarios</h1>
-        </div>
-      </v-col>
-      <v-col cols="12">
-        <div class="my-4">
-          <h2 class="handlee-regular text-h6 font-weight-thin">
-            Aquí te mostramos la información de tus usuarios, tanto en
-            estadísticas generales como en las particularidades de cada uno de
-            tus usuarios.
-          </h2>
-        </div>
-      </v-col>
-      <v-container>
-        <v-row>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Total de usuarios
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ totalUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Usuarios activos
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ activeUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1"> Estudiantes </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-error me-2 text-h3 font-weight-bold">
-                    mdi-arrow-down
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ studentsUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6" lg="3">
-            <v-card color="pa-4" rounded="xxl" height="110" elevation="5">
-              <div
-                class="d-flex flex-column justify-space-evenly align-center h-100"
-              >
-                <span class="catamaran-regular font-body-1">
-                  Administradores
-                </span>
-                <div class="d-flex flex-row align-center">
-                  <!-- <v-icon class="text-success me-2 text-h3 font-weight-bold">
-                    mdi-arrow-up
-                  </v-icon> -->
-                  <span class="catamaran-regular text-h5">
-                    {{ administratorUsers }}
-                  </span>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-          <v-col cols="12">
-            <v-row no-gutters class="align-center">
-              <v-col cols="12" md="6" class="mb-2">
-                <span class="catamaran-regular font-body-1">
-                  Buscador individual por cada uno de los usuarios:
-                </span>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="searchText"
-                  label="Buscar por nombre, apellido o correo"
-                  variant="solo-filled"
-                  rounded="xxl"
-                  prepend-inner-icon="mdi-magnify"
-                  clearable
-                  hide-details
-                  @input="onSearchInput"
-                  @click:clear="onSearchInput()"
-                />
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col cols="12" class="mt-4">
-            <v-card rounded="xl" elevation="5">
-              <v-data-table
-                :headers="tableHeaders"
-                :items="users"
-                :loading="isLoadingUsers"
-                :items-per-page="limit"
-                hide-default-footer
-                class="catamaran-regular"
-                @click:row="onRowClick"
-              >
-                <template #item.fullName="{ item }">
-                  {{ getFullName(item) }}
-                </template>
-                <template #item.roles="{ item }">
-                  <v-chip
-                    v-for="role in item.roles"
-                    :key="role"
-                    size="small"
-                    class="me-1"
-                    color="primary"
-                    variant="tonal"
-                  >
-                    {{ role }}
-                  </v-chip>
-                </template>
-                <template #item.active="{ item }">
-                  <v-icon :color="item.active ? 'success' : 'error'">
-                    {{ item.active ? 'mdi-check-circle' : 'mdi-close-circle' }}
-                  </v-icon>
-                </template>
-                <template #item.lastAccess="{ item }">
-                  {{ formatDate(item.lastAccess) }}
-                </template>
-                <template #item.actions="{ item }">
-                  <v-btn
-                    icon
-                    variant="text"
-                    size="small"
-                    @click.stop="onOpenSchedule(item)"
-                  >
-                    <v-icon>mdi-calendar-plus</v-icon>
-                  </v-btn>
-                </template>
-                <template #bottom>
-                  <div class="d-flex justify-center align-center pa-4">
-                    <v-pagination
-                      :model-value="page"
-                      :length="totalPages"
-                      :total-visible="5"
-                      rounded="circle"
-                      @update:model-value="onPageChange"
-                    />
-                  </div>
-                </template>
-              </v-data-table>
-            </v-card>
-          </v-col>
-          <v-col cols="12" v-if="selectedUser" class="mt-4">
-            <v-card color=" pa-2" rounded="xl" elevation="5">
-              <v-container>
-                <v-row>
-                  <v-col cols="12" md="2">
-                    <span class="handlee-regular text-h5 font-weight-thin">
-                      {{ getFullName(selectedUser) }}
-                    </span>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-card
-                      class="pa-2 d-flex flex-column justify-center text-center h-100"
-                      color=""
-                      elevation="5"
-                      rounded="xl"
+  <div class="users">
+    <header class="users__header">
+      <div class="users__heading">
+        <span class="users__eyebrow">Mis usuarios</span>
+        <span class="users__title">{{ headerTitle }}</span>
+      </div>
+
+      <div class="users__search">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#9b8fb0"
+          stroke-width="2.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M20 20l-4.8-4.8" />
+        </svg>
+        <input
+          v-model="searchText"
+          class="users__search-input"
+          type="search"
+          placeholder="Buscar por nombre o correo"
+          aria-label="Buscar por nombre o correo"
+          @input="onSearchInput"
+        />
+        <button
+          v-if="searchText"
+          type="button"
+          class="users__search-clear"
+          aria-label="Limpiar búsqueda"
+          @click="clearSearch"
+        >
+          ×
+        </button>
+      </div>
+    </header>
+
+    <div class="users__body">
+      <div class="chips">
+        <button
+          v-for="chip in chips"
+          :key="chip.key"
+          type="button"
+          class="chip"
+          :class="{
+            'chip--active': activeFilter === chip.key,
+            'chip--warn': chip.warn && activeFilter !== chip.key,
+          }"
+          @click="selectFilter(chip.key)"
+        >
+          {{ chip.label }}
+          <template v-if="chip.count !== undefined">
+            · {{ formatNumber(chip.count) }}</template
+          >
+        </button>
+      </div>
+
+      <div class="card">
+        <p v-if="usersError" class="state state--error">{{ usersError }}</p>
+
+        <p v-else-if="isLoadingUsers" class="state">Cargando usuarios…</p>
+
+        <p v-else-if="!users.length" class="state">
+          <template v-if="searchText.trim()">
+            No encontramos usuarios que coincidan con «{{ searchText.trim() }}».
+          </template>
+          <template v-else>Todavía no hay usuarios registrados.</template>
+        </p>
+
+        <template v-else>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="table__pad-lg">Nombre</th>
+                  <th>Rol</th>
+                  <th>Bienestar</th>
+                  <th>Cuestionarios 6m</th>
+                  <th>Último acceso</th>
+                  <th class="table__pad-lg table__right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="user in users"
+                  :key="user._id"
+                  class="row"
+                  :class="{ 'row--warn': needsAttention(user) }"
+                  tabindex="0"
+                  @click="goToDetail(user)"
+                  @keydown.enter="goToDetail(user)"
+                >
+                  <td class="table__pad-lg">
+                    <div class="person">
+                      <span
+                        class="person__avatar"
+                        :class="{
+                          'person__avatar--warn': needsAttention(user),
+                        }"
+                      >
+                        {{ getInitials(user) }}
+                      </span>
+                      <span class="person__copy">
+                        <span class="person__name">{{
+                          getFullName(user)
+                        }}</span>
+                        <span class="person__email">{{ user.email }}</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="pill"
+                      :class="isStudent(user) ? 'pill--student' : 'pill--staff'"
                     >
-                      <span class="handlee-regular text-h5 font-weight-thin">
-                        Resultados de la última respuesta:
+                      {{ roleLabel(user) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      v-if="user.wellbeingScore !== null"
+                      class="score"
+                      :class="{ 'score--warn': needsAttention(user) }"
+                    >
+                      {{ user.wellbeingScore }}
+                      <span class="score__track">
+                        <span
+                          class="score__fill"
+                          :style="{ width: scoreWidth(user.wellbeingScore) }"
+                        />
                       </span>
-                      <span class="catamaran-regular text-h6">
-                        4.5 / 5.0 de Bienestar
-                      </span>
-                    </v-card>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <v-card class="pa-4" color="" elevation="5" rounded="xl">
-                      <span class="handlee-regular text-h5 font-weight-thin">
-                        Citas en agenda del usuario
-                      </span>
-                      <v-row>
-                        <v-col cols="4" class="justify-center">
-                          <v-img src="/calendar.png" width="40" />
-                        </v-col>
-                        <v-col>
-                          <span
-                            class="catamaran-regular text-subtitle-1 font-weight-thin"
-                          >
-                            {{ userSchedules.length }} citas en los próximos
-                            días
-                          </span>
-                        </v-col>
-                        <v-col
-                          v-for="(schedule, i) in userSchedules"
-                          :key="i"
-                          cols="12"
-                        >
-                          <span
-                            class="catamaran-regular text-subtitle-1 font-weight-thin"
-                          >
-                            {{
-                              new Date(
-                                schedule.appointmentDate,
-                              ).toLocaleString()
-                            }}
-                            proxima cita
-                          </span>
-                        </v-col>
-                      </v-row>
-                      <v-card-actions class="d-flex flex-column flex-md-row">
-                        <NuxtLink href="/institute/my-users/clinic-history">
-                          <v-btn
-                            class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
-                            elevation="5"
-                            rounded="xl"
-                            variant="flat"
-                          >
-                            Conocer historia clínica
-                          </v-btn>
-                        </NuxtLink>
-                        <v-btn
-                          class="bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
-                          elevation="5"
-                          rounded="xl"
-                          variant="flat"
-                          @click="showScheduleDialog = true"
-                        >
-                          Agendar una nueva cita
-                        </v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card>
-          </v-col>
-          <!-- Schedule dialog -->
-          <v-dialog v-model="showScheduleDialog" max-width="700">
-            <v-card class="px-6 pt-4">
-              <v-card-title class="handlee-regular text-h4 font-weight-thin">
-                Agendar nueva cita
-              </v-card-title>
-              <v-card-subtitle v-if="selectedUser" class="catamaran-regular">
-                {{ getFullName(selectedUser) }}
-              </v-card-subtitle>
-              <span class="catamaran-regular text-subtitle-1 font-weight-thin">
-                Día de la cita:
-              </span>
-              <v-text-field
-                type="date"
-                label="Día de la cita"
-                variant="solo-filled"
-                clearable
-                rounded="xxl"
-                v-model="day"
-                :rules="[required]"
-                append-inner-icon="mdi-calendar-outline"
-                validate-on="lazy input"
-                class="catamaran-regular text-subtitle-1 font-weight-thin"
-              />
-              <div class="w-100 d-flex flex-row justify-space-between">
-                <div class="w-45">
-                  <span
-                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                  >
-                    Hora de inicio:
-                  </span>
-                  <v-text-field
-                    type="time"
-                    label="Hora de inicio"
-                    variant="solo-filled"
-                    clearable
-                    rounded="xxl"
-                    v-model="startHour"
-                    :rules="[required]"
-                    append-inner-icon="mdi-clock-outline"
-                    validate-on="lazy input"
-                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                  />
-                </div>
-                <div class="w-45">
-                  <span
-                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                  >
-                    Hora de fin:
-                  </span>
-                  <v-text-field
-                    type="time"
-                    label="Hora de fin"
-                    variant="solo-filled"
-                    clearable
-                    rounded="xxl"
-                    v-model="endHour"
-                    append-inner-icon="mdi-clock-outline"
-                    validate-on="lazy input"
-                    class="catamaran-regular text-subtitle-1 font-weight-thin"
-                  />
-                </div>
-              </div>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  @click="saveSchedule"
-                  class="bg- catamaran-regular text-subtitle-1 font-weight-thin"
+                    </span>
+                    <span v-else class="table__empty">—</span>
+                  </td>
+                  <td class="table__count">
+                    {{ user.quizCountLastSixMonths }}
+                  </td>
+                  <td class="table__muted">
+                    {{ formatLastAccess(user.lastAccess) }}
+                  </td>
+                  <td class="table__pad-lg table__right">
+                    <a
+                      v-if="needsAttention(user)"
+                      class="row__contact"
+                      :href="`mailto:${user.email}`"
+                      @click.stop
+                    >
+                      Contactar
+                    </a>
+                    <span v-else class="row__cta">Ver detalle →</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card__footer">
+            <span class="card__range">{{ rangeLabel }}</span>
+            <div v-if="totalPages > 1" class="pager">
+              <template v-for="(item, index) in pageItems" :key="index">
+                <span v-if="item === 'gap'" class="pager__gap">…</span>
+                <button
+                  v-else
+                  type="button"
+                  class="pager__page"
+                  :class="{ 'pager__page--active': item === page }"
+                  @click="goToPage(item)"
                 >
-                  Agregar
-                  <v-icon> mdi-plus </v-icon>
-                </v-btn>
-                <v-btn
-                  class="ms-2 bg-thirdy catamaran-regular text-subtitle-1 font-weight-thin"
-                  @click="showScheduleDialog = false"
-                >
-                  Cerrar
-                  <v-icon> mdi-close </v-icon>
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </v-row>
-      </v-container>
-    </v-row>
-  </v-container>
+                  {{ item }}
+                </button>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.users {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f4f8;
+  font-family: 'Figtree', sans-serif;
+  color: #0e2a36;
+}
+
+.users__header {
+  min-height: 74px;
+  padding: 12px 32px;
+  background: #fff;
+  border-bottom: 1px solid #eae6f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.users__heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.users__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9b8fb0;
+}
+
+.users__title {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.users__search {
+  position: relative;
+  width: 300px;
+  height: 42px;
+  border-radius: 999px;
+  background: #f5f4f8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.users__search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: #0e2a36;
+  outline: none;
+}
+
+.users__search-input::placeholder {
+  color: #9b8fb0;
+}
+
+.users__search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.users__search-clear {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #e7e2ef;
+  color: #6b6080;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.users__body {
+  flex: 1;
+  padding: 22px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #efebf5;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.state {
+  margin: 0;
+  padding: 56px 22px;
+  text-align: center;
+  font-size: 14px;
+  color: #7d7391;
+}
+
+.state--error {
+  color: #b3261e;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table thead tr {
+  height: 46px;
+  background: #faf9fc;
+}
+
+.table thead th {
+  padding: 0 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a7ea3;
+  white-space: nowrap;
+}
+
+.table__pad-lg {
+  padding-left: 22px !important;
+  padding-right: 22px !important;
+}
+
+.table__right {
+  text-align: right;
+}
+
+.row {
+  height: 62px;
+  border-top: 1px solid #f4f1f8;
+  cursor: pointer;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: #faf8fd;
+  outline: none;
+}
+
+.table tbody td {
+  padding: 0 14px;
+  vertical-align: middle;
+}
+
+.table__count {
+  color: #4b3f60;
+}
+
+.table__muted {
+  color: #7d7391;
+  white-space: nowrap;
+}
+
+.table__empty {
+  color: #9b8fb0;
+}
+
+.row__cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: #8475a0;
+  white-space: nowrap;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.person__avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 999px;
+  background: #cbadd8;
+  color: #3c2f52;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.person__copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.person__name {
+  font-weight: 700;
+}
+
+.person__email {
+  font-size: 12px;
+  color: #9b8fb0;
+}
+
+.pill {
+  display: inline-flex;
+  height: 25px;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill--student {
+  background: #dbf2f4;
+  color: #065c5d;
+}
+
+.pill--staff {
+  background: #f0eaf5;
+  color: #5c4a75;
+}
+
+.card__footer {
+  margin-top: auto;
+  padding: 16px 22px;
+  border-top: 1px solid #f4f1f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.card__range {
+  font-size: 13px;
+  color: #7d7391;
+}
+
+.pager {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pager__page,
+.pager__gap {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #f5f4f8;
+  color: #4b3f60;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pager__page {
+  cursor: pointer;
+}
+
+.pager__page:hover {
+  background: #f0eaf5;
+}
+
+.pager__page--active {
+  background: #3c2f52;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Chips de filtro ---------------------------------------------------- */
+
+.chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chip {
+  height: 34px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e2dcec;
+  border-radius: 999px;
+  background: #fff;
+  color: #4b3f60;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: #8475a0;
+}
+
+.chip--warn {
+  background: #fdf1e3;
+  border-color: transparent;
+  color: #8a5a1f;
+  font-weight: 700;
+}
+
+.chip--active {
+  background: #3c2f52;
+  border-color: #3c2f52;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Bienestar ----------------------------------------------------------- */
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #065c5d;
+  white-space: nowrap;
+}
+
+.score__track {
+  width: 52px;
+  height: 6px;
+  border-radius: 999px;
+  background: #eef4f5;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.score__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #6cc5cb;
+}
+
+.score--warn {
+  color: #8a5a1f;
+}
+
+.score--warn .score__track {
+  background: #f5e6d2;
+}
+
+.score--warn .score__fill {
+  background: #d69a4c;
+}
+
+/* Fila que requiere atención ------------------------------------------ */
+
+.row--warn {
+  background: #fffaf3;
+}
+
+.row--warn:hover,
+.row--warn:focus-visible {
+  background: #fdf3e6;
+}
+
+.person__avatar--warn {
+  background: #f3d9b8;
+  color: #7a4f14;
+}
+
+.row__contact {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #8a5a1f;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.row__contact:hover {
+  background: #74491a;
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .users__header,
+  .users__body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .users__search {
+    width: 100%;
+  }
+}
+</style>

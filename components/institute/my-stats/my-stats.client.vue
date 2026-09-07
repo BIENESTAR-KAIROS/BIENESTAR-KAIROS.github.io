@@ -1,474 +1,700 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/store/auth'
-import { useInstituteStore } from '~/store/institute'
-import { Bar, Radar } from 'vue-chartjs'
-import L from 'leaflet'
+import { useDisplay } from 'vuetify'
+import type {
+  IDimensionDetail,
+  IStatsFilters,
+} from '~/interfaces/stats/institute-stats.interface'
+import { genderLabels } from '~/utils/translations'
+import StatsFilters from './stats-filters.vue'
+import StatsFiltersSheet from './stats-filters-sheet.vue'
+import StatsSummary from './stats-summary.vue'
+import StatsDistribution from './stats-distribution.vue'
+import StatsDimensions from './stats-dimensions.vue'
+import StatsMap from './stats-map.vue'
+import StatsEmptyState from './stats-empty-state.vue'
+import StatsDimensionDetail from './stats-dimension-detail.vue'
+import {
+  AGE_RANGE_OPTIONS,
+  DEFAULT_PERIOD_DAYS,
+  periodLabelFor,
+} from './stats-config'
+import { useMyStats } from './use-my-stats'
 
-const days = [30, 90, 15, 8]
-const selectedDays = ref(days[0])
+const { $router } = useNuxtApp()
+const { mobile } = useDisplay()
 
-const nuxtApp = useNuxtApp()
-const authStore = useAuthStore()
-const instituteStore = useInstituteStore()
+const {
+  filters,
+  state,
+  errorMessage,
+  generatedAt,
+  globals,
+  population,
+  privacy,
+  filterOptions,
+  distribution,
+  bands,
+  dimensions,
+  zones,
+  wellbeingDelta,
+  respondentsDelta,
+  widerPeriodCount,
+  widerPeriod,
+  savedViews,
+  resultStats,
+  load,
+  applyFilters,
+  clearFilters,
+  removeFilter,
+  dimensionDetail,
+  exportCsv,
+  loadSavedViews,
+  saveView,
+  deleteView,
+  applySavedView,
+} = useMyStats()
 
-const answersVolume = ref(0)
-const averageScore = ref(0)
-const wellnessScore = ref(0)
-const standardDeviation = ref(0)
-const minMaxScore = ref(`0 / 0`)
+const isFilterSheetOpen = ref(false)
+const openedDimension = ref<IDimensionDetail | null>(null)
+const isExporting = ref(false)
+const isSavingView = ref(false)
+const saveViewName = ref('')
+const isSaveViewOpen = ref(false)
+const actionError = ref('')
 
-const totalScoresData = ref({
-  labels: ['Internas', 'Externas'],
-  datasets: [
-    {
-      label: 'Conexiones por día',
-      data: [60, 40],
-    },
-  ],
+const formatNumber = (value: number) => value.toLocaleString('es-MX')
+
+const periodLabel = computed(() => periodLabelFor(filters.days))
+
+const headerTitle = computed(() => {
+  const count = formatNumber(globals.value.n)
+  const answers = globals.value.n === 1 ? 'respuesta' : 'respuestas'
+
+  // "en el histórico completo" no admite el "en los" que piden los demás.
+  if (filters.days === null)
+    return `${count} ${answers} en el histórico completo`
+
+  return `${count} ${answers} en los ${periodLabel.value.toLowerCase()}`
 })
-const totalScoresOptions = ref({
-  plugins: { legend: { display: false } },
-  scales: {
-    x: {
-      grid: { color: '#1e2d40' },
-      ticks: { maxTicksLimit: 10 },
-      title: { display: true, text: 'Score total', color: '#64748b' },
-    },
-    y: {
-      grid: { color: '#1e2d40' },
-      title: { display: true, text: 'Estudiantes', color: '#64748b' },
-    },
-  },
-})
 
-const subscalesData = ref({
-  labels: ['Autonomía', 'Competencia', 'Relación', 'Estructura'],
-  datasets: [
-    {
-      label: 'Subescalas',
-      data: [3.5, 4.2, 3.8, 4.0],
-      backgroundColor: 'rgba(56,189,248,.7)',
-      borderColor: 'rgba(56,189,248,1)',
-      borderWidth: 2,
-      pointBackgroundColor: 'rgba(56,189,248,1)',
-    },
-  ],
-})
-const subscalesOptions = ref({
-  scales: {
-    r: {
-      min: 1,
-      max: 5,
-      grid: { color: '#1e2d40' },
-      angleLines: { color: '#1e2d40' },
-      pointLabels: { color: '#94a3b8', font: { size: 11 } },
-      ticks: { stepSize: 1, color: '#475569', backdropColor: 'transparent' },
-    },
-  },
-  plugins: { legend: { display: false } },
-})
+/** "Actualizado hoy, 08:15" en vez de un ISO que nadie lee de un vistazo. */
+const updatedLabel = computed(() => {
+  if (!generatedAt.value) return null
 
-// Demographic /////////////
+  const value = new Date(generatedAt.value)
+  if (Number.isNaN(value.getTime())) return null
 
-const map = ref(null) as any
-const MAP_POINTS = ref([])
-const MAP_SMIN = ref(0)
-const MAP_SMAX = ref(150)
-const bounds = ref([])
-const heatPoints = ref([])
-const heatLayer = ref(null)
-
-const updateHeatMap = async () => {
-  if (!map.value?.leafletObject || !heatPoints.value.length) return
-
-  const leafletInstance = map.value.leafletObject
-  leafletInstance.invalidateSize()
-
-  // 2. Convertimos el Proxy a un Array normal de JS
-  const rawPoints = toRaw(heatPoints.value).map((p) => toRaw(p))
-
-  if (heatLayer.value) {
-    leafletInstance.removeLayer(heatLayer.value)
-  }
-
-  try {
-    // 3. Pasamos rawPoints en lugar de heatPoints.value
-    heatLayer.value = await useLHeat({
-      leafletObject: leafletInstance,
-      heatPoints: rawPoints,
-      radius: 30,
-    })
-  } catch (e) {
-    console.error('Error al crear la capa de calor:', e)
-  }
-}
-
-function mapWeight(s) {
-  return Math.max(
-    0.05,
-    Math.min(
-      1,
-      (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1),
-    ),
+  const time = value.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const startOfDay = (input: Date) =>
+    new Date(input.getFullYear(), input.getMonth(), input.getDate()).getTime()
+  const days = Math.round(
+    (startOfDay(new Date()) - startOfDay(value)) / 86400000,
   )
-}
 
-function mapColor(s) {
-  const t = (s - MAP_SMIN.value) / Math.max(MAP_SMAX.value - MAP_SMIN.value, 1)
-  if (t > 0.75) return '#38bdf8'
-  if (t > 0.5) return '#34d399'
-  if (t > 0.25) return '#fbbf24'
-  return '#fb923c'
-}
-
-// Demographic /////////////
-
-const isLoading = ref(false)
-onMounted(async () => {
-  isLoading.value = true
-  try {
-    const response = await nuxtApp.$statsApi.get(
-      `/api/analytics/BienestarKairosDev/bienestar30/summary`,
-    )
-
-    const data = response.data
-    answersVolume.value = data.global_stats.n
-    averageScore.value = data.global_stats.mean
-    wellnessScore.value = data.global_stats.bienestar_promedio_1_5
-    standardDeviation.value = data.global_stats.std
-    minMaxScore.value = `${data.global_stats.min} / ${data.global_stats.max}`
-
-    const dist = data.score_distribution
-    totalScoresData.value = {
-      labels: dist.map((b) => (b._id !== 'other' ? b._id : '?')),
-      datasets: [
-        {
-          data: dist.map((b) => b.count),
-          backgroundColor: dist.map((_, i) => {
-            const p = i / dist.length
-            return p < 0.33
-              ? 'rgba(129,140,248,.7)'
-              : p < 0.66
-                ? 'rgba(56,189,248,.7)'
-                : 'rgba(52,211,153,.7)'
-          }),
-          borderRadius: 3,
-          borderSkipped: false,
-        },
-      ],
-    }
-
-    const SUBS = ['nucleo_emocional', 'dim_b', 'dim_c', 'dim_d', 'dim_e']
-    const SCOLOR = {
-      nucleo_emocional: '#38bdf8',
-      dim_b: '#818cf8',
-      dim_c: '#34d399',
-      dim_d: '#fb923c',
-      dim_e: '#f472b6',
-    }
-    const SLABEL = {
-      nucleo_emocional: 'Estado de ánimo',
-      dim_b: 'Resilencia',
-      dim_c: 'Relaciones sociales',
-      dim_d: 'Propósito',
-      dim_e: 'Autonomía',
-    }
-    const subscales = data.subscale_avg
-    subscalesData.value = {
-      labels: SUBS.map((k) => SLABEL[k]),
-      datasets: [
-        {
-          data: SUBS.map(
-            (k) => subscales.find((s) => s.subscale === k)?.avg ?? 0,
-          ),
-          backgroundColor: 'rgba(56,189,248,.13)',
-          borderColor: '#38bdf8',
-          pointBackgroundColor: SUBS.map((k) => SCOLOR[k]),
-          pointRadius: 5,
-          borderWidth: 2,
-        },
-      ],
-    }
-
-    // Demographic
-    const demographicResponse = await nuxtApp.$statsApi.get(
-      `/api/analytics/BienestarKairosDev/bienestar30/demographic`,
-    )
-
-    const dem = demographicResponse.data
-    const dStudents = dem.students || []
-    const dScores = dStudents.map((s) => s.score_total)
-    const dMean = dScores.length
-      ? dScores.reduce((a, b) => a + b, 0) / dScores.length
-      : 0
-    const dAges = dStudents.filter((s) => s.age).map((s) => s.age)
-    const dCPs = new Set(
-      dStudents.filter((s) => s.zipCode).map((s) => s.zipCode),
-    )
-
-    MAP_POINTS.value = dem.cp_map || []
-    if (MAP_POINTS.value.length) {
-      const sc = MAP_POINTS.value.map((p) => p.mean)
-      MAP_SMIN.value = Math.min(...sc)
-      MAP_SMAX.value = Math.max(...sc)
-      const sm = sc.reduce((a, b) => a + b, 0) / sc.length
-      const lats = MAP_POINTS.value.map((p) => p.lat),
-        lngs = MAP_POINTS.value.map((p) => p.lng)
-      if (lats.length > 0) {
-        bounds.value = [
-          [Math.min(...lats), Math.min(...lngs)],
-          [Math.max(...lats), Math.max(...lngs)],
-        ]
-      } else {
-        // Default a CDMX si no hay puntos
-        bounds.value = [
-          [19.2, -99.3],
-          [19.6, -99.0],
-        ]
-      }
-    }
-
-    console.log(MAP_POINTS)
-
-    heatPoints.value = MAP_POINTS.value
-      .filter((p) => {
-        // Solo permitimos puntos que tengan lat y lng numéricos y no sean NaN
-        const hasLat = typeof p.lat === 'number' && !isNaN(p.lat)
-        const hasLng = typeof p.lng === 'number' && !isNaN(p.lng)
-        return hasLat && hasLng
-      })
-      .map((p) => ({
-        lat: p.lat,
-        lng: p.lng,
-        intensity: mapWeight(p.mean), // Intensidad
-      }))
-    // Solo si hay puntos, intentamos actualizar el mapa
-    if (heatPoints.value.length > 0) {
-      await updateHeatMap()
-    } else {
-      console.warn(
-        'No se encontraron puntos geográficos válidos para el heatmap.',
-      )
-    }
-  } catch (error) {
-    console.error('Error fetching stats:', error)
-  } finally {
-    isLoading.value = false
-  }
+  if (days === 0) return `Actualizado hoy, ${time}`
+  if (days === 1) return `Actualizado ayer, ${time}`
+  return `Actualizado el ${value.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
 })
 
-const onMapReady = async () => {
-  await updateHeatMap()
+const genderLabel = (value: string) =>
+  genderLabels[value] ?? genderLabels[value?.toLowerCase()] ?? value
+
+/** Los chips que resumen los cortes activos en el encabezado móvil. */
+const mobileChips = computed(() => {
+  const chips = [periodLabel.value.replace(/^Últimos? /, '')]
+  if (filters.campus) chips.push(filters.campus)
+  if (filters.department) chips.push(filters.department)
+  if (filters.ageRange) {
+    chips.push(
+      AGE_RANGE_OPTIONS.find((option) => option.value === filters.ageRange)
+        ?.label ?? filters.ageRange,
+    )
+  }
+  if (filters.gender) chips.push(genderLabel(filters.gender))
+  return chips
+})
+
+const activeCutCount = computed(
+  () =>
+    [
+      filters.campus,
+      filters.department,
+      filters.ageRange,
+      filters.gender,
+    ].filter(Boolean).length + (filters.days === DEFAULT_PERIOD_DAYS ? 0 : 1),
+)
+
+const hasComparison = computed(
+  () => resultStats.value !== null && resultStats.value.previous.n > 0,
+)
+
+function openDimension(key: string) {
+  openedDimension.value = dimensionDetail(key)
 }
+
+function goToAttentionUsers() {
+  $router.push('/institute/my-users?status=ATTENTION')
+}
+
+/**
+ * El detalle propone filtrar por el grupo más bajo. Como el tablero no tiene
+ * corte por año de estudio, se lleva al listado de personas, que sí lo tiene.
+ */
+function filterByGroup(group: string) {
+  openedDimension.value = null
+  $router.push(`/institute/my-users?studyYear=${encodeURIComponent(group)}`)
+}
+
+function remindPending() {
+  $router.push('/institute/my-users?status=INACTIVE')
+}
+
+async function onExport() {
+  actionError.value = ''
+  isExporting.value = true
+  try {
+    await exportCsv()
+  } catch (error) {
+    console.error('Error exportando el CSV', error)
+    actionError.value = 'No pudimos generar el CSV. Intenta de nuevo.'
+  } finally {
+    isExporting.value = false
+  }
+}
+
+async function onSaveView() {
+  const name = saveViewName.value.trim()
+  if (!name) return
+
+  actionError.value = ''
+  isSavingView.value = true
+  try {
+    await saveView(name)
+    saveViewName.value = ''
+    isSaveViewOpen.value = false
+  } catch (error) {
+    console.error('Error guardando la vista', error)
+    actionError.value = 'No pudimos guardar la vista. Intenta de nuevo.'
+  } finally {
+    isSavingView.value = false
+  }
+}
+
+function onSheetApply(next: IStatsFilters) {
+  applyFilters(next)
+}
+
+onMounted(() => {
+  load()
+  loadSavedViews()
+})
 </script>
 
 <template>
-  <v-container>
-    <v-row no-gutters>
-      <v-col cols="12">
-        <div class="my-4">
-          <h1 class="handlee-regular text-h4 font-weight-thin">
-            Mis estadísticas
-          </h1>
+  <div class="stats">
+    <header class="stats__header">
+      <div class="stats__heading">
+        <span class="stats__eyebrow">Mis estadísticas</span>
+        <span class="stats__title">{{ headerTitle }}</span>
+      </div>
+
+      <div class="stats__actions">
+        <span v-if="updatedLabel" class="stats__updated">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3.5 2" />
+          </svg>
+          {{ updatedLabel }}
+        </span>
+
+        <button
+          type="button"
+          class="btn btn--ghost"
+          :disabled="isExporting || state === 'loading'"
+          @click="onExport"
+        >
+          {{ isExporting ? 'Generando…' : 'Exportar CSV' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn--primary"
+          :disabled="state === 'loading'"
+          @click="isSaveViewOpen = true"
+        >
+          Guardar esta vista
+        </button>
+      </div>
+    </header>
+
+    <div v-if="savedViews.length" class="views">
+      <span class="views__label">Vistas guardadas:</span>
+      <span v-for="view in savedViews" :key="view.id" class="views__item">
+        <button
+          type="button"
+          class="views__apply"
+          @click="applySavedView(view)"
+        >
+          {{ view.name }}
+        </button>
+        <button
+          type="button"
+          class="views__delete"
+          :aria-label="`Eliminar la vista ${view.name}`"
+          @click="deleteView(view.id)"
+        >
+          ×
+        </button>
+      </span>
+    </div>
+
+    <p v-if="actionError" class="banner banner--error">{{ actionError }}</p>
+
+    <!-- Barra de filtros móvil: la hoja inferior sustituye a los cinco selects. -->
+    <div v-if="mobile" class="mobile-filters">
+      <button
+        type="button"
+        class="mobile-filters__button"
+        @click="isFilterSheetOpen = true"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 5h16M7 12h10M10 19h4" />
+        </svg>
+        Filtros<template v-if="activeCutCount">
+          · {{ activeCutCount }}</template
+        >
+      </button>
+      <span
+        v-for="chip in mobileChips"
+        :key="chip"
+        class="mobile-filters__chip"
+        >{{ chip }}</span
+      >
+    </div>
+
+    <StatsFilters
+      v-else
+      :filters="filters"
+      :options="filterOptions"
+      :population="population"
+      :privacy="privacy"
+      @apply="applyFilters"
+      @remove="removeFilter"
+      @clear="clearFilters"
+    />
+
+    <p v-if="state === 'loading'" class="banner">Cargando tus estadísticas…</p>
+
+    <p v-else-if="state === 'error'" class="banner banner--error">
+      {{ errorMessage }}
+    </p>
+
+    <StatsEmptyState
+      v-else-if="state === 'insufficient-sample' || state === 'first-period'"
+      :variant="state"
+      :filters="filters"
+      :population="population"
+      :privacy="privacy"
+      :respondents="globals.n"
+      :wider-period-count="widerPeriodCount"
+      :wider-period="widerPeriod"
+      @remove="removeFilter"
+      @widen="applyFilters({ days: widerPeriod?.days ?? null })"
+      @remind="remindPending"
+    />
+
+    <template v-else>
+      <StatsSummary
+        :globals="globals"
+        :population="population"
+        :dimensions="dimensions"
+        :wellbeing-delta="wellbeingDelta"
+        :respondents-delta="respondentsDelta"
+      />
+
+      <div class="panels">
+        <StatsDistribution
+          :distribution="distribution"
+          :bands="bands"
+          :total="globals.n"
+          :compact="mobile"
+          @see-attention="goToAttentionUsers"
+        />
+
+        <StatsDimensions
+          :dimensions="dimensions"
+          :has-comparison="hasComparison"
+          :compact="mobile"
+          @open="openDimension"
+        />
+      </div>
+
+      <StatsMap :zones="zones" :privacy="privacy" :compact="mobile" />
+    </template>
+
+    <StatsFiltersSheet
+      v-model="isFilterSheetOpen"
+      :filters="filters"
+      :options="filterOptions"
+      :population="population"
+      :privacy="privacy"
+      @apply="onSheetApply"
+      @clear="clearFilters"
+    />
+
+    <StatsDimensionDetail
+      :detail="openedDimension"
+      @close="openedDimension = null"
+      @filter-group="filterByGroup"
+    />
+
+    <v-dialog v-model="isSaveViewOpen" max-width="480">
+      <div class="dialog">
+        <h2 class="dialog__title">Guardar esta vista</h2>
+        <p class="dialog__subtitle">
+          Se guardan los filtros, no los números: al volver verás cómo cambió
+          esa población.
+        </p>
+
+        <label class="dialog__field">
+          <span class="dialog__label">Nombre</span>
+          <input
+            v-model="saveViewName"
+            class="dialog__input"
+            type="text"
+            maxlength="80"
+            placeholder="Ingeniería · 90 días"
+            @keyup.enter="onSaveView"
+          />
+        </label>
+
+        <div class="dialog__actions">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            @click="isSaveViewOpen = false"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn--primary"
+            :disabled="isSavingView || !saveViewName.trim()"
+            @click="onSaveView"
+          >
+            {{ isSavingView ? 'Guardando…' : 'Guardar' }}
+          </button>
         </div>
-      </v-col>
-      <v-col cols="12">
-        <div class="my-4">
-          <h2 class="handlee-regular text-h6 font-weight-thin">
-            Aquí podrás crear filtros personalizados para obtener estadísticas
-            más exactas de tu población y su comportamiento.
-          </h2>
-        </div>
-      </v-col>
-      <v-container>
-        <v-row>
-          <v-col cols="12">
-            <div class="my-4">
-              <h1 class="handlee-regular text-h4 font-weight-thin">
-                Resumen global
-              </h1>
-            </div>
-          </v-col>
-          <v-col>
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h5 font-weight-thin">
-                  Respondentes
-                </h2>
-              </v-card-title>
-              <v-card-text class="handlee-regular text-h4 font-weight-bold">
-                {{ answersVolume }}
-              </v-card-text>
-              <v-card-subtitle> total estudiantes </v-card-subtitle>
-            </v-card>
-          </v-col>
-          <v-col>
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h5 font-weight-thin">
-                  Score promedio
-                </h2>
-              </v-card-title>
-              <v-card-text class="handlee-regular text-h4 font-weight-bold">
-                {{ averageScore }}
-              </v-card-text>
-              <v-card-subtitle> escala 30 - 150 </v-card-subtitle>
-            </v-card>
-          </v-col>
-          <v-col>
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h5 font-weight-thin">
-                  Bienestar
-                </h2>
-              </v-card-title>
-              <v-card-text class="handlee-regular text-h4 font-weight-bold">
-                {{ wellnessScore }}
-              </v-card-text>
-              <v-card-subtitle> escala 1 - 5 </v-card-subtitle>
-            </v-card>
-          </v-col>
-          <v-col>
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h5 font-weight-thin">
-                  Desviación estándar
-                </h2>
-              </v-card-title>
-              <v-card-text class="handlee-regular text-h4 font-weight-bold">
-                {{ standardDeviation }}
-              </v-card-text>
-              <v-card-subtitle> disperción </v-card-subtitle>
-            </v-card>
-          </v-col>
-          <v-col>
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h5 font-weight-thin">
-                  MIN / MAX
-                </h2>
-              </v-card-title>
-              <v-card-text class="handlee-regular text-h4 font-weight-bold">
-                {{ minMaxScore }}
-              </v-card-text>
-              <v-card-subtitle> rango observado </v-card-subtitle>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-      <v-container>
-        <v-row>
-          <v-col cols="12">
-            <div class="my-4">
-              <h1 class="handlee-regular text-h4 font-weight-thin">
-                Distribución y subescalas
-              </h1>
-            </div>
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-card class="pa-3 h-100" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h6 font-weight-thin">
-                  Histograma de scores totales
-                </h2>
-              </v-card-title>
-              <Bar :data="totalScoresData" :options="totalScoresOptions" />
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-card class="pa-3 h-100" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h6 font-weight-thin">
-                  Radar de subescalas (promedio 1–5)
-                </h2>
-              </v-card-title>
-              <Radar :data="subscalesData" :options="subscalesOptions" />
-            </v-card>
-          </v-col>
-          <v-col cols="12">
-            <v-card class="pa-3" rounded="xl">
-              <v-card-title>
-                <h2 class="handlee-regular text-h6 font-weight-thin">
-                  Mapa de salud mental por código postal · CDMX
-                </h2>
-              </v-card-title>
-              <div style="height: 500px; width: 100%">
-                <LMap
-                  ref="map"
-                  :zoom="12"
-                  :center="[19.32, -99.15]"
-                  :use-global-leaflet="true"
-                  @ready="onMapReady"
-                  :bounds="bounds"
-                >
-                  <LTileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="© OpenStreetMap © CARTO"
-                    layer-type="base"
-                    name="osm-wms.de"
-                  />
-                </LMap>
-                <div id="map-legend">
-                  <div class="map-leg-title">Score de bienestar</div>
-                  <div class="map-leg-bar"></div>
-                  <div class="map-leg-labels">
-                    <span id="map-leg-min">{{ MAP_SMIN }}</span
-                    ><span id="map-leg-max">{{ MAP_SMAX }}</span>
-                  </div>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-row>
-  </v-container>
+      </div>
+    </v-dialog>
+  </div>
 </template>
 
-<style>
-#map-legend {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 999;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  min-width: 170px;
-}
-.map-leg-title {
-  font-family: var(--font-h);
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  margin-bottom: 0.5rem;
-}
-.map-leg-bar {
-  height: 10px;
-  border-radius: 4px;
-  margin-bottom: 0.3rem;
-  background: linear-gradient(to right, #fb923c, #fbbf24, #34d399, #38bdf8);
-}
-.map-leg-labels {
+<style scoped>
+.stats {
+  min-height: 100%;
+  background: #f5f4f8;
+  padding: 24px 32px 40px;
   display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'Figtree', sans-serif;
+}
+
+.stats__header {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 0.6rem;
-  color: var(--muted);
+  gap: 20px;
+  flex-wrap: wrap;
 }
-.leaflet-popup-content-wrapper {
-  background: #111827;
-  border: 1px solid #1e2d40;
-  border-radius: 8px;
-  box-shadow: none;
-  color: #e2e8f0;
+
+.stats__heading {
+  display: flex;
+  flex-direction: column;
 }
-.leaflet-popup-tip {
-  background: #111827;
+
+.stats__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b6080;
 }
-.leaflet-popup-content {
-  margin: 10px 14px;
+
+.stats__title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #3c2f52;
+}
+
+.stats__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stats__updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #f0eaf5;
+  color: #5c4a75;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--ghost {
+  border: 2px solid #ded6ea;
+  background: #fff;
+  color: #3c2f52;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  border-color: #8475a0;
+  color: #8475a0;
+}
+
+.btn--primary {
+  border: 0;
+  background: #8475a0;
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #6d5f88;
+}
+
+.views {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.views__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b6080;
+}
+
+.views__item {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 6px 0 0;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e6dff0;
+}
+
+.views__apply {
+  border: 0;
+  background: transparent;
+  padding: 0 10px 0 14px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a3a63;
+  cursor: pointer;
+}
+
+.views__delete {
+  border: 0;
+  background: transparent;
+  color: #9a90ad;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.banner {
+  margin: 0;
+  padding: 18px 22px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #efebf5;
+  font-size: 14px;
+  color: #6b6080;
+}
+
+.banner--error {
+  color: #b3261e;
+  border-color: #f3d8d5;
+}
+
+.mobile-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.mobile-filters__button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #3c2f52;
+  color: #fff;
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mobile-filters__chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #ece7f3;
+  color: #4a3a63;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: 'Figtree', sans-serif;
+}
+
+.dialog__title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #3c2f52;
+  margin: 0;
+}
+
+.dialog__subtitle {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #6b6080;
+  margin: 0;
+}
+
+.dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dialog__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4b3f60;
+}
+
+.dialog__input {
+  height: 46px;
+  padding: 0 16px;
+  border: 2px solid #ece7f3;
+  border-radius: 14px;
+  background: #faf9fc;
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  color: #3c2f52;
+}
+
+.dialog__input:focus {
+  outline: none;
+  border-color: #8475a0;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .stats {
+    padding: 20px 20px 32px;
+    gap: 16px;
+  }
+
+  .stats__header {
+    align-items: flex-start;
+  }
+
+  .stats__actions {
+    width: 100%;
+  }
+
+  .stats__updated {
+    order: 3;
+  }
+
+  .btn {
+    flex: 1;
+    min-width: 140px;
+  }
 }
 </style>
