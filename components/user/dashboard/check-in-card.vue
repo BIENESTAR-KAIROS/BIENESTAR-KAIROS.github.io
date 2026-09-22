@@ -86,7 +86,11 @@ function register() {
     </div>
 
     <div class="check-in-card__actions">
-      <div class="check-in-card__moods">
+      <div
+        class="check-in-card__moods"
+        role="group"
+        aria-label="Estado de ánimo"
+      >
         <button
           v-for="mood in moods"
           :key="mood.value"
@@ -94,6 +98,7 @@ function register() {
           class="check-in-card__mood"
           :class="{ 'check-in-card__mood--active': pendingMood === mood.value }"
           :disabled="!canCheckInNow"
+          :aria-pressed="pendingMood === mood.value"
           @click="selectMood(mood.value)"
         >
           <svg
@@ -162,20 +167,19 @@ function register() {
 
 <style scoped>
 .check-in-card {
-  grid-column: 1 / -1;
   background: #fff;
   border-radius: 24px;
   padding: 24px 28px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
   gap: 28px;
-  flex-wrap: wrap;
+  min-width: 0;
   box-shadow: 0 6px 20px -10px rgba(6, 92, 93, 0.3);
 }
 
 .check-in-card__copy {
-  flex: 1;
-  min-width: 220px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -194,7 +198,8 @@ function register() {
 
 .check-in-card__actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -205,7 +210,8 @@ function register() {
 }
 
 .check-in-card__mood {
-  width: 74px;
+  flex: 1;
+  min-width: 0;
   height: 74px;
   border-radius: 24px;
   border: 2px solid #e3ecee;
@@ -255,7 +261,7 @@ function register() {
 }
 
 .check-in-card__submit {
-  height: 74px;
+  min-height: 50px;
   padding: 0 22px;
   border-radius: 999px;
   border: 0;
@@ -269,7 +275,13 @@ function register() {
 }
 
 .check-in-card__submit:hover:not(:disabled) {
-  background: #07979f;
+  background: #074c4d;
+}
+
+.check-in-card__mood:focus-visible,
+.check-in-card__submit:focus-visible {
+  outline: 3px solid #065c5d;
+  outline-offset: 3px;
 }
 
 .check-in-card__submit:disabled {
