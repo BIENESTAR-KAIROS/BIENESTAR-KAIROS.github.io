@@ -94,22 +94,39 @@ public/       Estáticos servidos tal cual (imágenes de dashboard, favicon).
 ## Cómo correr el proyecto
 
 ```bash
-npm install        # instalar dependencias (hay package-lock.json; usar npm, no yarn/pnpm)
-npm run dev         # servidor de desarrollo en http://localhost:3000
+npm install          # instalar dependencias
+npm run dev          # servidor de desarrollo en http://localhost:3001
 npm run build        # build de producción
 npm run generate     # build estático
-npm run preview       # preview del build
+npm run preview      # preview del build
 ```
 
-> Nota: los scripts en `package.json` están escritos con `yarn` en la sección
-> de docs/README, pero el repo tiene `package-lock.json`, no `yarn.lock` —
-> usa `npm run <script>` para mantener el lockfile consistente.
+Usa npm para instalar dependencias y ejecutar scripts (`npm run <script>`).
+El lockfile del proyecto es `package-lock.json`; no uses Yarn, pnpm ni Bun.
+Para pasar opciones a un script, usa `npm run <script> -- <opciones>`.
 
 Variables de entorno (`.env`, no versionado): `API_BASE_URL`,
 `API_LOCAL_BASE_URL`, `API_STATS_BASE_URL`, `API_LOCAL_STATS_BASE_URL`,
 `API_VERSION`, `PROD`, `NUXT_NEWS_API_KEY`, `GRAVATAR_API_KEY`,
 `GRAVATAR_API`. El plugin de axios cambia entre base local/prod según
 `process.env.PROD`.
+
+## Pruebas del frontend y acceso al navegador
+
+- El frontend normalmente ya estará corriendo en `http://localhost:3001`.
+  Comprueba esa dirección antes de iniciar otra instancia; no asumas el puerto 3000.
+- Si abres el navegador integrado de Codex y aparece el login, avisa al usuario
+  y espera a que ingrese sus credenciales. También puedes pedirle credenciales
+  de prueba si prefiere que realices el ingreso. No guardes credenciales en el
+  repositorio ni en la documentación.
+- No des por terminada una revisión autenticada por haber llegado al login:
+  mantén pendiente esa revisión hasta que el usuario complete el acceso.
+- Habitualmente el usuario hará la validación visual. Coordina con él qué
+  pantallas y estados debe revisar, y distingue esa validación de las
+  comprobaciones automáticas o de código que sí hayas realizado.
+- Puedes revisar desde Chrome cuando el usuario te dé permiso. Si todavía no
+  lo ha autorizado para la revisión en curso, pídeselo antes de abrirlo o
+  interactuar con él; no vuelvas a pedirlo si ya lo autorizó.
 
 ## Lint y formato
 
