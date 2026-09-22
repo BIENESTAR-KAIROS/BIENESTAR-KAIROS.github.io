@@ -13,9 +13,8 @@ const { mobile } = useDisplay()
 
 const spaceLinks = [
   { title: 'Inicio', to: '/user/dashboard', icon: 'home' },
-  { title: 'Cuestionarios', to: '/user/quiz', icon: 'clipboard' },
+  { title: 'Queremos conocerte', to: '/user/quiz', icon: 'clipboard' },
   { title: 'Queremos ayudarte', to: '/user/get-help', icon: 'heart' },
-  { title: 'Recomendaciones', to: '/user/recomendations', icon: 'star' },
 ]
 
 const accountLinks = [
@@ -129,20 +128,6 @@ onMounted(async () => {
               <path
                 d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"
               />
-            </svg>
-            <svg
-              v-else-if="link.icon === 'star'"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 3l1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" />
-              <path d="M18 17l.9 2.1L21 20l-2.1.9L18 23l-.9-2.1L15 20l2.1-.9z" />
             </svg>
           </span>
           {{ link.title }}

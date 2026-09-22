@@ -222,6 +222,8 @@ Propuesta: añadir aria-current y foco visible coherente. No depender únicament
 
 Nombres de archivo históricos: AppBarUser / AppBarInstitute contienen los drawers; NavBarUser / NavBarInstitue contienen las barras móviles. No deducir la anatomía solo del nombre.
 
+Actualización editorial · 22 de septiembre de 2026: por decisión del usuario, la sección `/user/quiz` se llama “Queremos conocerte” en la navegación de estudiantes (escritorio y móvil) y en las indicaciones que remiten a ella. Coincide con el acceso del dashboard. La auditoría inicial se conserva como evidencia histórica; el PDF está pendiente de incorporar esta actualización.
+
 ## 12. Formularios y acciones
 
 Etiqueta visible, ayuda próxima al control y respuesta clara al enviar.
@@ -263,6 +265,8 @@ Superficie violeta profunda, etiqueta “Base de Kairos · solo lectura”, tít
 Título y estado visible. Cuando no hay cita programada, mostrar el siguiente paso. Los textos de estas muestras son ilustrativos.
 
 Dos patrones de pestañas conviven: subrayadas para Ayuda; segmentadas en píldora para Recomendaciones. Elegir por contexto y mantener el patrón dentro de cada sección.
+
+Actualización de navegación · 22 de septiembre de 2026: por decisión del usuario, “Recomendaciones” se integra como primera pestaña de “Queremos ayudarte”, seguida de “Prácticas del bienestar”, “Meditaciones guiadas” y “Conoce especialistas”. Conserva íntegro su contenido y sus controles internos “Personalizadas”, “Libros” y “Noticias”. Se elimina su entrada independiente del menú; el acceso del dashboard y la ruta anterior llevan a `/user/get-help?tab=recommendations`. La barra de Ayuda admite desplazamiento horizontal en pantallas estrechas y foco visible. La auditoría inicial se conserva; el PDF está pendiente de incorporar esta integración.
 
 Esquemas con textos ilustrativos. El botón lavanda + blanco reproduce una deuda de contraste (p. 19). En el catálogo institucional actual, ver/editar/duplicar están deshabilitados; no se presentan como disponibles.
 

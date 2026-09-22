@@ -62,14 +62,14 @@ const forYouCards = computed(() => [
     subtitle: 'Prácticas y especialistas',
     to: '/user/get-help',
     image: '/image-dashboard-19.png',
-    badge: '3 recursos',
+    badge: '4 recursos',
     badgeColor: '#F0EAF5',
     badgeTextColor: '#5c4a75',
   },
   {
     title: 'Recomendaciones',
     subtitle: 'Tus tareas de hoy',
-    to: '/user/recomendations',
+    to: '/user/get-help?tab=recommendations',
     image: '/image-dashboard-20.png',
     badge:
       pendingTasksCount.value > 0

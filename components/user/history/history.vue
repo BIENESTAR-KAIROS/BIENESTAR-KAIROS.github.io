@@ -72,7 +72,7 @@ onMounted(() => {
 
         <p v-else-if="questionnaireAnswers.length === 0" class="history__empty">
           Aún no has llenado ningún cuestionario. Ve a la sección
-          "Cuestionarios" para responder el siguiente que tengas disponible.
+          "Queremos conocerte" para responder el siguiente que tengas disponible.
         </p>
 
         <table v-else class="history__table">
