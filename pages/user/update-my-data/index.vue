@@ -1,5 +1,3 @@
 <template>
-  <div>
-    update my data
-  </div>
+  <div>update my data</div>
 </template>

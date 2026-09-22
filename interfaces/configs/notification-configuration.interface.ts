@@ -1,5 +1,5 @@
 export interface INotificationConfiguration {
   emailEnabled: boolean
-  emailTemplates: {}
+  emailTemplates: Record<string, unknown>
   pushNotifications: boolean
 }

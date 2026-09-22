@@ -3,7 +3,7 @@ import type { INotificationConfiguration } from './notification-configuration.in
 import type { ISurveyConfiguration } from './survey-configuration.interface'
 
 export interface IConfiguration {
-  visualConfiguration?: {}
+  visualConfiguration?: Record<string, unknown>
   functionalConfiguration?: IFunctionalConfiguration
   surveyConfiguration?: ISurveyConfiguration
   notificationConfiguration?: INotificationConfiguration

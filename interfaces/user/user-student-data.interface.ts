@@ -4,7 +4,7 @@ import type { StudentCampusData } from './user-student-compus-data.interface'
 export interface StudentData {
   age: number
   gender: UserGenderEnum | string
-  demographicData?: Record<string, any>
+  demographicData?: Record<string, unknown>
   demographicSurveyCompleted: boolean
   groupIds: string[]
   campusInformation?: StudentCampusData

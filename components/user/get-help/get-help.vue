@@ -20,7 +20,8 @@ const tabs: { value: HelpTab; label: string }[] = [
 
 const tab = computed<HelpTab>(() => {
   return (
-    tabs.find((item) => item.value === route.query.tab)?.value || 'practices'
+    tabs.find((item) => item.value === route.query.tab)?.value ||
+    'recommendations'
   )
 })
 

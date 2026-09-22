@@ -15,7 +15,7 @@ export interface IUserDetail {
   active: boolean
   registrationDate: Date
   lastAccess?: Date
-  studentData?: Record<string, any>
-  instituteData?: Record<string, any>
+  studentData?: Record<string, unknown>
+  instituteData?: Record<string, unknown>
   questionnaireResults: IQuestionnaireResultItem[]
 }

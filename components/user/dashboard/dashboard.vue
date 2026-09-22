@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { NuxtLink } from '#components'
 import { useAuthStore } from '~/store/auth'
+import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import CheckInCard from './check-in-card.vue'
 import TodayTasks from './today-tasks.vue'
 import WellbeingCard from './wellbeing-card.vue'
 import MonthlyActivity from './monthly-activity.vue'
 import NextAppointmentCard from './next-appointment-card.vue'
-import {
+import type {
   MoodEnum,
-  type ICheckInSummary,
+  ICheckInSummary,
 } from '~/interfaces/checkin/check-in.interface'
 import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
 import type { ITrackingToggleResponse } from '~/interfaces/tracking/tracking-toggle.interface'
@@ -85,7 +86,7 @@ async function fetchCheckInSummary() {
     const response = await $axios.get<ICheckInSummary>('/check-in/summary')
     checkInSummary.value = response.data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -94,9 +95,9 @@ async function submitCheckIn(mood: MoodEnum) {
     isSubmittingCheckIn.value = true
     const response = await $axios.post<ICheckInSummary>('/check-in', { mood })
     checkInSummary.value = response.data
-  } catch (error: any) {
-    console.log(error)
-    alert(error?.response?.data?.message || 'No pudimos registrar tu check-in.')
+  } catch (error: unknown) {
+    console.error(error)
+    alert(getApiErrorMessage(error, 'No pudimos registrar tu check-in.'))
     // A rejected attempt (e.g. cooldown) may still mean the summary is stale.
     await fetchCheckInSummary()
   } finally {
@@ -109,7 +110,7 @@ async function fetchTodayTasks() {
     const response = await $axios.get<ITrackingTask[]>('/tracking/today')
     todayTasks.value = response.data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -131,7 +132,7 @@ async function toggleTask(recommendationId: string) {
 
     await monthlyActivityRef.value?.refresh()
   } catch (error) {
-    console.log(error)
+    console.error(error)
     alert('No pudimos actualizar esa tarea.')
   } finally {
     togglingTaskIds.value = togglingTaskIds.value.filter(

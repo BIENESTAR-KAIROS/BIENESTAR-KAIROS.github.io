@@ -5,6 +5,6 @@ export interface IStudentData {
   gender: string
   // TODO verify if objectId === string
   groupIds: string[] // Mongo object id array
-  demographicData: Record<string, any>
+  demographicData: Record<string, unknown>
   demographicSurveyCompleted: boolean
 }

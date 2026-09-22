@@ -48,6 +48,7 @@ existe un rol de administrador de KAIROS con su propio dashboard.
 
 Roles de la app (ver `interfaces/user/enum/user-rol.enum.ts` y
 `middleware/auth.global.ts`):
+
 - `KAIROS_ADMIN` — administrador global (`/admin/*`).
 - `INSTITUTION_ADMIN` / `INSTITUTION_STAFF` — panel institucional (`/institute/*`).
 - Usuario final — panel de usuario (`/user/*`).
@@ -167,7 +168,7 @@ runner instalado) — no inventes comandos de test que no existan.
 ## Precauciones
 
 - Este proyecto es SPA (`ssr: false`); no asumas que el código corre en el
-  servidor — el middleware de auth ya hace `if (!process.server)` a propósito.
+  servidor — el middleware de auth ya hace `if (!import.meta.server)` a propósito.
 - No commitees `.env` ni credenciales.
 - Las carpetas `.nuxt/` (generada) no se editan a mano; se regenera con
   `npm run dev` / `npm run build`.

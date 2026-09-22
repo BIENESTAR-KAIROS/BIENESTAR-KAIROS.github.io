@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AppBar from "~/components/global/AppBarInstitute.vue";
-import NavBarInstitue from "~/components/global/NavBarInstitue.vue";
+import AppBar from '~/components/global/AppBarInstitute.vue'
+import NavBarInstitue from '~/components/global/NavBarInstitue.vue'
 </script>
 
 <template>

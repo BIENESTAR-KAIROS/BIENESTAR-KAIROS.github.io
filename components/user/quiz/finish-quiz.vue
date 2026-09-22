@@ -3,6 +3,7 @@ import type { IRecomendations } from '~/interfaces/recomendations/recomendations
 import { useAuthStore } from '~/store/auth'
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
 import { useUserStore } from '~/store/user'
+import { hasErrorStatus } from '~/utils/helpers/http-errors'
 
 const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
@@ -10,25 +11,24 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const { $router } = useNuxtApp()
 
-const sum = ref(0)
 const calification = computed(() => {
-  sum.value = 0
-  const suma = (question: IQuizResponse): Number => {
-    const temp = ref(0)
-    temp.value += Number(question.answer) < 0 ? 0 : Number(question.answer)
+  let sum = 0
+  const suma = (question: IQuizResponse): number => {
+    let temp = 0
+    temp += Number(question.answer) < 0 ? 0 : Number(question.answer)
     question.options.forEach((option) => {
       option.subquestions?.forEach((sub) => {
-        temp.value += Number(suma(sub))
+        temp += Number(suma(sub))
       })
     })
-    return Number(temp.value)
+    return temp
   }
 
   quizStore.quiz.forEach((question) => {
-    sum.value += Number(suma(question))
+    sum += suma(question)
   })
 
-  return Number(sum.value)
+  return sum
 })
 
 const categories = computed(() => {
@@ -66,15 +66,7 @@ const claves = ref<Record<string, string>>({
 })
 
 // Función para verificar si es error 409
-const isError409 = (error: any): boolean => {
-  return (
-    error?.response?.status === 409 ||
-    error?.status === 409 ||
-    error?.statusCode === 409 ||
-    error?.response?.data?.statusCode === 409 ||
-    error?.data?.statusCode === 409
-  )
-}
+const isError409 = (error: unknown): boolean => hasErrorStatus(error, 409)
 
 const goToNextOrDashboard = async () => {
   try {
@@ -96,17 +88,9 @@ const goToNextOrDashboard = async () => {
           (item) => !item.solved,
         )
 
-        console.log(userStore.user.questionnaireQueue)
-
-        console.log(nextQuiz)
-
         if (nextQuiz) {
-          console.log(`next`)
-
           $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
         } else {
-          console.log(`dashboard`)
-
           $router.push('/user/dashboard')
         }
       }
@@ -129,18 +113,18 @@ onMounted(async () => {
     // 1. Determinar categoría
     let category = claves.value[quizStore.quiz[0].questionnaireId]
     if (category === 'PHQ') {
-      if (sum.value < 5) category += '0001'
-      else if (sum.value < 10) category += '0002'
-      else if (sum.value < 15) category += '0003'
+      if (calification.value < 5) category += '0001'
+      else if (calification.value < 10) category += '0002'
+      else if (calification.value < 15) category += '0003'
       else category += '0004'
     } else if (category === 'GAD') {
-      if (sum.value < 5) category += '0001'
-      else if (sum.value < 10) category += '0002'
-      else if (sum.value < 15) category += '0003'
+      if (calification.value < 5) category += '0001'
+      else if (calification.value < 10) category += '0002'
+      else if (calification.value < 15) category += '0003'
       else category += '0004'
     } else if (category === 'ASST') {
-      if (sum.value < 35) category += '0004'
-      else if (sum.value < 270) category += '0005'
+      if (calification.value < 35) category += '0004'
+      else if (calification.value < 270) category += '0005'
       else category += '0006'
     }
 
@@ -159,9 +143,8 @@ onMounted(async () => {
           recomendations.value =
             response.data.userRecommendation.recommendationIds
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (isError409(error)) {
-          console.log('🚨 Ya habías respondido el cuestionario.')
           alreadySubmitted.value = true
           return
         } else {
@@ -180,9 +163,8 @@ onMounted(async () => {
       try {
         const response = await $axios.get(`/recommendations/random`)
         recomendations.value.push(response.data)
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (isError409(error)) {
-          console.log('🚨 Ya habías respondido (en aleatoria).')
           alreadySubmitted.value = true
           return
         } else {
@@ -194,7 +176,7 @@ onMounted(async () => {
         }
       }
     } */
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('⚠️ Error inesperado:', err)
     // Solo marcar como ya respondido si es específicamente un 409
     if (isError409(err)) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {
-  type IQuizAvaibleResponse,
-  type IQuizzesAvaibleResponse,
+import type {
+  IQuizAvaibleResponse,
+  IQuizzesAvaibleResponse,
 } from '~/interfaces/quizzes/quiz-preview.interface'
 import { useAuthStore } from '~/store/auth'
 
@@ -24,7 +24,7 @@ onMounted(async () => {
     )
     posibleQuizzes.value = data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }

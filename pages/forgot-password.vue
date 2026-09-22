@@ -55,7 +55,7 @@ const sendRecoveryEmail = async () => {
         'Correo de recuperación enviado. Revisa tu bandeja de entrada y la carpeta de spam.'
     else throw new Error('No se pudo enviar el correo de recuperación.')
   } catch (error) {
-    console.log(error)
+    console.error(error)
     submitError.value = 'Error al enviar el correo de recuperación.'
   } finally {
     isLoading.value = false

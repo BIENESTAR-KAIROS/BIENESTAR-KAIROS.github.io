@@ -11,7 +11,9 @@ const completedByDay = ref<Record<number, number>>({})
 const isLoading = ref(false)
 
 const monthLabel = computed(() =>
-  now.toLocaleDateString('es-MX', { month: 'long' }).replace(/^\w/, (c) => c.toUpperCase()),
+  now
+    .toLocaleDateString('es-MX', { month: 'long' })
+    .replace(/^\w/, (c) => c.toUpperCase()),
 )
 
 const daysInMonth = computed(() => new Date(year, month, 0).getDate())
@@ -38,9 +40,12 @@ function colorForCount(count: number): string {
 async function fetchMonthlyStats() {
   try {
     isLoading.value = true
-    const response = await $axios.get<ITrackingMonthlyStatsResponse>('/tracking/stats', {
-      params: { month, year },
-    })
+    const response = await $axios.get<ITrackingMonthlyStatsResponse>(
+      '/tracking/stats',
+      {
+        params: { month, year },
+      },
+    )
 
     completedByDay.value = response.data.completedByDay.reduce(
       (acc, item) => {
@@ -50,7 +55,7 @@ async function fetchMonthlyStats() {
       {} as Record<number, number>,
     )
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }

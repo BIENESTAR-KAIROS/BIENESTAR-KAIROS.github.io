@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { UserRegisterRequestDto } from '~/dto/request/user/user-register.request.dto'
-import { UserGenderEnum } from '~/interfaces/user/enum/user-gender.enum'
+import type { UserGenderEnum } from '~/interfaces/user/enum/user-gender.enum'
 import AuthShell from '../global/AuthShell.vue'
 import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
@@ -124,7 +124,7 @@ async function register() {
 
     nuxtApp.$router.push('/')
   } catch (error) {
-    console.log(error)
+    console.error(error)
     submitError.value = 'No pudimos completar tu registro.'
   } finally {
     isLoading.value = false

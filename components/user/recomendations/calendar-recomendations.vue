@@ -31,16 +31,16 @@ const monthLabel = computed(() =>
 
 const weekdayLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
 
-const daysInMonth = computed(
-  () => new Date(currentYear.value, currentMonth.value + 1, 0).getDate(),
+const daysInMonth = computed(() =>
+  new Date(currentYear.value, currentMonth.value + 1, 0).getDate(),
 )
 
-const daysInPrevMonth = computed(
-  () => new Date(currentYear.value, currentMonth.value, 0).getDate(),
+const daysInPrevMonth = computed(() =>
+  new Date(currentYear.value, currentMonth.value, 0).getDate(),
 )
 
-const firstWeekday = computed(
-  () => new Date(currentYear.value, currentMonth.value, 1).getDay(),
+const firstWeekday = computed(() =>
+  new Date(currentYear.value, currentMonth.value, 1).getDay(),
 )
 
 const isCurrentMonthInView = computed(
@@ -113,14 +113,24 @@ function cellTextColor(cell: ICalendarCell): string {
 }
 
 const selectedCell = computed(() =>
-  calendarCells.value.find((cell) => cell.inMonth && cell.day === selectedDay.value),
+  calendarCells.value.find(
+    (cell) => cell.inMonth && cell.day === selectedDay.value,
+  ),
 )
 
 const selectedDayLabel = computed(() => {
   if (!selectedCell.value) return ''
-  const date = new Date(currentYear.value, currentMonth.value, selectedCell.value.day)
+  const date = new Date(
+    currentYear.value,
+    currentMonth.value,
+    selectedCell.value.day,
+  )
   return date
-    .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
+    .toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
     .replace(/^\w/, (c) => c.toUpperCase())
 })
 
@@ -168,7 +178,9 @@ async function fetchAppointments() {
   }
 
   try {
-    const response = await $axios.get<IAppointment[]>(`/calendary/patient/${userId}`)
+    const response = await $axios.get<IAppointment[]>(
+      `/calendary/patient/${userId}`,
+    )
     const days = new Set<number>()
 
     for (const appointment of response.data) {
@@ -184,7 +196,7 @@ async function fetchAppointments() {
 
     appointmentDays.value = days
   } catch (error) {
-    console.log(error)
+    console.error(error)
     appointmentDays.value = new Set()
   }
 }
@@ -194,7 +206,7 @@ async function fetchData() {
     isLoading.value = true
     await Promise.all([fetchMonthlyStats(), fetchAppointments()])
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }
@@ -212,11 +224,41 @@ watch([currentMonth, currentYear], () => {
     <div class="calendar-card__header">
       <span class="calendar-card__month">{{ monthLabel }}</span>
       <div class="calendar-card__nav">
-        <button type="button" class="calendar-card__nav-btn" @click="goToPrevMonth">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        <button
+          type="button"
+          class="calendar-card__nav-btn"
+          @click="goToPrevMonth"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#0E2A36"
+            stroke-width="2.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </button>
-        <button type="button" class="calendar-card__nav-btn" @click="goToNextMonth">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+        <button
+          type="button"
+          class="calendar-card__nav-btn"
+          @click="goToNextMonth"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#0E2A36"
+            stroke-width="2.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
         </button>
       </div>
     </div>
@@ -237,10 +279,14 @@ watch([currentMonth, currentYear], () => {
         class="calendar-card__cell"
         :class="{
           'calendar-card__cell--today': cell.isToday,
-          'calendar-card__cell--selected': cell.inMonth && cell.day === selectedDay,
+          'calendar-card__cell--selected':
+            cell.inMonth && cell.day === selectedDay,
           'calendar-card__cell--muted': !cell.inMonth,
         }"
-        :style="{ background: cellBackground(cell), color: cellTextColor(cell) }"
+        :style="{
+          background: cellBackground(cell),
+          color: cellTextColor(cell),
+        }"
         :disabled="!cell.inMonth"
         @click="selectDay(cell)"
       >
@@ -251,19 +297,33 @@ watch([currentMonth, currentYear], () => {
     <div class="calendar-card__legend">
       <span class="calendar-card__legend-dot" style="background: #065c5d" />
       <span class="calendar-card__legend-label">3+ tareas</span>
-      <span class="calendar-card__legend-dot" style="background: #6cc5cb; margin-left: 8px" />
+      <span
+        class="calendar-card__legend-dot"
+        style="background: #6cc5cb; margin-left: 8px"
+      />
       <span class="calendar-card__legend-label">1–2 tareas</span>
-      <span class="calendar-card__legend-dot" style="background: #f0eaf5; margin-left: 8px" />
+      <span
+        class="calendar-card__legend-dot"
+        style="background: #f0eaf5; margin-left: 8px"
+      />
       <span class="calendar-card__legend-label">Cita</span>
     </div>
 
     <div v-if="selectedCell" class="calendar-card__detail">
       <span class="calendar-card__detail-title">{{ selectedDayLabel }}</span>
-      <span v-if="selectedCell.hasAppointment" class="calendar-card__detail-appointment">
+      <span
+        v-if="selectedCell.hasAppointment"
+        class="calendar-card__detail-appointment"
+      >
         Tienes una cita agendada este día.
       </span>
-      <ul v-if="selectedDayRecommendations.length > 0" class="calendar-card__detail-list">
-        <li v-for="(rec, i) in selectedDayRecommendations" :key="i">{{ rec }}</li>
+      <ul
+        v-if="selectedDayRecommendations.length > 0"
+        class="calendar-card__detail-list"
+      >
+        <li v-for="(rec, i) in selectedDayRecommendations" :key="i">
+          {{ rec }}
+        </li>
       </ul>
       <span
         v-else-if="!selectedCell.hasAppointment"

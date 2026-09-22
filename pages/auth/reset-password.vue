@@ -39,7 +39,7 @@ const sendNewPassword = async (event: Event) => {
       throw new Error('No se pudo restablecer la contraseña.')
     }
   } catch (error) {
-    console.log(error)
+    console.error(error)
     alert('Error al restablecer la contraseña.')
   }
 }
@@ -64,17 +64,17 @@ const sendNewPassword = async (event: Event) => {
             <v-row>
               <v-col cols="12" md="6" offset-md="3">
                 <v-text-field
+                  v-model="newPassword"
                   label="Nueva Contraseña"
                   type="password"
-                  v-model="newPassword"
                   required
                 />
               </v-col>
               <v-col cols="12" md="6" offset-md="3">
                 <v-text-field
+                  v-model="confirmNewPassword"
                   label="Confirmar Nueva Contraseña"
                   type="password"
-                  v-model="confirmNewPassword"
                   required
                 />
               </v-col>
@@ -84,20 +84,20 @@ const sendNewPassword = async (event: Event) => {
                 <div class="d-flex justify-center w-100">
                   <v-btn
                     color="greenShadow"
-                    @click="sendNewPassword"
                     type="submit"
+                    @click="sendNewPassword"
                   >
                     Restablecer Contraseña
                   </v-btn>
                 </div>
               </v-col>
               <v-col cols="12">
-                <div class="d-flex justify-center w-100" v-if="!success">
+                <div v-if="!success" class="d-flex justify-center w-100">
                   <v-btn color="primary" type="submit" :variant="'plain'">
                     Iniciar sesión
                   </v-btn>
                 </div>
-                <div class="d-flex justify-center w-100" v-if="success">
+                <div v-if="success" class="d-flex justify-center w-100">
                   <NuxtLink to="/">
                     <v-btn color="primary" type="submit" :variant="'elevated'">
                       Iniciar sesión

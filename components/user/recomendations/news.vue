@@ -42,15 +42,16 @@ const savedArticles = ref<ISavedArticle[]>([])
 const weeklyDigest = ref(false)
 
 const featured = computed(() => articles.value[0] ?? null)
-const listArticles = computed(() =>
-  articles.value.slice(1, visibleCount.value),
-)
+const listArticles = computed(() => articles.value.slice(1, visibleCount.value))
 const hasMore = computed(() => visibleCount.value < articles.value.length)
 
 function formatDate(value?: string): string {
   if (!value) return ''
-  return new Date(value)
-    .toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(value).toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 function readingTime(article: INewsArticle): string {
@@ -71,10 +72,7 @@ function toggleSaved(article: INewsArticle) {
     ? savedArticles.value.filter((item) => item.url !== article.url)
     : [...savedArticles.value, { title: article.title, url: article.url }]
 
-  localStorage.setItem(
-    'kairos_saved_news',
-    JSON.stringify(savedArticles.value),
-  )
+  localStorage.setItem('kairos_saved_news', JSON.stringify(savedArticles.value))
 }
 
 function toggleTopic(topic: string) {
@@ -120,7 +118,7 @@ async function fetchNews() {
     articles.value = data.articles ?? []
     visibleCount.value = 4
   } catch (error) {
-    console.log(error)
+    console.error(error)
     articles.value = []
   } finally {
     isLoading.value = false
@@ -172,7 +170,9 @@ onMounted(() => {
           </div>
           <div class="hero__body">
             <div class="hero__meta">
-              <span class="hero__source">{{ featured.source?.name || 'Fuente' }}</span>
+              <span class="hero__source">{{
+                featured.source?.name || 'Fuente'
+              }}</span>
               <span>·</span>
               <span>{{ formatDate(featured.publishedAt) }}</span>
               <span>·</span>
@@ -188,7 +188,19 @@ onMounted(() => {
                 class="hero__read"
               >
                 Leer la nota
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M7 17 17 7" />
+                  <path d="M8 7h9v9" />
+                </svg>
               </a>
               <button
                 type="button"
@@ -196,7 +208,18 @@ onMounted(() => {
                 :class="{ 'hero__save--active': isSaved(featured) }"
                 @click="toggleSaved(featured)"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved(featured) ? '#065C5D' : 'none'" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v17l-6-4-6 4z" /></svg>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  :fill="isSaved(featured) ? '#065C5D' : 'none'"
+                  stroke="#0E2A36"
+                  stroke-width="2.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M6 4h12v17l-6-4-6 4z" />
+                </svg>
               </button>
             </div>
           </div>
@@ -209,11 +232,17 @@ onMounted(() => {
         >
           <div
             class="news-row__thumb"
-            :style="{ backgroundImage: gradientBySlot[(i + 1) % gradientBySlot.length] }"
+            :style="{
+              backgroundImage: gradientBySlot[(i + 1) % gradientBySlot.length],
+            }"
           />
           <div class="news-row__copy">
             <div class="news-row__meta">
-              <span>{{ article.source?.name || 'Fuente' }} · {{ formatDate(article.publishedAt) }} · {{ readingTime(article) }}</span>
+              <span
+                >{{ article.source?.name || 'Fuente' }} ·
+                {{ formatDate(article.publishedAt) }} ·
+                {{ readingTime(article) }}</span
+              >
             </div>
             <span class="news-row__title">{{ article.title }}</span>
             <span class="news-row__description">{{ article.description }}</span>
@@ -225,9 +254,25 @@ onMounted(() => {
               :class="{ 'news-row__save--active': isSaved(article) }"
               @click="toggleSaved(article)"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" :fill="isSaved(article) ? '#065C5D' : 'none'" stroke="#0E2A36" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v17l-6-4-6 4z" /></svg>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                :fill="isSaved(article) ? '#065C5D' : 'none'"
+                stroke="#0E2A36"
+                stroke-width="2.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M6 4h12v17l-6-4-6 4z" />
+              </svg>
             </button>
-            <a :href="article.url" target="_blank" rel="noopener" class="news-row__link">
+            <a
+              :href="article.url"
+              target="_blank"
+              rel="noopener"
+              class="news-row__link"
+            >
               Leer
             </a>
           </div>

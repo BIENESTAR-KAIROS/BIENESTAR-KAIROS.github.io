@@ -138,9 +138,9 @@ async function finalizeQuiz() {
         }
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     errorMessage.value = 'No pudimos enviar tus respuestas. Intenta de nuevo.'
-    console.log(error)
+    console.error(error)
   } finally {
     isSending.value = false
   }

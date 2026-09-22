@@ -15,8 +15,8 @@ const togglingIds = ref<string[]>([])
 const activeDaysCount = ref(0)
 
 const today = new Date()
-const daysInMonth = computed(
-  () => new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(),
+const daysInMonth = computed(() =>
+  new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(),
 )
 
 const isToggling = (id: string) => togglingIds.value.includes(id)
@@ -53,7 +53,7 @@ async function toggleTask(recommendationId: string) {
 
     await fetchMonthlyStreak()
   } catch (error) {
-    console.log(error)
+    console.error(error)
     alert('No pudimos actualizar esa recomendación.')
   } finally {
     togglingIds.value = togglingIds.value.filter(
@@ -67,7 +67,7 @@ onMounted(async () => {
     isLoading.value = true
     await Promise.all([fetchTodayTasks(), fetchMonthlyStreak()])
   } catch (error) {
-    console.log(error)
+    console.error(error)
     alert('Error al cargar tus recomendaciones de hoy.')
   } finally {
     isLoading.value = false
@@ -130,7 +130,9 @@ onMounted(async () => {
             type="button"
             class="task-card__mark"
             :disabled="isToggling(task.recommendationId)"
-            :class="{ 'task-card__mark--loading': isToggling(task.recommendationId) }"
+            :class="{
+              'task-card__mark--loading': isToggling(task.recommendationId),
+            }"
             @click="toggleTask(task.recommendationId)"
           >
             ¡Hecho!
@@ -138,7 +140,11 @@ onMounted(async () => {
         </div>
 
         <div class="streak-banner">
-          <img src="/image-dashboard-20.png" alt="" class="streak-banner__icon" />
+          <img
+            src="/image-dashboard-20.png"
+            alt=""
+            class="streak-banner__icon"
+          />
           <div class="streak-banner__copy">
             <span class="streak-banner__title">
               Llevas {{ activeDaysCount }} de {{ daysInMonth }} días con al

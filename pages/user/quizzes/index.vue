@@ -1,5 +1,5 @@
 <template>
-<main>
+  <main>
     <h1>Opciones de cuestionarios</h1>
-</main>
+  </main>
 </template>

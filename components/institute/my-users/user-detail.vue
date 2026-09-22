@@ -5,6 +5,7 @@ import { useAuthStore } from '~/store/auth'
 import CalendarRecomendations from '~/components/institute/my-users/recommendations/calendar-recomendations.vue'
 import type { IUserDetail } from '~/interfaces/user/user-detail.interface'
 import { campusLabels, translateValue } from '~/utils/translations'
+import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
 interface IUserSchedule {
   _id?: string
@@ -43,11 +44,12 @@ async function fetchUserDetail() {
     )
 
     userDetail.value = data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching user detail', error)
-    errorMsg.value =
-      error?.response?.data?.message ||
-      'Error al obtener la información del usuario'
+    errorMsg.value = getApiErrorMessage(
+      error,
+      'Error al obtener la información del usuario',
+    )
   } finally {
     isLoading.value = false
   }
@@ -376,11 +378,12 @@ async function saveSchedule() {
 
     schedules.value.push(data ?? { appointmentDate })
     showScheduleDialog.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating appointment', error)
-    scheduleError.value =
-      error?.response?.data?.message ||
-      'No pudimos agendar la cita. Intenta de nuevo.'
+    scheduleError.value = getApiErrorMessage(
+      error,
+      'No pudimos agendar la cita. Intenta de nuevo.',
+    )
   } finally {
     isSavingSchedule.value = false
   }

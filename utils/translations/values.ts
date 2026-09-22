@@ -51,7 +51,7 @@ export const valueLabels: Record<string, string> = {
   '6_TO_8_HOURS_PER_WEEK': 'De 6 a 8 horas por semana',
 }
 
-export function translateValue(val: any): string {
+export function translateValue(val: unknown): string {
   if (typeof val === 'boolean') return val ? 'Sí' : 'No'
   if (typeof val === 'string') return valueLabels[val] || val
   return String(val)

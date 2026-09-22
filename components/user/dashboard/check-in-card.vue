@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { MoodEnum, type ICheckInSummary } from '~/interfaces/checkin/check-in.interface'
+import {
+  MoodEnum,
+  type ICheckInSummary,
+} from '~/interfaces/checkin/check-in.interface'
 
 const props = defineProps<{
   summary: ICheckInSummary | null
@@ -47,7 +50,8 @@ const canCheckInNow = computed(() => {
 
 const minutesUntilNextCheckIn = computed(() => {
   if (canCheckInNow.value || !props.summary?.nextCheckInAvailableAt) return 0
-  const remainingMs = new Date(props.summary.nextCheckInAvailableAt).getTime() - now.value
+  const remainingMs =
+    new Date(props.summary.nextCheckInAvailableAt).getTime() - now.value
   return Math.max(1, Math.ceil(remainingMs / 60000))
 })
 

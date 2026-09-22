@@ -20,9 +20,9 @@ function openNavBar() {
     <v-btn
       v-if="mobile"
       icon="mdi-menu"
-      @click="openNavBar"
       color="white"
       class="text-h6"
+      @click="openNavBar"
     />
 
     <template v-if="$vuetify.display.smAndDown" #append>

@@ -91,8 +91,12 @@ const selectedDayLabel = computed(() => {
   })
 })
 
-const onCalendarDateClick = (payload: any) => {
-  const clickedDate = parseCalendarDateValue(payload?.date ?? payload)
+const onCalendarDateClick = (payload: unknown) => {
+  const value =
+    payload && typeof payload === 'object' && 'date' in payload
+      ? (payload.date ?? payload)
+      : payload
+  const clickedDate = parseCalendarDateValue(value)
   if (!clickedDate) {
     return
   }
@@ -175,7 +179,7 @@ const fetchData = async () => {
     isLoading.value = true
     await fetchMonthlyStats()
   } catch (error) {
-    console.log(error)
+    console.error(error)
     alert('Error al cargar el historial de recomendaciones.')
   } finally {
     isLoading.value = false

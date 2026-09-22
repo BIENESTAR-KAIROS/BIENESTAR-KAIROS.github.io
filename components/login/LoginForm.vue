@@ -76,7 +76,7 @@ const login = async () => {
       }
     }
   } catch (error) {
-    console.log(error)
+    console.error(error)
     submitError.value = 'No pudimos iniciar sesión con esos datos.'
   } finally {
     isLoading.value = false

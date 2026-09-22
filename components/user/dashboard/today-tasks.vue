@@ -49,7 +49,9 @@ const emit = defineEmits<{
         >
           {{ task.recommendation }}
         </span>
-        <span class="today-tasks__category">Basado en: {{ task.category }}</span>
+        <span class="today-tasks__category"
+          >Basado en: {{ task.category }}</span
+        >
       </div>
       <span v-if="task.isCompleted" class="today-tasks__status">Hecho</span>
       <button

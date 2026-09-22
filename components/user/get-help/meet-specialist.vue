@@ -27,7 +27,22 @@ function contactHref(value: string): string {
 
     <div v-if="institute?.phoneNumber" class="urgency">
       <span class="urgency__icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5" /><path d="M12 16.5h.01" /><path d="M10.3 3.9 2.6 17a1.6 1.6 0 0 0 1.4 2.4h16a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0z" /></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#fff"
+          stroke-width="2.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 8v5" />
+          <path d="M12 16.5h.01" />
+          <path
+            d="M10.3 3.9 2.6 17a1.6 1.6 0 0 0 1.4 2.4h16a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0z"
+          />
+        </svg>
       </span>
       <div class="urgency__copy">
         <span class="urgency__title">¿Necesitas hablar con alguien ahora?</span>
@@ -45,14 +60,20 @@ function contactHref(value: string): string {
     </div>
 
     <div v-else class="specialists__grid">
-      <div v-for="(specialist, i) in specialists" :key="i" class="specialist-card">
+      <div
+        v-for="(specialist, i) in specialists"
+        :key="i"
+        class="specialist-card"
+      >
         <div class="specialist-card__header">
           <span class="specialist-card__avatar">
             <img :src="specialist.image" alt="" />
           </span>
           <div class="specialist-card__heading">
             <span class="specialist-card__name">{{ specialist.title }}</span>
-            <span class="specialist-card__badge">Servicio de tu universidad</span>
+            <span class="specialist-card__badge"
+              >Servicio de tu universidad</span
+            >
           </div>
         </div>
 
@@ -76,7 +97,19 @@ function contactHref(value: string): string {
             :key="j"
             class="specialist-card__row"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#07979F" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#07979F"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.4" />
+            </svg>
             <span>{{ place }}</span>
           </div>
         </div>
@@ -89,8 +122,35 @@ function contactHref(value: string): string {
             :href="contactHref(contact)"
             class="specialist-card__row specialist-card__row--link"
           >
-            <svg v-if="isEmail(contact)" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#07979F" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3.6 7l8.4 6 8.4-6" /></svg>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#07979F" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5C4 5.7 4.7 5 5.5 5h3l1.6 4-2 1.4a11 11 0 0 0 5.5 5.5l1.4-2 4 1.6v3c0 .8-.7 1.5-1.5 1.5A15 15 0 0 1 4 6.5z" /></svg>
+            <svg
+              v-if="isEmail(contact)"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#07979F"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+              <path d="M3.6 7l8.4 6 8.4-6" />
+            </svg>
+            <svg
+              v-else
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#07979F"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 6.5C4 5.7 4.7 5 5.5 5h3l1.6 4-2 1.4a11 11 0 0 0 5.5 5.5l1.4-2 4 1.6v3c0 .8-.7 1.5-1.5 1.5A15 15 0 0 1 4 6.5z"
+              />
+            </svg>
             <span>{{ contact }}</span>
           </a>
         </div>

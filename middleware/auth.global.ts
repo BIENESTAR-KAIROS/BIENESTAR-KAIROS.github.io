@@ -50,7 +50,7 @@ function isValidRoute(path: string, routes: string[]): boolean {
 }
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  if (!process.server) {
+  if (!import.meta.server) {
     const authStore = useAuthStore()
 
     try {
