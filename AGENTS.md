@@ -31,10 +31,17 @@ incluso cuando el cambio visual forme parte de una tarea funcional.
   accesibilidad afectados. Resume brevemente las referencias utilizadas,
   las verificaciones realizadas y cualquier desviación relevante.
 - Si una instrucción explícita del usuario cambia una regla de diseño,
-  aplícala y documenta la decisión. Cuando cambie una regla compartida,
-  actualiza el brandbook con fecha y alcance; conserva la auditoría inicial
-  como evidencia histórica. Si el PDF queda desactualizado, indícalo en
-  el Markdown hasta regenerarlo.
+  aplícala y documenta la decisión en el lugar que corresponda según su alcance.
+- Consultar el brandbook no implica modificarlo en cada tarea. Actualízalo
+  solo cuando cambien criterios compartidos: colores, tipografía, reglas de
+  componentes reutilizables, patrones de navegación o reglas de contenido.
+  Registra la fecha y el alcance; conserva la auditoría inicial como evidencia
+  histórica. Si el PDF queda desactualizado, indícalo en el Markdown hasta
+  regenerarlo.
+- Los cambios puntuales de una pantalla, como quitar una tarjeta, reordenar
+  pestañas o ajustar un texto local, se documentan en el código y los commits.
+  No requieren actualizar el brandbook salvo que también cambien una regla
+  compartida. No uses el brandbook como bitácora de cambios de la aplicación.
 
 ## Qué es este proyecto
 

@@ -44,11 +44,7 @@ const initials = computed(() => {
   return `${name}${lastName}`.toUpperCase()
 })
 
-const pendingTasksCount = computed(
-  () => todayTasks.value.filter((task) => !task.isCompleted).length,
-)
-
-const forYouCards = computed(() => [
+const forYouCards = [
   {
     title: 'Queremos conocerte',
     subtitle: 'Cuestionarios varios',
@@ -67,19 +63,7 @@ const forYouCards = computed(() => [
     badgeColor: '#F0EAF5',
     badgeTextColor: '#5c4a75',
   },
-  {
-    title: 'Recomendaciones',
-    subtitle: 'Tus tareas de hoy',
-    to: '/user/get-help?tab=recommendations',
-    image: '/image-dashboard-20.png',
-    badge:
-      pendingTasksCount.value > 0
-        ? `${pendingTasksCount.value} pendientes`
-        : 'Sin pendientes',
-    badgeColor: '#DBF2F4',
-    badgeTextColor: '#065C5D',
-  },
-])
+]
 
 async function fetchCheckInSummary() {
   try {
@@ -337,7 +321,7 @@ onMounted(async () => {
 
 .dashboard__for-you {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
