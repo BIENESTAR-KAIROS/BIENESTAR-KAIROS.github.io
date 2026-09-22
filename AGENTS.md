@@ -2,6 +2,40 @@
 
 Guía para agentes de IA (y humanos) que trabajen en este repositorio.
 
+## Diseño de interfaz y brandbook
+
+Antes de proponer, implementar o revisar cambios de diseño, consulta
+[el brandbook](docs/brandbook/brandbook.md) y lee las secciones aplicables.
+Esta regla incluye pantallas, componentes, layouts, colores, tipografía,
+espaciado, iconos, gráficas, responsive, estados y textos de interfaz,
+incluso cuando el cambio visual forme parte de una tarea funcional.
+
+- Consulta [la auditoría del frontend](docs/brandbook/auditoria-frontend.md)
+  para identificar si la pantalla y sus componentes son recientes,
+  heredados o mixtos. Amplía con la
+  [auditoría de usuario](docs/brandbook/auditoria-usuario.md) o la
+  [auditoría institucional](docs/brandbook/auditoria-institucional.md)
+  según el área afectada.
+- Usa el Markdown como referencia operativa y el
+  [PDF](output/pdf/brandbook-bienestar-kairos.pdf) cuando necesites consultar
+  muestras visuales. Conserva la variante del contexto: estudiante/acceso
+  o institución, con sus propias medidas y patrones.
+- Distingue **observado**, **propuesto** y **heredado**. Las propuestas no
+  son tokens ya implementados; los estilos heredados y los problemas de
+  contraste o foco documentados no deben reproducirse como norma.
+- La ventana del 8 de agosto al 22 de septiembre de 2026 es el corte fijo
+  de la auditoría inicial, no un filtro móvil que deba recalcularse en cada
+  tarea. Usa la versión vigente del brandbook para cambios posteriores.
+- Antes de entregar, comprueba la coherencia con las reglas consultadas,
+  la adaptación a móvil/escritorio y los estados y aspectos de
+  accesibilidad afectados. Resume brevemente las referencias utilizadas,
+  las verificaciones realizadas y cualquier desviación relevante.
+- Si una instrucción explícita del usuario cambia una regla de diseño,
+  aplícala y documenta la decisión. Cuando cambie una regla compartida,
+  actualiza el brandbook con fecha y alcance; conserva la auditoría inicial
+  como evidencia histórica. Si el PDF queda desactualizado, indícalo en
+  el Markdown hasta regenerarlo.
+
 ## Qué es este proyecto
 
 Bienestar KAIROS es una aplicación web de bienestar/salud mental para
