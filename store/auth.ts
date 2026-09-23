@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { type ILoginResponse } from '~/interfaces/login/login-response.interface'
+import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
 import type { IUser } from '~/interfaces/user/user.interface'
 
 export const useAuthStore = defineStore('auth', {
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore('auth', {
   },
   getters: {
     isAuthenticated(): boolean {
-      let response = false
+      const response = false
       if (this.accessToken && this.user) {
         const now = new Date().getTime()
 

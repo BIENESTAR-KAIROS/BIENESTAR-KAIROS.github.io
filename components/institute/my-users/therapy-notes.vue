@@ -42,9 +42,9 @@ function handleClickEdit() {
       </v-col>
       <v-col cols="12">
         <v-textarea
+          v-model="notes"
           label="Notas de la sesión"
           variant="solo-filled"
-          v-model="notes"
           bg-color="purpleShadow"
           :disabled="!isEditing"
         />

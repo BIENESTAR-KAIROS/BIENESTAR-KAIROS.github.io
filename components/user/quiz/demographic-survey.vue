@@ -505,8 +505,8 @@ async function saveAnswers() {
 
     if (authStore.user?.studentData) {
       authStore.user.studentData.demographicSurveyCompleted = true
-      authStore.user.studentData.demographicData =
-        response.user?.studentData?.demographicData ?? buildPayload()
+      authStore.user.studentData.demographicData = response.user?.studentData
+        ?.demographicData ?? { ...buildPayload() }
     }
 
     markDemographicSolved()

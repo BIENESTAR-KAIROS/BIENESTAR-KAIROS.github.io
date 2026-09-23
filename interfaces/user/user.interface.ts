@@ -1,5 +1,5 @@
 import type { IInstitute } from '../institute/institute.interface'
-import { UserRolEnum } from './enum/user-rol.enum'
+import type { UserRolEnum } from './enum/user-rol.enum'
 import type { InstituteData } from './user-institute-data.interface'
 import type { KairosData } from './user-kairos-data.interface'
 import type { StudentData } from './user-student-data.interface'

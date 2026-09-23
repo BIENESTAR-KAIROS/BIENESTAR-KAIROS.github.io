@@ -13,9 +13,8 @@ const { mobile } = useDisplay()
 
 const spaceLinks = [
   { title: 'Inicio', to: '/user/dashboard', icon: 'home' },
-  { title: 'Cuestionarios', to: '/user/quiz', icon: 'clipboard' },
+  { title: 'Queremos conocerte', to: '/user/quiz', icon: 'clipboard' },
   { title: 'Queremos ayudarte', to: '/user/get-help', icon: 'heart' },
-  { title: 'Recomendaciones', to: '/user/recomendations', icon: 'star' },
 ]
 
 const accountLinks = [
@@ -28,7 +27,18 @@ const updateNavBarState = (value: boolean) => {
   appStore.isNavBarOpen = value
 }
 
-let roles = authStore.user?.roles || []
+const roles = computed(() => authStore.user?.roles || [])
+const canViewInstitute = computed(() =>
+  roles.value.some(
+    (role) =>
+      role === UserRolEnum.INSTITUTION_ADMIN ||
+      role === UserRolEnum.INSTITUTION_STAFF ||
+      role === UserRolEnum.KAIROS_ADMIN,
+  ),
+)
+const canViewAdmin = computed(() =>
+  roles.value.includes(UserRolEnum.KAIROS_ADMIN),
+)
 
 const isOpen = computed(() => appStore.isNavBarOpen)
 
@@ -47,14 +57,12 @@ async function logout() {
     authStore.clearAuth()
     $router.push('/')
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
 onMounted(async () => {
   if (!mobile.value) updateNavBarState(true)
-
-  roles = authStore.user?.roles || []
 })
 </script>
 
@@ -112,7 +120,9 @@ onMounted(async () => {
               stroke-linejoin="round"
             >
               <rect x="8" y="2" width="8" height="4" rx="1" />
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <path
+                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+              />
               <path d="M9 12h6M9 16h4" />
             </svg>
             <svg
@@ -129,20 +139,6 @@ onMounted(async () => {
               <path
                 d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"
               />
-            </svg>
-            <svg
-              v-else-if="link.icon === 'star'"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 3l1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" />
-              <path d="M18 17l.9 2.1L21 20l-2.1.9L18 23l-.9-2.1L15 20l2.1-.9z" />
             </svg>
           </span>
           {{ link.title }}
@@ -202,22 +198,13 @@ onMounted(async () => {
           {{ link.title }}
         </NuxtLink>
 
-        <template
-          v-if="
-            roles.find(
-              (rol: UserRolEnum) =>
-                rol === UserRolEnum.INSTITUTION_ADMIN ||
-                rol === UserRolEnum.INSTITUTION_STAFF ||
-                rol === UserRolEnum.KAIROS_ADMIN,
-            )
-          "
-        >
+        <template v-if="canViewInstitute">
           <span class="kairos-nav__group-title">Institución</span>
           <NuxtLink to="/institute/dashboard" class="kairos-nav__item">
             Vista de instituto
           </NuxtLink>
           <NuxtLink
-            v-if="roles.find((rol: UserRolEnum) => rol === UserRolEnum.KAIROS_ADMIN)"
+            v-if="canViewAdmin"
             to="/admin/dashboard"
             class="kairos-nav__item"
           >
@@ -231,7 +218,9 @@ onMounted(async () => {
           <span class="kairos-nav__sos-title">¿Necesitas hablar hoy?</span>
           <span class="kairos-nav__sos-copy">
             {{ institute?.name || 'Tu institución' }}
-            <template v-if="institute?.phoneNumber"> · {{ institute.phoneNumber }}</template>
+            <template v-if="institute?.phoneNumber">
+              · {{ institute.phoneNumber }}</template
+            >
           </span>
         </div>
         <button type="button" class="kairos-nav__logout" @click="logout">

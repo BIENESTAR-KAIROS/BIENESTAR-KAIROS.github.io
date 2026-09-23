@@ -69,7 +69,7 @@ onMounted(async () => {
     quizStore.canAccessQuestionHistory = quiz.canAccessQuestionHistory
   } catch (error) {
     loadFailed.value = true
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }

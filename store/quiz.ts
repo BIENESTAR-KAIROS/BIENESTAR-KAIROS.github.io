@@ -47,7 +47,7 @@ export interface AnswerDto {
   textResponse?: string
   numericResponse?: number
   multipleResponse?: string[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   subanswer?: AnswerDto[]
 }
 
@@ -55,7 +55,7 @@ export interface SubmitResponseDto {
   questionnaireId: string
   answers: AnswerDto[]
   comments?: string
-  submissionMetadata?: Record<string, any>
+  submissionMetadata?: Record<string, unknown>
 }
 
 // Clase de error personalizada para el 409
@@ -163,7 +163,7 @@ export const useQuizStore = defineStore('quiz', {
           )
 
         return response.data
-      } catch (error: any) {
+      } catch (error: unknown) {
         throw error
       }
     },

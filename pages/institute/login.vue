@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import LoginPage from '~/components/login/LoginPage.vue';
+import LoginPage from '~/components/login/LoginPage.vue'
 
 definePageMeta({
-  layout: "empty",
-});
+  layout: 'empty',
+})
 </script>
 
 <template>
-    <LoginPage />
+  <LoginPage />
 </template>

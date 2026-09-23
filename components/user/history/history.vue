@@ -36,7 +36,7 @@ async function fetchQuestionnaireHistory() {
 
     questionnaireAnswers.value = response.data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }
@@ -71,8 +71,8 @@ onMounted(() => {
         <p v-if="isLoading" class="history__empty">Cargando tu historial…</p>
 
         <p v-else-if="questionnaireAnswers.length === 0" class="history__empty">
-          Aún no has llenado ningún cuestionario. Ve a la sección
-          "Cuestionarios" para responder el siguiente que tengas disponible.
+          Aún no has llenado ningún cuestionario. Ve a la sección "Queremos
+          conocerte" para responder el siguiente que tengas disponible.
         </p>
 
         <table v-else class="history__table">

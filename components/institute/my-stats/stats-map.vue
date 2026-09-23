@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Map as LeafletMap } from 'leaflet'
 import type {
   IStatsPrivacy,
   IStatsZone,
@@ -15,8 +16,8 @@ type MapView = 'heat' | 'list'
 
 const view = ref<MapView>(props.compact ? 'list' : 'heat')
 
-const map = ref<{ leafletObject?: any } | null>(null)
-const heatLayer = ref<any>(null)
+const map = shallowRef<{ leafletObject?: LeafletMap } | null>(null)
+const heatLayer = shallowRef<Awaited<ReturnType<typeof useLHeat>> | null>(null)
 
 const scoreRange = computed(() => {
   if (!props.zones.length) return { min: 0, max: 0 }

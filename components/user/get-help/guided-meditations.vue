@@ -45,7 +45,15 @@ const rest = meditations.slice(1)
           :src="embedUrl(featured.link)"
           title="Meditación 1"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allow="
+            accelerometer;
+            autoplay;
+            clipboard-write;
+            encrypted-media;
+            gyroscope;
+            picture-in-picture;
+            web-share;
+          "
           allowfullscreen
         />
       </div>
@@ -66,17 +74,21 @@ const rest = meditations.slice(1)
     </div>
 
     <div v-if="rest.length > 0" class="meditations__grid">
-      <div
-        v-for="(meditation, i) in rest"
-        :key="i"
-        class="meditation-card"
-      >
+      <div v-for="(meditation, i) in rest" :key="i" class="meditation-card">
         <div class="meditation-card__player">
           <iframe
             :src="embedUrl(meditation.link)"
             :title="`Meditación ${i + 2}`"
             frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allow="
+              accelerometer;
+              autoplay;
+              clipboard-write;
+              encrypted-media;
+              gyroscope;
+              picture-in-picture;
+              web-share;
+            "
             allowfullscreen
           />
         </div>

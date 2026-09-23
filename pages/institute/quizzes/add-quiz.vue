@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import AddQuizComp from '~/components/institute/my-quizzes/add-quiz-comp.vue'
+
 definePageMeta({
   layout: 'institute',
 })
-
-import AddQuizComp from '~/components/institute/my-quizzes/add-quiz-comp.vue'
 </script>
 
 <template>

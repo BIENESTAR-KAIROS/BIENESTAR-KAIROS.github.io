@@ -1,41 +1,71 @@
 <script setup lang="ts">
-import { computed, provide, ref } from 'vue'
+import { computed, onMounted, provide, ref, watch } from 'vue'
 import GuidedMeditations from './guided-meditations.vue'
 import MeetSpecialist from './meet-specialist.vue'
 import WellnesPractices from './wellnes-practices.vue'
+import Recomendations from '../recomendations/recomendations.vue'
 
-type HelpTab = 'practices' | 'meditations' | 'specialists'
+type HelpTab = 'practices' | 'meditations' | 'specialists' | 'recommendations'
 
-const tab = ref<HelpTab>('practices')
+const route = useRoute()
+const router = useRouter()
+const tabsList = ref<HTMLElement | null>(null)
 
 const tabs: { value: HelpTab; label: string }[] = [
+  { value: 'recommendations', label: 'Recomendaciones' },
   { value: 'practices', label: 'Prácticas del bienestar' },
   { value: 'meditations', label: 'Meditaciones guiadas' },
   { value: 'specialists', label: 'Conoce especialistas' },
 ]
 
+const tab = computed<HelpTab>(() => {
+  return (
+    tabs.find((item) => item.value === route.query.tab)?.value ||
+    'recommendations'
+  )
+})
+
+function selectTab(value: HelpTab) {
+  return router.replace({ query: { ...route.query, tab: value } })
+}
+
+function revealActiveTab() {
+  tabsList.value
+    ?.querySelector('[aria-pressed="true"]')
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
+onMounted(revealActiveTab)
+watch(tab, revealActiveTab, { flush: 'post' })
+
 const tabComponent = computed(() => {
   if (tab.value === 'meditations') return GuidedMeditations
   if (tab.value === 'specialists') return MeetSpecialist
+  if (tab.value === 'recommendations') return Recomendations
   return WellnesPractices
 })
 
-provide('goToHelpTab', (value: HelpTab) => {
-  tab.value = value
-})
+provide('goToHelpTab', selectTab)
 </script>
 
 <template>
   <div class="get-help">
     <header class="get-help__tabs">
-      <div class="get-help__tabs-list">
+      <div
+        ref="tabsList"
+        class="get-help__tabs-list"
+        role="group"
+        aria-label="Secciones de Queremos ayudarte"
+      >
         <button
           v-for="item in tabs"
           :key="item.value"
           type="button"
           class="get-help__tab"
           :class="{ 'get-help__tab--active': tab === item.value }"
-          @click="tab = item.value"
+          :aria-pressed="tab === item.value"
+          aria-controls="help-content"
+          @click="selectTab(item.value)"
         >
           {{ item.label }}
         </button>
@@ -45,7 +75,12 @@ provide('goToHelpTab', (value: HelpTab) => {
       </span>
     </header>
 
-    <component :is="tabComponent" />
+    <section
+      id="help-content"
+      :aria-label="tabs.find((item) => item.value === tab)?.label"
+    >
+      <component :is="tabComponent" />
+    </section>
   </div>
 </template>
 
@@ -60,13 +95,15 @@ provide('goToHelpTab', (value: HelpTab) => {
 }
 
 .get-help__tabs {
-  height: 72px;
-  flex: 0 0 72px;
+  min-height: 72px;
+  flex: 0 0 auto;
   background: #fff;
   border-bottom: 1px solid #e3ecee;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 24px;
   padding: 0 36px;
 }
 
@@ -74,6 +111,8 @@ provide('goToHelpTab', (value: HelpTab) => {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .get-help__tab {
@@ -86,13 +125,18 @@ provide('goToHelpTab', (value: HelpTab) => {
   font-family: 'Figtree', sans-serif;
   font-size: 15px;
   font-weight: 600;
-  color: #5f767e;
+  color: #5c7078;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .get-help__tab:hover {
   color: #065c5d;
+}
+
+.get-help__tab:focus-visible {
+  outline: 2px solid #065c5d;
+  outline-offset: -4px;
 }
 
 .get-help__tab--active {

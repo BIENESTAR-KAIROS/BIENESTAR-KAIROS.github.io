@@ -21,7 +21,9 @@ const updateNavBarState = (value: boolean) => {
   appStore.isNavBarOpen = value
 }
 
-let roles = authStore.user?.roles || []
+const canViewAdmin = computed(
+  () => authStore.user?.roles?.includes(UserRolEnum.KAIROS_ADMIN) ?? false,
+)
 
 const isOpen = computed(() => appStore.isNavBarOpen)
 
@@ -42,14 +44,12 @@ async function logout() {
     authStore.clearAuth()
     $router.push('/')
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
 onMounted(() => {
   if (!mobile.value) updateNavBarState(true)
-
-  roles = authStore.user?.roles || []
 })
 </script>
 
@@ -74,7 +74,9 @@ onMounted(() => {
       <div v-if="institute" class="institute-nav__org">
         <span class="institute-nav__org-label">Institución</span>
         <span class="institute-nav__org-name">{{ institute.name }}</span>
-        <span v-if="campus" class="institute-nav__org-campus">{{ campus }}</span>
+        <span v-if="campus" class="institute-nav__org-campus">{{
+          campus
+        }}</span>
       </div>
 
       <nav class="institute-nav__nav">
@@ -113,7 +115,9 @@ onMounted(() => {
             >
               <circle cx="9" cy="8" r="3.5" />
               <path d="M2.5 21c0-3.6 2.9-5.5 6.5-5.5s6.5 1.9 6.5 5.5" />
-              <path d="M16 5.2a3.5 3.5 0 0 1 0 6.6M18 15.8c2.1.7 3.5 2.3 3.5 5.2" />
+              <path
+                d="M16 5.2a3.5 3.5 0 0 1 0 6.6M18 15.8c2.1.7 3.5 2.3 3.5 5.2"
+              />
             </svg>
             <svg
               v-else-if="link.icon === 'chart'"
@@ -152,7 +156,7 @@ onMounted(() => {
 
       <div class="institute-nav__footer">
         <NuxtLink
-          v-if="roles.find((rol: UserRolEnum) => rol === UserRolEnum.KAIROS_ADMIN)"
+          v-if="canViewAdmin"
           to="/admin/dashboard"
           class="institute-nav__switch"
         >

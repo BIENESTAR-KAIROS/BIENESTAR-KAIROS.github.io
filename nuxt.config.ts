@@ -59,7 +59,7 @@ export default defineNuxtConfig({
   },
   eslint: {
     config: {
-      standalone: false, // Permite que Nuxt gestione la config
+      standalone: true,
     },
   },
 

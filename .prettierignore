@@ -73,6 +73,14 @@ typings/
 
 # nuxt.js build output
 .nuxt
+.output
+.nitro
+.data
+
+# Local agent configuration
+.claude
+.codex
+.agents
 
 # Nuxt generate
 dist

@@ -1,26 +1,13 @@
-module.exports = {
-  extends: [
-    '@nuxtjs/eslint-config-typescript',
-    'plugin:prettier/recommended',
-    'plugin:nuxt/recommended',
-  ],
-  plugins: ['prettier'],
-  // add your custom rules here
+import withNuxt from './.nuxt/eslint.config.mjs'
+
+export default withNuxt({
+  // Preserve the project's existing rule exceptions; Prettier handles formatting.
   rules: {
     'object-shorthand': 0,
     'vue/singleline-html-element-content-newline': 'off',
-    'vue/html-self-closing': [
-      'warn',
-      {
-        html: {
-          normal: 'never',
-          void: 'always',
-        },
-      },
-    ],
+    'vue/html-self-closing': 'off',
     'vue/valid-v-slot': 'off',
-    'no-console': ['warn'],
-    'standard/computed-property-even-spacing': 0,
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
     /**
      * Rules added below were not being inforced before,
      * if enabled, a developer will have to manually update code to fix linting issues.
@@ -63,4 +50,4 @@ module.exports = {
       },
     ],
   },
-}
+})

@@ -50,7 +50,11 @@ const goToHelpTab = inject<(value: string) => void>('goToHelpTab')
         class="practice-card practice-card--promo"
         @click="goToHelpTab?.('specialists')"
       >
-        <img :src="featuredSpecialist.image" alt="" class="practice-card--promo__icon" />
+        <img
+          :src="featuredSpecialist.image"
+          alt=""
+          class="practice-card--promo__icon"
+        />
         <span class="practice-card--promo__title">
           {{ featuredSpecialist.title }}
         </span>

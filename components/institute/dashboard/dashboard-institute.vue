@@ -95,8 +95,8 @@ const stats = computed(() => [
       <p class="institute-home__intro">
         Esta es la información general de tu población y sus parámetros, son
         aquellos detalles que Kairos considera que debes de saber de tu
-        población, si quieres ver información a tu medida, accede a
-        “Mis estadísticas”.
+        población, si quieres ver información a tu medida, accede a “Mis
+        estadísticas”.
       </p>
 
       <div class="institute-home__grid">

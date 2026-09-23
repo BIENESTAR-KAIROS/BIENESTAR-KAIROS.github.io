@@ -3,7 +3,7 @@ import type { IInstitute } from '../institution/institution.interface'
 import type { IUser } from '../users/user.interface'
 
 export interface IQuestionOption {
-  value: any
+  value: unknown
   text: string
   weight: number
   subquestions?: IQuestion[]

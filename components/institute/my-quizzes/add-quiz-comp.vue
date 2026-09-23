@@ -24,8 +24,7 @@ async function saveQuiz() {
   try {
     response.value = await quizStore.saveQuiz()
   } catch (error) {
-    console.log('Error on save questionarie')
-    console.error(error)
+    console.error('Error on save questionnaire', error)
   }
 }
 </script>
@@ -55,12 +54,12 @@ async function saveQuiz() {
         <v-row no-gutters>
           <v-col cols="12">
             <v-text-field
+              v-model="newQuiz.title"
               label="Nombre de tu cuestionario"
               bg-color="purpleShadow"
               variant="solo-filled"
               clearable
               rounded="xxl"
-              v-model="newQuiz.title"
               :roles="[required]"
               validate-on="lazy input"
               class="w-75"
@@ -76,12 +75,12 @@ async function saveQuiz() {
 
           <v-col cols="12">
             <v-text-field
+              v-model="newQuestion.text"
               label="Escribe aqui tu pregunta"
               bg-color="purpleShadow"
               variant="solo-filled"
               clearable
               rounded="xxl"
-              v-model="newQuestion.text"
               :roles="[required]"
               validate-on="lazy input"
             />
@@ -89,12 +88,12 @@ async function saveQuiz() {
           <v-col cols="2" />
           <v-col cols="10">
             <v-text-field
+              v-model="range"
               label="Rango de tu respuesta"
               bg-color="purpleShadow"
               variant="solo-filled"
               clearable
               rounded="xxl"
-              v-model="range"
               :roles="[required]"
               validate-on="lazy input"
             />
@@ -114,7 +113,7 @@ async function saveQuiz() {
           class="w-100 h-100 d-flex flex-column justify-space-around align-center"
         >
           <div class="h-100 w-75 d-flex flex-column justify-center mb-4">
-            <v-btn color="thirdy" @click="saveQuiz" class="mb-4">
+            <v-btn color="thirdy" class="mb-4" @click="saveQuiz">
               Guadar
             </v-btn>
             <v-btn color="thirdy" :readonly="isActivePreview"> Preview </v-btn>

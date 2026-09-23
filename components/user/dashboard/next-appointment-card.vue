@@ -30,18 +30,23 @@ const dateLabel = computed(() => {
   return `${weekday} ${day}, ${time} h`
 })
 
-const specialistName = computed(() => appointment.value?.psychologistId?.name || 'Tu especialista')
+const specialistName = computed(
+  () => appointment.value?.psychologistId?.name || 'Tu especialista',
+)
 
 async function fetchUpcomingAppointment() {
   try {
     isLoading.value = true
-    const response = await $axios.get<IUpcomingAppointment[]>('/calendary/upcoming', {
-      params: { role: 'patient' },
-    })
+    const response = await $axios.get<IUpcomingAppointment[]>(
+      '/calendary/upcoming',
+      {
+        params: { role: 'patient' },
+      },
+    )
 
     appointment.value = response.data[0] ?? null
   } catch (error) {
-    console.log(error)
+    console.error(error)
   } finally {
     isLoading.value = false
   }

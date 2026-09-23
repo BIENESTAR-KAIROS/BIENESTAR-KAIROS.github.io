@@ -35,7 +35,7 @@ onMounted(async () => {
       throw new Error('No se pudo verificar la cuenta.')
     }
   } catch (error) {
-    console.log(error)
+    console.error(error)
     $Swal.fire('Error al verificar la cuenta.')
   }
 })

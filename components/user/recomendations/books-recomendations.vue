@@ -137,7 +137,7 @@ async function fetchBooks() {
     const data = await response.json()
     books.value = data.docs ?? []
   } catch (error) {
-    console.log(error)
+    console.error(error)
     books.value = []
   } finally {
     isLoading.value = false
@@ -193,7 +193,20 @@ onMounted(() => {
             </span>
           </div>
           <div class="featured__reason">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07979F" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" /></svg>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#07979F"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M12 3l1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"
+              />
+            </svg>
             <span>
               Te lo sugerimos porque
               <strong v-if="activeTopic.query">
@@ -231,7 +244,9 @@ onMounted(() => {
           :key="topic.label"
           type="button"
           class="filters__chip"
-          :class="{ 'filters__chip--active': activeTopic.label === topic.label }"
+          :class="{
+            'filters__chip--active': activeTopic.label === topic.label,
+          }"
           @click="selectTopic(topic)"
         >
           {{ topic.label }}
@@ -255,7 +270,19 @@ onMounted(() => {
             <img :src="coverUrl(book)!" alt="" @error="onCoverError(book)" />
           </div>
           <div v-else class="book-card__cover book-card__cover--placeholder">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v14" /><path d="M6 17h12v3H6a2 2 0 0 1 0-4h12" /></svg>
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 19.5V6a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v14" />
+              <path d="M6 17h12v3H6a2 2 0 0 1 0-4h12" />
+            </svg>
             <span>Sin portada</span>
           </div>
 

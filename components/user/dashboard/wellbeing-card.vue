@@ -9,7 +9,10 @@ const average = computed(() => props.summary?.average ?? 0)
 
 const delta = computed(() => {
   if (!props.summary) return 0
-  return Math.round((props.summary.average - props.summary.previousAverage) * 10) / 10
+  return (
+    Math.round((props.summary.average - props.summary.previousAverage) * 10) /
+    10
+  )
 })
 
 const deltaLabel = computed(() => {
@@ -17,7 +20,8 @@ const deltaLabel = computed(() => {
     return 'Registra tu ánimo para ver tu tendencia.'
   }
   if (delta.value > 0) return `Subió ${delta.value} desde la semana pasada.`
-  if (delta.value < 0) return `Bajó ${Math.abs(delta.value)} desde la semana pasada.`
+  if (delta.value < 0)
+    return `Bajó ${Math.abs(delta.value)} desde la semana pasada.`
   return 'Se mantuvo igual que la semana pasada.'
 })
 

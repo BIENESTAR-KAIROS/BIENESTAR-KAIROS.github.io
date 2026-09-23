@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
 
-defineProps<{
+const props = defineProps<{
   tasks: ITrackingTask[]
   togglingIds: string[]
 }>()
@@ -9,10 +9,59 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'toggle', recommendationId: string): void
 }>()
+
+const listRef = ref<HTMLElement | null>(null)
+const mobileMaxHeight = ref<string>()
+let rowsObserver: ResizeObserver | undefined
+
+function measureVisibleRows() {
+  const list = listRef.value
+  if (!list) return
+
+  const rows = Array.from(
+    list.querySelectorAll<HTMLElement>('.today-tasks__row'),
+  ).slice(0, 2)
+
+  if (rows.length === 0) {
+    mobileMaxHeight.value = undefined
+    return
+  }
+
+  // Measure actual rows so long recommendations remain fully readable on mobile.
+  const styles = getComputedStyle(list)
+  const borders =
+    parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth)
+  mobileMaxHeight.value = `${rows.reduce((height, row) => height + row.getBoundingClientRect().height, borders)}px`
+}
+
+function observeVisibleRows() {
+  rowsObserver?.disconnect()
+  listRef.value
+    ?.querySelectorAll<HTMLElement>('.today-tasks__row')
+    .forEach((row, index) => {
+      if (index < 2) rowsObserver?.observe(row)
+    })
+  measureVisibleRows()
+}
+
+onMounted(() => {
+  rowsObserver = new ResizeObserver(measureVisibleRows)
+  observeVisibleRows()
+})
+
+watch(() => props.tasks, observeVisibleRows, { flush: 'post' })
+onBeforeUnmount(() => rowsObserver?.disconnect())
 </script>
 
 <template>
-  <div class="today-tasks">
+  <div
+    ref="listRef"
+    class="today-tasks"
+    :style="{ '--today-tasks-mobile-max-height': mobileMaxHeight }"
+    role="region"
+    aria-label="Lista de tareas de hoy"
+    tabindex="0"
+  >
     <div v-if="tasks.length === 0" class="today-tasks__empty">
       Todavía no tienes recomendaciones asignadas para hoy.
     </div>
@@ -25,6 +74,8 @@ const emit = defineEmits<{
         type="button"
         class="today-tasks__check"
         :class="{ 'today-tasks__check--done': task.isCompleted }"
+        :aria-label="task.recommendation"
+        :aria-pressed="task.isCompleted"
         :disabled="togglingIds.includes(task.recommendationId)"
         @click="emit('toggle', task.recommendationId)"
       >
@@ -49,7 +100,9 @@ const emit = defineEmits<{
         >
           {{ task.recommendation }}
         </span>
-        <span class="today-tasks__category">Basado en: {{ task.category }}</span>
+        <span class="today-tasks__category"
+          >Basado en: {{ task.category }}</span
+        >
       </div>
       <span v-if="task.isCompleted" class="today-tasks__status">Hecho</span>
       <button
@@ -70,7 +123,26 @@ const emit = defineEmits<{
   background: #fff;
   border-radius: 24px;
   border: 1px solid #eaf1f2;
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.today-tasks:focus-visible {
+  outline: 3px solid #065c5d;
+  outline-offset: -3px;
+}
+
+.today-tasks__check:focus-visible,
+.today-tasks__mark:focus-visible {
+  outline: 3px solid #065c5d;
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .today-tasks {
+    max-height: var(--today-tasks-mobile-max-height);
+  }
 }
 
 .today-tasks__empty {

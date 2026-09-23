@@ -45,7 +45,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -71,7 +71,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -97,7 +97,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -136,7 +136,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -176,7 +176,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -216,7 +216,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -242,7 +242,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"
@@ -268,7 +268,7 @@ import UserResults from './user-results.vue'
                       </span>
                     </div>
                   </div>
-                  <template v-slot:actions>
+                  <template #actions>
                     <v-btn
                       color="purpleShadow"
                       rounded="xl"

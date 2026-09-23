@@ -110,7 +110,6 @@ export const useUserStore = defineStore('user', {
       }
 
       if (!response.data.isActive) {
-        console.log('La cola de cuestionarios no está activa')
         return null
       }
 

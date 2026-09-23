@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useTheme } from 'vuetify'
+import { Bar } from 'vue-chartjs'
 
 const theme = useTheme()
-import { Bar } from 'vue-chartjs'
 
 const data = {
   labels: ['25-05', '26-05', '27-05', '28-05', '29-05', '30-05', '31-05'],

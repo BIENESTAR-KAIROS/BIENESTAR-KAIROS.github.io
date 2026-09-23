@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import DashboardInstitute from '~/components/institute/dashboard/dashboard-institute.vue';
+import DashboardInstitute from '~/components/institute/dashboard/dashboard-institute.vue'
 
 definePageMeta({
-  layout: "institute",
-});
+  layout: 'institute',
+})
 </script>
 
 <template>

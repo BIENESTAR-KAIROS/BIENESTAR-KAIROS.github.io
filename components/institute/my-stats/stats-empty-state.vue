@@ -30,8 +30,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'remove', value: keyof IStatsFilters): void
-  (event: 'widen'): void
-  (event: 'remind'): void
+  (event: 'widen' | 'remind'): void
 }>()
 
 const formatNumber = (value: number) => value.toLocaleString('es-MX')

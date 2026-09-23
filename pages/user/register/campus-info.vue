@@ -63,8 +63,8 @@ async function submitCampusInfo() {
               <v-row no-gutters>
                 <v-col cols="12" md="8" offset-md="2" class="mb-md-2">
                   <v-select
-                    label="Campus"
                     v-model="campusInfo.name"
+                    label="Campus"
                     :items="campusesData.map((campus) => campus.name)"
                     bg-color="loginInput"
                     variant="solo-filled"
@@ -75,8 +75,8 @@ async function submitCampusInfo() {
                 </v-col>
                 <v-col cols="12" md="8" offset-md="2" class="mb-md-2">
                   <v-select
-                    label="Departamento"
                     v-model="campusInfo.department"
+                    label="Departamento"
                     :items="
                       campusesData
                         .find((campus) => campus.name === campusInfo.name)
@@ -91,8 +91,8 @@ async function submitCampusInfo() {
                 </v-col>
                 <v-col cols="12" md="8" offset-md="2" class="mb-md-2">
                   <v-select
-                    label="Carrera"
                     v-model="campusInfo.career"
+                    label="Carrera"
                     :items="
                       campusesData
                         .find((campus) => campus.name === campusInfo.name)

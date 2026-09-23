@@ -12,9 +12,9 @@ export interface INewQuestionDto {
 }
 
 export class ICreateEvaluationConfigurationDto {
-  formulas?: {}
-  categories?: {}
-  interpretations?: {}
+  formulas?: Record<string, unknown>
+  categories?: Record<string, unknown>
+  interpretations?: Record<string, unknown>
 }
 
 export interface INewQuiz {
