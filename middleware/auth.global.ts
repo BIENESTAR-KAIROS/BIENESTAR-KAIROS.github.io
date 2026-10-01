@@ -9,6 +9,7 @@ const authRoutes: string[] = [
   '/institute/my-users',
   '/institute/dashboard',
   '/institute/quizzes',
+  '/institute/settings',
 
   // ? USERS links
   '/user/quiz',
