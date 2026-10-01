@@ -33,6 +33,8 @@ export interface IInstituteQuizListItem {
   title: string
   description?: string
   active: boolean
+  schemaVersion?: number
+  status?: 'draft'
   creationDate?: string
   modificationDate?: string
   institution: IInstituteQuizInstitution | null
@@ -52,6 +54,8 @@ export interface IQuizStatisticsResponse {
     id: string
     title: string
     active: boolean
+    schemaVersion?: number
+    status?: 'draft'
   }
   responses: {
     /** Respuestas completadas. */
@@ -74,6 +78,8 @@ export interface IInstituteQuizCard {
   title: string
   description: string
   active: boolean
+  schemaVersion?: number
+  status?: 'draft'
   /**
    * Un cuestionario que no pertenece a tu institución —la base que diseña
    * Kairos— se ve pero no se toca. Hoy el listado se pide filtrado por

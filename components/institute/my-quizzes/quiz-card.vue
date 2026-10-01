@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import BuilderDefinitionView from './builder-definition-view.vue'
 import type { IInstituteQuizCard } from '~/interfaces/quizzes/institute-quiz.interface'
 
 const props = defineProps<{
   quiz: IInstituteQuizCard
 }>()
 
+const definitionOpen = ref(false)
+
 const formatNumber = (value: number) => value.toLocaleString('es-MX')
 
 const statusLabel = computed(() => {
   if (props.quiz.readonly) return 'Base de Kairos · solo lectura'
+  if (props.quiz.status === 'draft') return 'Borrador'
   return props.quiz.active ? 'Activo' : 'Pausado'
 })
 
@@ -73,8 +77,8 @@ const questionsLabel = computed(() =>
         <button
           type="button"
           class="quiz-card__button quiz-card__button--ghost"
-          disabled
-          title="Ver las preguntas llega en el siguiente paso"
+          :disabled="quiz.schemaVersion !== 2"
+          @click="definitionOpen = true"
         >
           Ver preguntas
         </button>
@@ -98,6 +102,18 @@ const questionsLabel = computed(() =>
         </button>
       </div>
     </footer>
+    <v-dialog
+      v-model="definitionOpen"
+      max-width="900"
+      scrollable
+      aria-label="Definición guardada del cuestionario"
+    >
+      <BuilderDefinitionView
+        v-if="definitionOpen"
+        :id="quiz.id"
+        @close="definitionOpen = false"
+      />
+    </v-dialog>
   </article>
 </template>
 

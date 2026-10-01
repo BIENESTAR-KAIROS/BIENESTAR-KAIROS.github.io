@@ -15,6 +15,7 @@ export type QuizzesState = 'loading' | 'error' | 'empty' | 'ready'
  * "sin audiencia": es la institución entera.
  */
 function audienceLabelFor(quiz: IInstituteQuizListItem): string {
+  if (quiz.status === 'draft') return 'Sin publicar'
   const groups = quiz.assignedGroups ?? []
   if (groups.length === 0) return 'Toda la institución'
   if (groups.length === 1) return groups[0].name
@@ -62,6 +63,8 @@ export function useMyQuizzes() {
     title: quiz.title,
     description: quiz.description?.trim() || 'Sin descripción.',
     active: quiz.active,
+    status: quiz.status,
+    schemaVersion: quiz.schemaVersion,
     readonly: Boolean(
       quiz.institution?.id && quiz.institution.id !== instituteId.value,
     ),
@@ -80,15 +83,17 @@ export function useMyQuizzes() {
   async function loadResponses(cards: IInstituteQuizCard[]) {
     const results = await Promise.allSettled(
       cards.map((card) =>
-        $axios.get<IQuizStatisticsResponse>(
-          `/questionnaires/${card.id}/statistics`,
-        ),
+        card.status === 'draft'
+          ? Promise.resolve(null)
+          : $axios.get<IQuizStatisticsResponse>(
+              `/questionnaires/${card.id}/statistics`,
+            ),
       ),
     )
 
     quizzes.value = cards.map((card, index) => {
       const result = results[index]
-      if (result.status !== 'fulfilled') return card
+      if (result.status !== 'fulfilled' || !result.value) return card
 
       const { total, potential, responseRate } = result.value.data.responses
       return { ...card, responses: { total, potential, responseRate } }
