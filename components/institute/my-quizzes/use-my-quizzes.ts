@@ -1,3 +1,5 @@
+import { isAxiosError } from 'axios'
+import type { QuestionnaireActiveResponse } from '~/interfaces/quizzes/quiz-builder.interface'
 import { useAuthStore } from '~/store/auth'
 import type {
   IInstituteQuizCard,
@@ -23,7 +25,9 @@ function audienceLabelFor(quiz: IInstituteQuizListItem): string {
   return `${groups[0].name} y ${groups.length - 1} grupos más`
 }
 
-function updatedLabelFor(quiz: IInstituteQuizListItem): string | null {
+function updatedLabelFor(
+  quiz: Pick<IInstituteQuizListItem, 'modificationDate' | 'creationDate'>,
+): string | null {
   const raw = quiz.modificationDate ?? quiz.creationDate
   if (!raw) return null
 
@@ -47,6 +51,52 @@ export function useMyQuizzes() {
   const state = ref<QuizzesState>('loading')
   const errorMessage = ref('')
   const quizzes = ref<IInstituteQuizCard[]>([])
+  const savingIds = ref<string[]>([])
+  const actionErrors = ref<Record<string, string>>({})
+  const actionMessage = ref('')
+
+  async function setActive(quiz: IInstituteQuizCard, active: boolean) {
+    if (
+      quiz.readonly ||
+      quiz.status === 'draft' ||
+      savingIds.value.includes(quiz.id)
+    )
+      return
+    savingIds.value.push(quiz.id)
+    actionErrors.value[quiz.id] = ''
+    actionMessage.value = ''
+    try {
+      const { data } = await $axios.patch<QuestionnaireActiveResponse>(
+        `/questionnaire/${quiz.id}/active`,
+        {
+          active,
+          revision: quiz.revision ?? 0,
+        },
+      )
+      quizzes.value = quizzes.value.map((card) =>
+        card.id === quiz.id
+          ? {
+              ...card,
+              active: data.active,
+              revision: data.revision,
+              updatedLabel: data.modificationDate
+                ? updatedLabelFor({ modificationDate: data.modificationDate })
+                : card.updatedLabel,
+            }
+          : card,
+      )
+      actionMessage.value = `«${quiz.title}» está ${data.active ? 'activo' : 'inactivo'}.`
+    } catch (error) {
+      const detail = isAxiosError<{ message?: string | string[] }>(error)
+        ? error.response?.data?.message
+        : undefined
+      actionErrors.value[quiz.id] =
+        (Array.isArray(detail) ? detail.join(' ') : detail) ||
+        'No pudimos cambiar el estado. Vuelve a intentarlo.'
+    } finally {
+      savingIds.value = savingIds.value.filter((id) => id !== quiz.id)
+    }
+  }
 
   const instituteId = computed(() => {
     const institute = authStore.user?.institute
@@ -63,10 +113,11 @@ export function useMyQuizzes() {
     title: quiz.title,
     description: quiz.description?.trim() || 'Sin descripción.',
     active: quiz.active,
+    revision: quiz.revision,
     status: quiz.status,
     schemaVersion: quiz.schemaVersion,
     readonly: Boolean(
-      quiz.institution?.id && quiz.institution.id !== instituteId.value,
+      !quiz.institution?.id || quiz.institution.id !== instituteId.value,
     ),
     questionsCount: quiz.questionsCount ?? 0,
     groups: quiz.assignedGroups ?? [],
@@ -91,7 +142,9 @@ export function useMyQuizzes() {
       ),
     )
 
-    quizzes.value = cards.map((card, index) => {
+    quizzes.value = quizzes.value.map((card) => {
+      const index = cards.findIndex((item) => item.id === card.id)
+      if (index < 0) return card
       const result = results[index]
       if (result.status !== 'fulfilled' || !result.value) return card
 
@@ -132,6 +185,10 @@ export function useMyQuizzes() {
 
   return {
     state,
+    savingIds,
+    actionErrors,
+    actionMessage,
+    setActive,
     errorMessage,
     quizzes,
     activeCount,

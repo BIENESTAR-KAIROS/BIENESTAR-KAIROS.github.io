@@ -50,7 +50,14 @@ onMounted(load)
   <div class="quiz-builder qb-preview-dialog">
     <header class="qb-row">
       <div>
-        <p class="qb-eyebrow">Borrador guardado · Solo lectura</p>
+        <p class="qb-eyebrow">
+          {{
+            definition?.status === 'published'
+              ? 'Cuestionario publicado'
+              : 'Borrador guardado'
+          }}
+          · Solo lectura
+        </p>
         <h2>{{ definition?.title || 'Cuestionario' }}</h2>
       </div>
       <button

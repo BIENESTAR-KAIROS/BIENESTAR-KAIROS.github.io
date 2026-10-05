@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { useAuthStore } from '~/store/auth'
 import type {
   CreateQuestionnaireRequest,
+  UpdateQuestionnaireRequest,
   QuestionnaireDefinition,
 } from '~/interfaces/quizzes/quiz-builder.interface'
 import BuilderEvaluationEditor from './builder-evaluation-editor.vue'
@@ -10,6 +11,7 @@ import BuilderQuestionEditor from './builder-question-editor.vue'
 import BuilderQuestionPreview from './builder-question-preview.vue'
 import {
   createEvaluation,
+  restoreBuilderQuestions,
   allBuilderQuestions,
   flattenQuestions,
   validateBuilder,
@@ -19,6 +21,11 @@ import {
   questionTypes,
 } from './quiz-builder-model'
 
+const props = defineProps<{ questionnaireId?: string }>()
+const loading = ref(Boolean(props.questionnaireId))
+const loadError = ref('')
+const savedDefinition = ref<QuestionnaireDefinition | null>(null)
+const publishing = ref(false)
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
 const evaluation = ref(createEvaluation())
@@ -29,8 +36,8 @@ const allQuestions = computed(() => allBuilderQuestions(questions.value))
 const scoredQuestions = computed(() =>
   allQuestions.value.filter((q) => q.scoringMode === 'scored'),
 )
-async function saveQuestionnaire() {
-  if (saving.value) return
+async function saveQuestionnaire(publish = false) {
+  if (saving.value || loading.value || loadError.value) return
   const flat = flattenQuestions(questions.value)
   errors.value = validateBuilder(title.value, flat, evaluation.value)
   const institute = auth.user?.institute
@@ -45,6 +52,7 @@ async function saveQuestionnaire() {
     return
   }
   saving.value = true
+  publishing.value = publish
   // Snapshot the definition so an in-flight request cannot mix edits.
   const configuration = structuredClone(toRaw(evaluation.value))
   for (const dimension of [
@@ -65,7 +73,35 @@ async function saveQuestionnaire() {
     evaluationConfiguration: configuration,
   }
   try {
-    await $axios.post<QuestionnaireDefinition>('/questionnaire', payload)
+    let definition: QuestionnaireDefinition
+    if (props.questionnaireId) {
+      const update: UpdateQuestionnaireRequest = {
+        title: payload.title,
+        description: payload.description,
+        questions: payload.questions,
+        evaluationConfiguration: payload.evaluationConfiguration,
+        revision: savedDefinition.value?.__v ?? 0,
+      }
+      definition = (
+        await $axios.patch<QuestionnaireDefinition>(
+          `/questionnaire/${props.questionnaireId}/definition`,
+          update,
+        )
+      ).data
+    } else {
+      definition = (
+        await $axios.post<QuestionnaireDefinition>('/questionnaire', payload)
+      ).data
+    }
+    savedDefinition.value = definition
+    if (publish) {
+      savedDefinition.value = (
+        await $axios.patch<QuestionnaireDefinition>(
+          `/questionnaire/${definition._id}/publish`,
+          { revision: definition.__v ?? 0 },
+        )
+      ).data
+    }
     await navigateTo('/institute/quizzes')
   } catch (error: unknown) {
     const detail = isAxiosError<{ message?: string | string[] }>(error)
@@ -75,14 +111,42 @@ async function saveQuestionnaire() {
       ? detail
       : [
           detail ||
-            'No pudimos guardar el cuestionario. El borrador sigue aquí; vuelve a intentarlo.',
+            'No pudimos guardar el cuestionario. Tus cambios siguen aquí; vuelve a intentarlo.',
         ]
     await nextTick()
     errorPanel.value?.focus()
   } finally {
     saving.value = false
+    publishing.value = false
   }
 }
+async function loadDefinition() {
+  if (!props.questionnaireId) return
+  loading.value = true
+  loadError.value = ''
+  try {
+    const { data } = await $axios.get<QuestionnaireDefinition>(
+      `/questionnaire/${props.questionnaireId}/definition`,
+    )
+    const restored = restoreBuilderQuestions(data.questions)
+    title.value = data.title
+    description.value = data.description
+    questions.value = restored
+    activeId.value = restored[0].id
+    evaluation.value = data.evaluationConfiguration
+    savedDefinition.value = data
+  } catch (error) {
+    loadError.value = isAxiosError<{ message?: string }>(error)
+      ? error.response?.data?.message ||
+        'No pudimos cargar el cuestionario. Vuelve a intentarlo.'
+      : error instanceof Error
+        ? error.message
+        : 'No pudimos cargar el cuestionario.'
+  } finally {
+    loading.value = false
+  }
+}
+onMounted(loadDefinition)
 const title = ref('')
 const description = ref('')
 const questions = ref([createQuestion()])
@@ -165,30 +229,62 @@ function addRule() {
           ><v-icon icon="mdi-arrow-left" size="22"
         /></NuxtLink>
         <div>
-          <p class="qb-eyebrow">Mis cuestionarios / Crear</p>
-          <h1>Nuevo cuestionario</h1>
+          <p class="qb-eyebrow">
+            Mis cuestionarios / {{ questionnaireId ? 'Editar' : 'Crear' }}
+          </p>
+          <h1>
+            {{ questionnaireId ? 'Editar cuestionario' : 'Nuevo cuestionario' }}
+          </h1>
         </div>
       </div>
-      <div class="qb-header-actions">
-        <span class="qb-badge">Borrador</span>
+      <div v-if="!loading && !loadError" class="qb-header-actions">
+        <span class="qb-badge">{{
+          savedDefinition?.status === 'published' ? 'Publicado' : 'Borrador'
+        }}</span>
         <button type="button" class="qb-button" @click="previewOpen = true">
           <v-icon icon="mdi-eye-outline" size="18" /> Previsualizar
         </button>
         <button
           type="button"
-          class="qb-button qb-button--primary"
+          class="qb-button"
+          :class="{
+            'qb-button--primary':
+              !questionnaireId || savedDefinition?.status === 'published',
+          }"
           :disabled="saving"
           :aria-busy="saving"
           aria-describedby="qb-draft-note"
-          @click="saveQuestionnaire"
+          @click="saveQuestionnaire()"
         >
           <v-icon icon="mdi-content-save-outline" size="18" />
-          {{ saving ? 'Guardando…' : 'Guardar cuestionario' }}
+          {{
+            saving && !publishing
+              ? 'Guardando…'
+              : questionnaireId
+                ? 'Guardar cambios'
+                : 'Guardar borrador'
+          }}
+        </button>
+        <button
+          v-if="questionnaireId && savedDefinition?.status === 'draft'"
+          type="button"
+          class="qb-button qb-button--primary"
+          :disabled="saving"
+          :aria-busy="publishing"
+          @click="saveQuestionnaire(true)"
+        >
+          {{ publishing ? 'Publicando…' : 'Guardar y publicar' }}
         </button>
       </div>
     </header>
-
-    <fieldset class="qb-body qb-form-body" :disabled="saving">
+    <p v-if="loading" class="qb-panel" role="status">Cargando cuestionario…</p>
+    <div v-else-if="loadError" class="qb-panel qb-error" role="alert">
+      <p>{{ loadError }}</p>
+      <button type="button" class="qb-button" @click="loadDefinition">
+        Reintentar
+      </button>
+    </div>
+    <fieldset v-else class="qb-body qb-form-body" :disabled="saving">
       <div
         v-if="errors.length"
         ref="errorPanel"
@@ -206,11 +302,11 @@ function addRule() {
           icon="mdi-information-outline"
           size="20"
           aria-hidden="true"
-        /><span
-          >El cuestionario se guardará como borrador de tu institución. Las
-          preguntas y reglas quedarán guardadas; todavía no estará disponible
-          para alumnos.</span
-        >
+        /><span>{{
+          savedDefinition?.status === 'published'
+            ? 'Los cambios se guardarán en el cuestionario publicado y conservarán su estado activo o inactivo.'
+            : 'Guarda el borrador para continuar después. Al publicar quedará inactivo; podrás activarlo desde Mis cuestionarios.'
+        }}</span>
       </p>
       <section class="qb-panel qb-details" aria-labelledby="qb-details-title">
         <div class="qb-section-heading">

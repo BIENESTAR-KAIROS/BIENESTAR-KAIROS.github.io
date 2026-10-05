@@ -280,3 +280,61 @@ export function validateBuilder(
     errors.push('Escribe la etiqueta de la alarma final.')
   return errors
 }
+
+/** Restore saved IDs and references; never recreate the questions during editing. */
+export function restoreBuilderQuestions(
+  flat: DefinitionQuestion[],
+): BuilderQuestion[] {
+  const ordered = [...flat].sort((a, b) => a.order - b.order)
+  const restored = new Map<string, BuilderQuestion>()
+  for (const q of ordered) {
+    restored.set(q._id, {
+      id: q._id,
+      text: q.text,
+      help: q.helpText ?? '',
+      block: q.category ?? '',
+      type: q.type,
+      presentation: q.presentation,
+      required: q.required,
+      scoringMode: q.scoring.mode,
+      scoringMethod: q.scoring.method,
+      options: q.options.map((o) => ({
+        id: o._id,
+        text: o.text,
+        score: o.score ?? '',
+        children: [],
+      })),
+      maxAnswers: q.constraints.maxSelections ?? 2,
+      min: q.constraints.min ?? 0,
+      max: q.constraints.max ?? 100,
+      maxLength: q.constraints.maxLength ?? 500,
+    })
+  }
+  const roots: BuilderQuestion[] = []
+  for (const q of ordered) {
+    const question = restored.get(q._id)!
+    if (!q.visibleWhen) {
+      roots.push(question)
+      continue
+    }
+    const condition = q.visibleWhen
+    const parent = restored.get(condition.questionId)
+    const option = parent?.options.find((o) => o.id === condition.optionIds[0])
+    // The visual tree currently supports one triggering option per child.
+    // Reject unsupported imported definitions rather than silently losing rules.
+    if (
+      !option ||
+      condition.optionIds.length !== 1 ||
+      condition.operator !== 'includesAny'
+    )
+      throw new Error(
+        'Esta definición tiene condiciones que el constructor todavía no puede editar.',
+      )
+    option.children.push(question)
+  }
+  if (!roots.length || allBuilderQuestions(roots).length !== flat.length)
+    throw new Error(
+      'No pudimos reconstruir todas las preguntas del cuestionario.',
+    )
+  return roots
+}

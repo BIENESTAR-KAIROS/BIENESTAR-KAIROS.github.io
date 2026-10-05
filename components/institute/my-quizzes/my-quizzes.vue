@@ -2,7 +2,17 @@
 import QuizCard from './quiz-card.vue'
 import { useMyQuizzes } from './use-my-quizzes'
 
-const { state, errorMessage, quizzes, activeCount, load } = useMyQuizzes()
+const {
+  state,
+  errorMessage,
+  quizzes,
+  activeCount,
+  load,
+  savingIds,
+  actionErrors,
+  actionMessage,
+  setActive,
+} = useMyQuizzes()
 
 const formatNumber = (value: number) => value.toLocaleString('es-MX')
 
@@ -53,7 +63,14 @@ onMounted(load)
     </p>
 
     <div v-else class="quizzes__grid">
-      <QuizCard v-for="quiz in quizzes" :key="quiz.id" :quiz="quiz" />
+      <QuizCard
+        v-for="quiz in quizzes"
+        :key="quiz.id"
+        :quiz="quiz"
+        :saving="savingIds.includes(quiz.id)"
+        :error="actionErrors[quiz.id]"
+        @set-active="setActive(quiz, $event)"
+      />
 
       <div v-if="state === 'empty'" class="quizzes__empty" role="note">
         <span class="quizzes__empty-title">
@@ -87,6 +104,9 @@ onMounted(load)
         <span class="quizzes__new-soon">Abrir constructor visual</span>
       </NuxtLink>
     </div>
+    <p class="quizzes__feedback" role="status" aria-live="polite">
+      {{ actionMessage }}
+    </p>
   </div>
 </template>
 

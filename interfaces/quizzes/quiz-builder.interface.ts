@@ -86,9 +86,22 @@ export interface CreateQuestionnaireRequest {
   questions: DefinitionQuestion[]
   evaluationConfiguration: EvaluationConfiguration
 }
+export interface UpdateQuestionnaireRequest extends Omit<
+  CreateQuestionnaireRequest,
+  'institution'
+> {
+  revision: number
+}
+export interface QuestionnaireActiveResponse {
+  id: string
+  active: boolean
+  revision: number
+  modificationDate?: string
+}
 export interface QuestionnaireDefinition extends CreateQuestionnaireRequest {
   _id: string
   schemaVersion: 2
-  status: 'draft'
-  active: false
+  status: 'draft' | 'published'
+  active: boolean
+  __v?: number
 }

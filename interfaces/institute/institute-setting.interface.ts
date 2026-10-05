@@ -8,5 +8,5 @@ export interface QuestionnaireQueueOption {
   id: string
   title: string
   active: boolean
-  status?: 'draft'
+  status?: 'draft' | 'published'
 }
