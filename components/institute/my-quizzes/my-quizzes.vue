@@ -2,7 +2,17 @@
 import QuizCard from './quiz-card.vue'
 import { useMyQuizzes } from './use-my-quizzes'
 
-const { state, errorMessage, quizzes, activeCount, load } = useMyQuizzes()
+const {
+  state,
+  errorMessage,
+  quizzes,
+  activeCount,
+  load,
+  savingIds,
+  actionErrors,
+  actionMessage,
+  setActive,
+} = useMyQuizzes()
 
 const formatNumber = (value: number) => value.toLocaleString('es-MX')
 
@@ -30,14 +40,9 @@ onMounted(load)
         <span class="quizzes__title">{{ headerTitle }}</span>
       </div>
 
-      <button
-        type="button"
-        class="quizzes__create"
-        disabled
-        title="Crear cuestionarios llega en el siguiente paso"
-      >
+      <NuxtLink to="/institute/quizzes/add-quiz" class="quizzes__create">
         Crear cuestionario
-      </button>
+      </NuxtLink>
     </header>
 
     <p class="quizzes__intro">
@@ -58,7 +63,14 @@ onMounted(load)
     </p>
 
     <div v-else class="quizzes__grid">
-      <QuizCard v-for="quiz in quizzes" :key="quiz.id" :quiz="quiz" />
+      <QuizCard
+        v-for="quiz in quizzes"
+        :key="quiz.id"
+        :quiz="quiz"
+        :saving="savingIds.includes(quiz.id)"
+        :error="actionErrors[quiz.id]"
+        @set-active="setActive(quiz, $event)"
+      />
 
       <div v-if="state === 'empty'" class="quizzes__empty" role="note">
         <span class="quizzes__empty-title">
@@ -70,9 +82,7 @@ onMounted(load)
         </span>
       </div>
 
-      <!-- La tarjeta de alta ya vive en la retícula; se enciende al construir
-           el flujo de creación. -->
-      <div class="quizzes__new" aria-disabled="true">
+      <NuxtLink to="/institute/quizzes/add-quiz" class="quizzes__new">
         <span class="quizzes__new-icon">
           <svg
             width="21"
@@ -91,9 +101,12 @@ onMounted(load)
         <span class="quizzes__new-text">
           Para un grupo, una carrera o un momento del semestre.
         </span>
-        <span class="quizzes__new-soon">Disponible en el siguiente paso</span>
-      </div>
+        <span class="quizzes__new-soon">Abrir constructor visual</span>
+      </NuxtLink>
     </div>
+    <p class="quizzes__feedback" role="status" aria-live="polite">
+      {{ actionMessage }}
+    </p>
   </div>
 </template>
 
@@ -137,11 +150,15 @@ onMounted(load)
 }
 
 .quizzes__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   height: 42px;
   padding: 0 22px;
   border: 0;
   border-radius: 999px;
-  background: #8475a0;
+  background: #6d5f88;
   color: #fff;
   font-family: 'Figtree', sans-serif;
   font-size: 14px;
@@ -149,9 +166,19 @@ onMounted(load)
   cursor: pointer;
 }
 
-.quizzes__create:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.quizzes__create:hover {
+  background: #3c2f52;
+}
+
+.quizzes__create:focus-visible,
+.quizzes__new:focus-visible {
+  outline: 3px solid #6d5f88;
+  outline-offset: 4px;
+}
+
+.quizzes__new:hover {
+  background: #f0eaf5;
+  border-color: #8475a0;
 }
 
 .quizzes__intro {
@@ -215,6 +242,7 @@ onMounted(load)
 }
 
 .quizzes__new {
+  text-decoration: none;
   gap: 9px;
   align-items: center;
   justify-content: center;
@@ -249,7 +277,7 @@ onMounted(load)
 .quizzes__new-soon {
   font-size: 12px;
   font-weight: 700;
-  color: #9a90ad;
+  color: #6b6080;
 }
 
 @media (max-width: 1100px) {

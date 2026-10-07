@@ -15,6 +15,7 @@ const navListInstitute = [
     title: 'Mis cuestionarios',
     to: '/quizzes',
   },
+  { title: 'Mis configuraciones', to: '/settings' },
 ]
 
 export default navListInstitute

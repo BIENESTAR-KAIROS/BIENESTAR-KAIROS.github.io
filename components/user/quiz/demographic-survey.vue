@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
+import QuestionnaireFlowState from '~/components/user/quiz/questionnaire-flow-state.vue'
 import {
   civilStatusTranslations,
   studyYearTranslations,
@@ -165,6 +166,7 @@ const blocks: Block[] = [
 ]
 
 const isLoading = ref(true)
+const flowError = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
 const errorMessage = ref('')
@@ -422,40 +424,24 @@ function toggleVersion(id: string) {
 }
 
 async function loadSurveyState() {
-  try {
-    const [availabilityResponse, history] = await Promise.all([
-      userStore.getDemographicSurveyAvailability(),
-      userStore.getDemographicHistory(),
-    ])
-
-    availability.value = availabilityResponse
-    historyEntries.value = history.entries
-  } catch (error) {
-    console.error('Error al consultar el historial sociodemográfico:', error)
-  }
+  const [availabilityResponse, history] = await Promise.all([
+    userStore.getDemographicSurveyAvailability(),
+    userStore.getDemographicHistory(),
+  ])
+  availability.value = availabilityResponse
+  historyEntries.value = history.entries
 }
 
 async function goToNextPendingQuiz(): Promise<boolean> {
-  const nextQuiz = userStore.user?.questionnaireQueue?.queue.find(
-    (item) => !item.solved,
-  )
-
-  if (!nextQuiz) return false
-
-  await $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
-
-  return true
-}
-
-function markDemographicSolved() {
-  const queue = userStore.user?.questionnaireQueue
-
-  if (!queue) return
-
-  userStore.user!.questionnaireQueue = {
-    queue: queue.queue.map((item) =>
-      item.questionnaireId === 'demographic' ? { ...item, solved: true } : item,
-    ),
+  try {
+    const flow = await userStore.loadQuestionnaireFlow()
+    if (!flow.isActive || !flow.nextQuestionnaireId) return false
+    await $router.push(`/user/quiz/${flow.nextQuestionnaireId}`)
+    return true
+  } catch {
+    // Saving already succeeded. Resolve navigation on the index without submitting again.
+    await $router.push('/user/quiz')
+    return true
   }
 }
 
@@ -509,10 +495,15 @@ async function saveAnswers() {
         ?.demographicData ?? { ...buildPayload() }
     }
 
-    markDemographicSolved()
     clearDraft()
     isEditing.value = false
-    await loadSurveyState()
+    try {
+      await loadSurveyState()
+    } catch {
+      // The answers were saved. Retry loading, never submit them again automatically.
+      flowError.value = true
+      return
+    }
 
     if (await goToNextPendingQuiz()) return
 
@@ -535,9 +526,43 @@ async function saveAnswers() {
     // the state that explains why instead of leaving an unsubmittable form.
     if (response?.status === 409) isEditing.value = false
 
-    await loadSurveyState()
+    try {
+      await loadSurveyState()
+    } catch {
+      flowError.value = true
+    }
   } finally {
     isSaving.value = false
+  }
+}
+
+async function prepareSurvey() {
+  isLoading.value = true
+  flowError.value = false
+  try {
+    const flow = await userStore.loadQuestionnaireFlow()
+    await loadSurveyState()
+    const demographic = flow.queue.find(
+      (item) => item.questionnaireId === 'demographic',
+    )
+    if (
+      flow.isActive &&
+      demographic &&
+      flow.nextQuestionnaireId &&
+      flow.nextQuestionnaireId !== 'demographic' &&
+      !(demographic.solved && availability.value?.unlockedByInstitution)
+    ) {
+      await $router.replace(`/user/quiz/${flow.nextQuestionnaireId}`)
+      return
+    }
+
+    prefillFrom(lastSubmittedData.value)
+    loadDraft()
+  } catch (error) {
+    flowError.value = true
+    console.error('Error al preparar el cuestionario sociodemográfico:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -545,29 +570,7 @@ onMounted(async () => {
   viewportQuery = window.matchMedia('(max-width: 720px)')
   isNarrow.value = viewportQuery.matches
   viewportQuery.addEventListener('change', syncViewport)
-
-  try {
-    if (!userStore.user) userStore.user = authStore.user
-    if (!userStore.user?.questionnaireQueue) {
-      await userStore.getUserQuestionnaireQueue()
-    }
-
-    const demographicQuiz = userStore.user?.questionnaireQueue?.queue.find(
-      (item) => item.questionnaireId === 'demographic',
-    )
-
-    // Step out of the way only while the registration queue still has something
-    // pending; once it is done this screen is reachable on its own.
-    if (demographicQuiz?.solved && (await goToNextPendingQuiz())) return
-
-    await loadSurveyState()
-    prefillFrom(lastSubmittedData.value)
-    loadDraft()
-  } catch (error) {
-    console.error('Error al preparar el cuestionario sociodemográfico:', error)
-  } finally {
-    isLoading.value = false
-  }
+  await prepareSurvey()
 })
 
 onBeforeUnmount(() => {
@@ -580,7 +583,12 @@ onBeforeUnmount(() => {
     <p v-if="isLoading" class="demographic__loading">
       Preparando tu cuestionario…
     </p>
-
+    <QuestionnaireFlowState
+      v-else-if="flowError"
+      error
+      message="No pudimos preparar tu cuestionario. Vuelve a intentarlo."
+      @retry="prepareSurvey"
+    />
     <template v-else>
       <header class="demographic__header">
         <div class="demographic__header-text">
@@ -850,6 +858,14 @@ onBeforeUnmount(() => {
                 sientas que tu situación se ha modificado.
               </p>
 
+              <p
+                v-if="availability?.unlockedByInstitution"
+                class="demographic__update-text"
+                role="status"
+              >
+                Tu institución permite actualizar tus respuestas sin esperar 90
+                días. Cada envío se guarda como una nueva versión.
+              </p>
               <p v-if="isLocked" class="demographic__lock">
                 <svg
                   viewBox="0 0 24 24"

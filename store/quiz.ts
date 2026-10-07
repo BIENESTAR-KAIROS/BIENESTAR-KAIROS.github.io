@@ -112,6 +112,7 @@ export const useQuizStore = defineStore('quiz', {
       isFinished: false,
       isDynamic: false,
       studentId: '',
+      attemptId: undefined as string | undefined,
       quiz: [] as IQuizResponse[],
       answers: [] as SendQuestionAnswerDto[],
       canAccessQuestionHistory: true,
@@ -149,6 +150,7 @@ export const useQuizStore = defineStore('quiz', {
       const nuxtApp = useNuxtApp()
 
       const payload: CreateQuestionnaireAnswerDto = {
+        attemptId: this.attemptId,
         studentId: this.studentId,
         questionnaireId: this.quiz[0].questionnaireId,
         submittedAt: new Date(),

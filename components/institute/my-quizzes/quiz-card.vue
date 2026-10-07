@@ -1,15 +1,23 @@
 <script setup lang="ts">
+import BuilderDefinitionView from './builder-definition-view.vue'
 import type { IInstituteQuizCard } from '~/interfaces/quizzes/institute-quiz.interface'
 
 const props = defineProps<{
   quiz: IInstituteQuizCard
+  saving?: boolean
+  error?: string
 }>()
+
+defineEmits<{ 'set-active': [active: boolean] }>()
+
+const definitionOpen = ref(false)
 
 const formatNumber = (value: number) => value.toLocaleString('es-MX')
 
 const statusLabel = computed(() => {
   if (props.quiz.readonly) return 'Base de Kairos · solo lectura'
-  return props.quiz.active ? 'Activo' : 'Pausado'
+  if (props.quiz.status === 'draft') return 'Borrador'
+  return props.quiz.active ? 'Activo' : 'Inactivo'
 })
 
 /**
@@ -64,6 +72,34 @@ const questionsLabel = computed(() =>
       </div>
     </dl>
 
+    <div v-if="!quiz.readonly" class="quiz-card__availability">
+      <button
+        type="button"
+        role="switch"
+        class="quiz-card__toggle"
+        :aria-checked="quiz.active"
+        :aria-label="`Cuestionario activo: ${quiz.title}`"
+        :aria-describedby="
+          quiz.status === 'draft' ? `draft-note-${quiz.id}` : undefined
+        "
+        :disabled="saving || quiz.status === 'draft'"
+        :aria-busy="saving"
+        @click="$emit('set-active', !quiz.active)"
+      >
+        <span class="quiz-card__track" aria-hidden="true"><span /></span>
+        <span>{{
+          saving ? 'Guardando…' : quiz.active ? 'Activo' : 'Inactivo'
+        }}</span>
+      </button>
+      <p
+        v-if="quiz.status === 'draft'"
+        :id="`draft-note-${quiz.id}`"
+        class="quiz-card__hint"
+      >
+        Publica el borrador desde Editar para activarlo.
+      </p>
+      <p v-if="error" class="quiz-card__error" role="alert">{{ error }}</p>
+    </div>
     <footer class="quiz-card__footer">
       <span v-if="quiz.updatedLabel" class="quiz-card__updated">
         {{ quiz.updatedLabel }}
@@ -73,17 +109,27 @@ const questionsLabel = computed(() =>
         <button
           type="button"
           class="quiz-card__button quiz-card__button--ghost"
-          disabled
-          title="Ver las preguntas llega en el siguiente paso"
+          :disabled="quiz.schemaVersion !== 2"
+          @click="definitionOpen = true"
         >
           Ver preguntas
         </button>
+        <NuxtLink
+          v-if="!quiz.readonly && quiz.schemaVersion === 2 && !saving"
+          :to="`/institute/quizzes/${quiz.id}/edit`"
+          class="quiz-card__button quiz-card__button--primary"
+          >Editar</NuxtLink
+        >
         <button
-          v-if="!quiz.readonly"
+          v-else-if="!quiz.readonly"
           type="button"
           class="quiz-card__button quiz-card__button--primary"
           disabled
-          title="Editar las preguntas llega en el siguiente paso"
+          :title="
+            saving
+              ? 'Espera a que termine el guardado'
+              : 'La edición de cuestionarios anteriores aún no está disponible'
+          "
         >
           Editar
         </button>
@@ -98,6 +144,18 @@ const questionsLabel = computed(() =>
         </button>
       </div>
     </footer>
+    <v-dialog
+      v-model="definitionOpen"
+      max-width="900"
+      scrollable
+      aria-label="Definición guardada del cuestionario"
+    >
+      <BuilderDefinitionView
+        v-if="definitionOpen"
+        :id="quiz.id"
+        @close="definitionOpen = false"
+      />
+    </v-dialog>
   </article>
 </template>
 
@@ -228,8 +286,12 @@ const questionsLabel = computed(() =>
 }
 
 .quiz-card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   flex: 1;
-  height: 40px;
+  min-height: 40px;
   padding: 0 14px;
   border-radius: 999px;
   font-family: 'Figtree', sans-serif;
@@ -251,7 +313,7 @@ const questionsLabel = computed(() =>
 
 .quiz-card__button--primary {
   border: 0;
-  background: #8475a0;
+  background: #6d5f88;
   color: #fff;
 }
 
@@ -264,5 +326,63 @@ const questionsLabel = computed(() =>
 .quiz-card--readonly .quiz-card__button--primary {
   background: #cbadd8;
   color: #3c2f52;
+}
+.quiz-card__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #3c2f52;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+.quiz-card__toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.quiz-card__track {
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 26px;
+  padding: 3px;
+  border: 2px solid #6d5f88;
+  border-radius: 999px;
+  background: #f0eaf5;
+}
+.quiz-card__track > span {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6d5f88;
+}
+.quiz-card__toggle[aria-checked='true'] .quiz-card__track {
+  background: #6d5f88;
+  justify-content: flex-end;
+}
+.quiz-card__toggle[aria-checked='true'] .quiz-card__track > span {
+  background: #fff;
+}
+.quiz-card__button:focus-visible,
+.quiz-card__toggle:focus-visible {
+  outline: 3px solid #6d5f88;
+  outline-offset: 4px;
+}
+.quiz-card__hint,
+.quiz-card__error {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b6080;
+}
+.quiz-card__error {
+  color: #8a3d3d;
+}
+.quiz-card__actions {
+  flex-wrap: wrap;
 }
 </style>

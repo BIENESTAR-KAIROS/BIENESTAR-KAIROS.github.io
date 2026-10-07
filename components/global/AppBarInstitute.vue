@@ -15,6 +15,7 @@ const navLinks = [
   { title: 'Mis usuarios', to: '/institute/my-users', icon: 'users' },
   { title: 'Mis estadísticas', to: '/institute/stats', icon: 'chart' },
   { title: 'Mis cuestionarios', to: '/institute/quizzes', icon: 'clipboard' },
+  { title: 'Mis configuraciones', to: '/institute/settings', icon: 'settings' },
 ]
 
 const updateNavBarState = (value: boolean) => {
@@ -84,6 +85,7 @@ onMounted(() => {
           v-for="link in navLinks"
           :key="link.to"
           :to="link.to"
+          :aria-current="isActive(link.to) ? 'page' : undefined"
           class="institute-nav__item"
           :class="{ 'institute-nav__item--active': isActive(link.to) }"
         >
@@ -148,6 +150,22 @@ onMounted(() => {
                 d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
               />
               <path d="M9 12h6M9 16h4" />
+            </svg>
+            <svg
+              v-else-if="link.icon === 'settings'"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 7h5m6 0h5M4 17h9m6 0h1" />
+              <circle cx="12" cy="7" r="3" />
+              <circle cx="16" cy="17" r="3" />
             </svg>
           </span>
           {{ link.title }}

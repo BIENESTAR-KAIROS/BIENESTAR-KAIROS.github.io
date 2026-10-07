@@ -8,7 +8,8 @@ const authRoutes: string[] = [
   '/institute/stats',
   '/institute/my-users',
   '/institute/dashboard',
-  '/institute/quizzes',
+  '/institute/quizzes', // Includes /add-quiz and /:id/edit through isValidRoute.
+  '/institute/settings',
 
   // ? USERS links
   '/user/quiz',

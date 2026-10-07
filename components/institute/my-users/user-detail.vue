@@ -6,6 +6,7 @@ import CalendarRecomendations from '~/components/institute/my-users/recommendati
 import type { IUserDetail } from '~/interfaces/user/user-detail.interface'
 import { campusLabels, translateValue } from '~/utils/translations'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
+import QuestionnaireRetakes from './questionnaire-retakes.vue'
 
 interface IUserSchedule {
   _id?: string
@@ -529,6 +530,7 @@ onMounted(() => {
                 </tbody>
               </table>
             </div>
+            <QuestionnaireRetakes :student-id="userId" />
           </section>
         </div>
 

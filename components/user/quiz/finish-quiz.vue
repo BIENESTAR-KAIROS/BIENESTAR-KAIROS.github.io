@@ -69,36 +69,7 @@ const claves = ref<Record<string, string>>({
 const isError409 = (error: unknown): boolean => hasErrorStatus(error, 409)
 
 const goToNextOrDashboard = async () => {
-  try {
-    if (userStore.user) {
-      userStore.user.questionnaireQueue = {
-        queue: userStore.user.questionnaireQueue.queue.map((item) =>
-          item.questionnaireId === userStore.lastQuizId
-            ? { ...item, solved: true }
-            : item,
-        ),
-      }
-
-      const thisQuiz = userStore.user.questionnaireQueue.queue.find(
-        (item) => item.questionnaireId === userStore.lastQuizId,
-      )
-
-      if (thisQuiz && thisQuiz.solved) {
-        const nextQuiz = userStore.user.questionnaireQueue.queue.find(
-          (item) => !item.solved,
-        )
-
-        if (nextQuiz) {
-          $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
-        } else {
-          $router.push('/user/dashboard')
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error resolving next questionnaire on finish:', error)
-    await $router.push('/user/dashboard')
-  }
+  await $router.push('/user/quiz')
 }
 
 onMounted(async () => {

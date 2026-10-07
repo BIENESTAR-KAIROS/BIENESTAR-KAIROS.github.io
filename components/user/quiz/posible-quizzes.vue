@@ -1,94 +1,78 @@
 <script setup lang="ts">
-import type {
-  IQuizAvaibleResponse,
-  IQuizzesAvaibleResponse,
-} from '~/interfaces/quizzes/quiz-preview.interface'
-import { useAuthStore } from '~/store/auth'
-
-const posibleQuizzes: Ref<IQuizzesAvaibleResponse> = ref({
-  questionnaires: [] as IQuizAvaibleResponse[],
-  count: 0,
-})
-const { $axios } = useNuxtApp()
-const isLoading = ref(true)
-
-const authStore = useAuthStore()
-
-onMounted(async () => {
-  authStore.refreshAuth()
-
-  try {
-    isLoading.value = true
-    const { data } = await $axios.get<IQuizzesAvaibleResponse>(
-      `/questionnaire/available/${authStore.user?._id}`,
-    )
-    posibleQuizzes.value = data
-  } catch (error) {
-    console.error(error)
-  } finally {
-    isLoading.value = false
-  }
-})
+import type { StudentQuestionnaireItem } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
+defineProps<{
+  questionnaires: StudentQuestionnaireItem[]
+  sequenceComplete?: boolean
+}>()
 </script>
 
 <template>
   <div class="quizzes">
-    <div v-if="isLoading" class="quizzes__loading">
-      <span class="quizzes__spinner" />
-      <span>Buscando tus cuestionarios…</span>
-    </div>
+    <header class="quizzes__header">
+      <span class="quizzes__eyebrow">Cuestionarios</span>
+      <h1 class="quizzes__title">Responder un cuestionario</h1>
+      <p class="quizzes__intro">
+        <template v-if="questionnaires.length > 0">
+          Tu organización tiene {{ questionnaires.length }}
+          {{ questionnaires.length === 1 ? 'cuestionario' : 'cuestionarios' }}
+          para ti. Puedes elegir entre los que están disponibles para responder.
+        </template>
+        <template v-else-if="sequenceComplete">
+          No tienes cuestionarios pendientes en tu secuencia por ahora.
+        </template>
+        <template v-else>
+          Por ahora no tienes cuestionarios pendientes disponibles.
+        </template>
+      </p>
+    </header>
 
-    <template v-else>
-      <header class="quizzes__header">
-        <span class="quizzes__eyebrow">Cuestionarios</span>
-        <h1 class="quizzes__title">Responder un cuestionario</h1>
-        <p class="quizzes__intro">
-          <template v-if="posibleQuizzes.count > 0">
-            Tu organización tiene {{ posibleQuizzes.count }}
-            {{ posibleQuizzes.count === 1 ? 'cuestionario' : 'cuestionarios' }}
-            {{ posibleQuizzes.count === 1 ? 'disponible' : 'disponibles' }}.
-            Responde el que creas que nos ayuda a darte mejores recomendaciones
-            según cómo te sientes.
-          </template>
-          <template v-else>
-            Por ahora tu organización no tiene cuestionarios disponibles. Te
-            avisaremos en cuanto se publique uno nuevo.
-          </template>
-        </p>
-      </header>
-
-      <div v-if="posibleQuizzes.questionnaires.length" class="quizzes__grid">
-        <article
-          v-for="quiz in posibleQuizzes.questionnaires"
-          :key="quiz._id"
-          class="quizzes__card"
+    <div v-if="questionnaires.length" class="quizzes__grid">
+      <article
+        v-for="quiz in questionnaires"
+        :key="quiz.questionnaireId"
+        class="quizzes__card"
+      >
+        <span class="quizzes__badge">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#065c5d"
+            stroke-width="2.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+            <path
+              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+            />
+            <path d="M9 12h6M9 16h4" />
+          </svg>
+        </span>
+        <div class="quizzes__copy">
+          <h2 class="quizzes__card-title">{{ quiz.title }}</h2>
+          <p v-if="quiz.attemptId" class="quizzes__card-text">
+            Tu institución habilitó una nueva aplicación para ti.
+          </p>
+          <p class="quizzes__card-text">{{ quiz.description }}</p>
+        </div>
+        <NuxtLink
+          v-if="quiz.canRespond || quiz.canPreview"
+          :to="`/user/quiz/${quiz.questionnaireId}`"
+          class="quizzes__cta"
         >
-          <span class="quizzes__badge">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#065c5d"
-              stroke-width="2.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="8" y="2" width="8" height="4" rx="1" />
-              <path
-                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-              />
-              <path d="M9 12h6M9 16h4" />
-            </svg>
-          </span>
-          <div class="quizzes__copy">
-            <h2 class="quizzes__card-title">{{ quiz.title }}</h2>
-            <p class="quizzes__card-text">{{ quiz.description }}</p>
-          </div>
-          <NuxtLink :to="`/user/quiz/${quiz._id}`" class="quizzes__cta">
-            Responder el cuestionario
-          </NuxtLink>
-        </article>
-      </div>
-    </template>
+          {{
+            quiz.canPreview && !quiz.canRespond
+              ? 'Probar sin guardar'
+              : quiz.questionnaireId === 'demographic' && quiz.solved
+                ? 'Actualizar mis respuestas'
+                : 'Responder el cuestionario'
+          }}
+        </NuxtLink>
+        <p v-else class="quizzes__card-text">
+          Aún no disponible para responder.
+        </p>
+      </article>
+    </div>
   </div>
 </template>
 
@@ -102,28 +86,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 22px;
-}
-
-.quizzes__loading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #5c7078;
-}
-
-.quizzes__spinner {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  border: 3px solid #dbf2f4;
-  border-top-color: #07979f;
-  animation: quizzes-spin 0.8s linear infinite;
-}
-
-@keyframes quizzes-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .quizzes__header {
@@ -158,7 +120,7 @@ onMounted(async () => {
 
 .quizzes__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 18px;
 }
 
@@ -228,8 +190,13 @@ onMounted(async () => {
 }
 
 .quizzes__cta:hover {
-  background: #07979f;
+  background: #0e2a36;
   color: #fff;
+}
+
+.quizzes__cta:focus-visible {
+  outline: 3px solid #07979f;
+  outline-offset: 4px;
 }
 
 @media (max-width: 700px) {

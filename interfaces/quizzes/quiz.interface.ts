@@ -26,6 +26,7 @@ export enum QuestionTypeEnum {
 }
 
 export interface IQuiz {
+  attemptId?: string
   id: string
   title: string
   description: string
