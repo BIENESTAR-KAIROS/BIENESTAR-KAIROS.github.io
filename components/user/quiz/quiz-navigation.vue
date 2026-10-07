@@ -111,33 +111,9 @@ async function finalizeQuiz() {
       return
     }
 
-    if (userStore.user) {
-      userStore.user.questionnaireQueue = {
-        queue: userStore.user.questionnaireQueue.queue.map((item) =>
-          item.questionnaireId === route.params.id
-            ? { ...item, solved: true }
-            : item,
-        ),
-      }
-
-      const thisQuiz = userStore.user.questionnaireQueue.queue.find(
-        (item) => item.questionnaireId === route.params.id,
-      )
-
-      if (thisQuiz && thisQuiz.solved) {
-        const nextQuiz = userStore.user.questionnaireQueue.queue.find(
-          (item) => !item.solved,
-        )
-
-        userStore.lastQuizId = route.params.id as string
-
-        if (nextQuiz) {
-          $router.push(`/user/quiz/${nextQuiz.questionnaireId}`)
-        } else {
-          $router.push('/user/dashboard')
-        }
-      }
-    }
+    userStore.lastQuizId = route.params.id as string
+    // The index reloads the server flow after the committed submission.
+    await $router.push('/user/quiz')
   } catch (error: unknown) {
     errorMessage.value = 'No pudimos enviar tus respuestas. Intenta de nuevo.'
     console.error(error)

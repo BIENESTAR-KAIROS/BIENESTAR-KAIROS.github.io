@@ -32,9 +32,3 @@ export interface IUserQuestionnaireQueue {
     solved?: boolean
   }[]
 }
-
-export interface IQuestionnaireQueueReponse {
-  id: string
-  isActive: boolean
-  queue: IUserQuestionnaireQueue
-}

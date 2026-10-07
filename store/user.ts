@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
+import { useAuthStore } from './auth'
+import type { StudentQuestionnaireFlow } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
 import type { UserRegisterRequestDto } from '~/dto/request/user/user-register.request.dto'
 import type { StudentDataRequestDto } from '~/dto/request/user/user-student-data.request.dto'
 import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
 import type AuthRegisterDto from '~/interfaces/register/register.dto'
 import type {
-  IQuestionnaireQueueReponse,
   IUser,
   IUserQuestionnaireQueue,
 } from '~/interfaces/user/user.interface'
@@ -20,6 +21,7 @@ export const useUserStore = defineStore('user', {
       registerUser: {} as AuthRegisterDto,
       user: null as IUser | null,
       lastQuizId: null as string | null,
+      questionnaireFlow: null as StudentQuestionnaireFlow | null,
     }
   },
   actions: {
@@ -82,46 +84,25 @@ export const useUserStore = defineStore('user', {
 
       return { user: response.data.user, passed }
     },
-    async getUserQuestionnaireQueue(): Promise<IUserQuestionnaireQueue | null> {
-      const sortQueue = (
-        questionnaireQueue: IUserQuestionnaireQueue,
-      ): IUserQuestionnaireQueue => {
-        if (!questionnaireQueue[0].solved) {
-          questionnaireQueue = {
-            queue: questionnaireQueue.map((item) => ({
-              ...item,
-              solved: item.solved || false, // Asegura que 'solved' esté presente y sea un booleano
-            })),
-          }
-        }
-
-        return {
-          queue: questionnaireQueue.queue.sort((a, b) => a.order - b.order),
-        }
-      }
-
-      const nuxtApp = useNuxtApp()
-      const response = await nuxtApp.$axios.get<IQuestionnaireQueueReponse>(
-        `/institute-setting/institute/${this.user!.institute!._id}`,
+    async loadQuestionnaireFlow(): Promise<StudentQuestionnaireFlow> {
+      const auth = useAuthStore()
+      if (!auth.user) throw new Error('No hay una sesión activa.')
+      const userId = auth.user._id
+      this.questionnaireFlow = null
+      const { data } = await useNuxtApp().$axios.get<StudentQuestionnaireFlow>(
+        '/questionnaire/student-flow',
       )
-      if (response.status != 200) {
-        alert(`Error al obtener la cola de cuestionarios: ${response}`)
-        return null
-      }
-
-      if (!response.data.isActive) {
-        return null
-      }
-
-      if (this.user!.questionnaireQueue) {
-        return this.user!.questionnaireQueue
-      }
-
-      const sortedQueue = sortQueue(response.data.queue)
-
-      this.user!.questionnaireQueue = sortedQueue
-
-      return sortedQueue
+      // An old response must not be reused after a change of account.
+      if (useAuthStore().user?._id !== userId)
+        throw new Error('La sesión cambió. Vuelve a intentarlo.')
+      this.questionnaireFlow = data
+      this.user = auth.user
+      this.user.questionnaireQueue = { queue: data.isActive ? data.queue : [] }
+      return data
+    },
+    async getUserQuestionnaireQueue(): Promise<IUserQuestionnaireQueue | null> {
+      const flow = await this.loadQuestionnaireFlow()
+      return flow.isActive ? { queue: flow.queue } : null
     },
     async getDemographicHistory(): Promise<IDemographicHistory> {
       const nuxtApp = useNuxtApp()

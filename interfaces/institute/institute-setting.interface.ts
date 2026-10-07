@@ -1,6 +1,7 @@
 export interface InstituteSetting {
   id: string
   isActive: boolean
+  demographicRetakeEnabled: boolean
   queue: { order: number; questionnaireId: string }[]
 }
 

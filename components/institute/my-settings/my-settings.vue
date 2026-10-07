@@ -51,8 +51,15 @@ async function loadSettings() {
   }
 }
 
-async function toggleQueue() {
-  if (!setting.value || saving.value || !instituteId.value) return
+async function toggleSetting(key: 'isActive' | 'demographicRetakeEnabled') {
+  if (
+    !setting.value ||
+    saving.value ||
+    queueSaving.value ||
+    saveError.value ||
+    !instituteId.value
+  )
+    return
   const version = requestVersion
   const id = instituteId.value
   saving.value = true
@@ -60,14 +67,19 @@ async function toggleQueue() {
   success.value = ''
   try {
     const { data } = await $axios.patch<InstituteSetting>(
-      `/institute-setting/institute/${id}/queue-status`,
-      { isActive: !setting.value.isActive },
+      `/institute-setting/institute/${id}/${key === 'isActive' ? 'queue-status' : 'demographic-retake'}`,
+      { [key]: !setting.value[key] },
     )
     if (version !== requestVersion) return
     setting.value = data
-    success.value = data.isActive
-      ? 'Secuencia de cuestionarios activada.'
-      : 'Secuencia de cuestionarios desactivada.'
+    success.value =
+      key === 'isActive'
+        ? data.isActive
+          ? 'Secuencia de cuestionarios activada.'
+          : 'Secuencia de cuestionarios desactivada.'
+        : data.demographicRetakeEnabled
+          ? 'El alumnado puede actualizar el sociodemográfico sin esperar 90 días.'
+          : 'Se restableció la espera de 90 días desde la última respuesta.'
   } catch {
     if (version !== requestVersion) return
     saveError.value =
@@ -163,7 +175,7 @@ onBeforeUnmount(() => requestVersion++)
               aria-labelledby="queue-title"
               aria-describedby="queue-description"
               :disabled="saving || queueSaving || !!saveError"
-              @click="toggleQueue"
+              @click="toggleSetting('isActive')"
             >
               <span />
             </button>
@@ -178,6 +190,66 @@ onBeforeUnmount(() => requestVersion++)
           @busy="queueSaving = $event"
           @saved="onQueueSaved"
         />
+      </article>
+      <article
+        class="setting-card setting-card--demographic"
+        aria-labelledby="demographic-retake-title"
+        :aria-busy="saving"
+      >
+        <div class="setting-card__heading">
+          <span class="setting-icon" aria-hidden="true"
+            ><v-icon icon="mdi-form-select" size="24"
+          /></span>
+          <div>
+            <p class="eyebrow">Cuestionario sociodemográfico</p>
+            <h2 id="demographic-retake-title">Permitir nuevas respuestas</h2>
+          </div>
+        </div>
+        <p id="demographic-retake-description" class="setting-description">
+          Permite que el alumnado actualice sus respuestas en cualquier momento,
+          sin esperar 90 días. Cada envío conserva una nueva versión en el
+          historial. Al desactivarlo, la espera se calcula desde la última
+          respuesta.
+        </p>
+        <p class="queue-count">
+          Los pasos ya completados de la secuencia se conservan.
+        </p>
+        <div class="setting-card__footer">
+          <span
+            class="setting-status"
+            :class="{
+              'setting-status--active': setting.demographicRetakeEnabled,
+            }"
+          >
+            <span aria-hidden="true" class="status-dot" />
+            {{
+              setting.demographicRetakeEnabled
+                ? 'Sin espera'
+                : 'Espera de 90 días'
+            }}
+          </span>
+          <div class="setting-control">
+            <span aria-hidden="true">{{
+              saving
+                ? 'Guardando…'
+                : setting.demographicRetakeEnabled
+                  ? 'Desactivar'
+                  : 'Activar'
+            }}</span>
+            <button
+              type="button"
+              role="switch"
+              class="setting-switch"
+              :aria-checked="setting.demographicRetakeEnabled"
+              aria-labelledby="demographic-retake-title"
+              aria-describedby="demographic-retake-description"
+              :disabled="saving || queueSaving || !!saveError"
+              @click="toggleSetting('demographicRetakeEnabled')"
+            >
+              <span />
+            </button>
+          </div>
+        </div>
       </article>
       <p role="status" class="settings-feedback">
         {{ saving ? 'Guardando configuración…' : success }}
@@ -238,6 +310,9 @@ h2 {
 }
 .setting-card {
   max-width: 820px;
+}
+.setting-card--demographic {
+  margin-top: 24px;
 }
 .setting-card__heading {
   display: flex;
@@ -379,6 +454,9 @@ button:focus-visible {
   }
   .setting-control {
     gap: 8px;
+  }
+  .setting-card__footer {
+    flex-wrap: wrap;
   }
 }
 </style>

@@ -17,6 +17,7 @@ export interface IDemographicHistory {
 
 export interface IDemographicSurveyAvailability {
   canUpdate: boolean
+  unlockedByInstitution: boolean
   /** Days the survey stays locked after each submission. */
   cooldownDays: number
   lastUpdatedAt: string | null
