@@ -10,6 +10,7 @@ import {
 } from '~/store/quiz'
 import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
 import { useUserStore } from '~/store/user'
+import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
 const route = useRoute()
 const { $router } = useNuxtApp()
@@ -115,7 +116,10 @@ async function finalizeQuiz() {
     // The index reloads the server flow after the committed submission.
     await $router.push('/user/quiz')
   } catch (error: unknown) {
-    errorMessage.value = 'No pudimos enviar tus respuestas. Intenta de nuevo.'
+    errorMessage.value = getApiErrorMessage(
+      error,
+      'No pudimos enviar tus respuestas. Intenta de nuevo.',
+    )
     console.error(error)
   } finally {
     isSending.value = false

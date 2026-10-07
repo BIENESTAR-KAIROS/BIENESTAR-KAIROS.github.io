@@ -56,6 +56,8 @@ onMounted(async () => {
       `/questionnaire/student/${route.params.id}`,
     )
     quizStore.quiz = []
+    quizStore.attemptId = quiz.attemptId
+    quizStore.answers = []
     quizStore.isLastQuestion = false
     quizStore.isFinished = false
     quizStore.totalQuestions = 0

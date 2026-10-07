@@ -4,6 +4,8 @@ export interface StudentQuestionnaireItem {
   description: string
   schemaVersion?: number
   canRespond: boolean
+  canPreview?: boolean
+  attemptId?: string
   solved: boolean
 }
 export interface StudentQuestionnaireQueueItem extends StudentQuestionnaireItem {

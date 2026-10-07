@@ -50,17 +50,22 @@ defineProps<{
         </span>
         <div class="quizzes__copy">
           <h2 class="quizzes__card-title">{{ quiz.title }}</h2>
+          <p v-if="quiz.attemptId" class="quizzes__card-text">
+            Tu institución habilitó una nueva aplicación para ti.
+          </p>
           <p class="quizzes__card-text">{{ quiz.description }}</p>
         </div>
         <NuxtLink
-          v-if="quiz.canRespond"
+          v-if="quiz.canRespond || quiz.canPreview"
           :to="`/user/quiz/${quiz.questionnaireId}`"
           class="quizzes__cta"
         >
           {{
-            quiz.questionnaireId === 'demographic' && quiz.solved
-              ? 'Actualizar mis respuestas'
-              : 'Responder el cuestionario'
+            quiz.canPreview && !quiz.canRespond
+              ? 'Probar sin guardar'
+              : quiz.questionnaireId === 'demographic' && quiz.solved
+                ? 'Actualizar mis respuestas'
+                : 'Responder el cuestionario'
           }}
         </NuxtLink>
         <p v-else class="quizzes__card-text">

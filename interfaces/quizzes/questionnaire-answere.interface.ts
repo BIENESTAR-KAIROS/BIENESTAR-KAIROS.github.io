@@ -4,6 +4,7 @@ export interface SendQuestionAnswerDto {
 }
 
 export interface CreateQuestionnaireAnswerDto {
+  attemptId?: string
   studentId: string
   questionnaireId: string
   submittedAt?: Date

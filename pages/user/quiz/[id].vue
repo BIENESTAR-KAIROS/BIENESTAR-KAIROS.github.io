@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Quiz from '~/components/user/quiz/quiz.vue'
+import DefinitionQuiz from '~/components/user/quiz/definition-quiz.vue'
 import QuestionnaireFlowState from '~/components/user/quiz/questionnaire-flow-state.vue'
 import type { StudentQuestionnaireItem } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
 import { resolveStudentQuestionnaireRoute } from '~/utils/helpers/student-questionnaire-flow'
@@ -45,7 +46,12 @@ definePageMeta({ layout: 'empty-login', key: (route) => route.path })
     message="No pudimos consultar tu secuencia. Vuelve a intentarlo."
     @retry="load"
   />
-  <Quiz v-else-if="questionnaire?.canRespond" />
+  <DefinitionQuiz
+    v-else-if="questionnaire?.schemaVersion === 2 && questionnaire.canPreview"
+  />
+  <Quiz
+    v-else-if="questionnaire?.canRespond && questionnaire.schemaVersion !== 2"
+  />
   <QuestionnaireFlowState
     v-else
     :title="questionnaire?.title || 'Cuestionario no disponible'"
