@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import axios from 'axios'
+import { useAuthStore } from '~/store/auth'
+import type { DefinitionSubmissionResult } from '~/interfaces/quizzes/definition-result.interface'
 import DefinitionQuestion from './definition-question.vue'
 import QuestionnaireFlowState from './questionnaire-flow-state.vue'
 import type {
@@ -22,7 +25,22 @@ const loading = ref(true)
 const failed = ref(false)
 const showHistory = ref(false)
 const showErrors = ref(false)
-const reviewed = ref(false)
+const submitting = ref(false)
+const submissionError = ref('')
+const saved = ref<DefinitionSubmissionResult | null>(null)
+const resultRecommendations = computed(() => {
+  if (!saved.value) return []
+  const evaluation = saved.value.evaluation
+  return [
+    ...new Set([
+      ...saved.value.recommendations.map((item) => item.text),
+      ...[evaluation.overall, ...evaluation.dimensions]
+        .map((item) => item?.recommendations)
+        .filter((text): text is string => !!text),
+    ]),
+  ]
+})
+const auth = useAuthStore()
 const visibilityMessage = ref('')
 const questionHeading = ref<HTMLElement | null>(null)
 const visible = computed(() =>
@@ -62,7 +80,8 @@ async function load() {
     answers.value = {}
     currentId.value = visible.value[0]?._id ?? ''
     if (!currentId.value) throw new Error('No visible questions')
-    reviewed.value = false
+    saved.value = null
+    submissionError.value = ''
     showErrors.value = false
   } catch {
     failed.value = true
@@ -88,7 +107,7 @@ function setAnswer(value: StudentAnswer) {
   ]
     .filter(Boolean)
     .join(' ')
-  reviewed.value = false
+  submissionError.value = ''
 }
 async function selectQuestion(id: string) {
   currentId.value = id
@@ -103,15 +122,47 @@ function next() {
   const nextQuestion = visible.value[position.value + 1]
   if (nextQuestion) void selectQuestion(nextQuestion._id)
 }
-async function review() {
+async function submit() {
+  if (submitting.value || saved.value || !definition.value || !auth.user) return
   const invalid = visible.value.find((q) => errors.value.get(q._id))
   if (invalid) {
     await selectQuestion(invalid._id)
     showErrors.value = true
     return
   }
-  // Point 1 only: no legacy POST, score, completed step, or finish-page redirect.
-  reviewed.value = true
+  submitting.value = true
+  submissionError.value = ''
+  try {
+    saved.value = (
+      await $axios.post<DefinitionSubmissionResult>(
+        `/questionnaire/${definition.value._id}/responses`,
+        {
+          studentId: auth.user._id,
+          questionnaireId: definition.value._id,
+          revision: definition.value.revision,
+          attemptId: definition.value.attemptId,
+          responses: visible.value
+            .filter((q) => hasStudentAnswer(answers.value[q._id]))
+            .map((q) => ({
+              questionId: q._id,
+              response: answers.value[q._id],
+            })),
+        },
+      )
+    ).data
+    await nextTick()
+    questionHeading.value?.focus()
+  } catch (error) {
+    const text: unknown = axios.isAxiosError(error)
+      ? error.response?.data?.message
+      : null
+    submissionError.value =
+      typeof text === 'string'
+        ? text
+        : 'No pudimos guardar tus respuestas. Puedes volver a intentarlo.'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -143,18 +194,23 @@ async function review() {
         />
       </div>
     </header>
-    <aside class="definition-quiz__notice">
-      <strong>Prueba del cuestionario</strong>
-      <p>
-        Puedes explorar las preguntas. El envío aún no está disponible: tus
-        respuestas no se guardan ni se evalúan y se perderán al salir.
-      </p>
-      <p>
-        Si cambias una respuesta y se ocultan otras preguntas, sus respuestas se
-        borran.
-      </p>
-    </aside>
-    <section class="definition-quiz__card">
+    <section v-if="saved" class="definition-quiz__card" role="status">
+      <h2 ref="questionHeading" tabindex="-1">Tus respuestas se guardaron</h2>
+      <p>Gracias por completar el cuestionario.</p>
+      <template v-if="resultRecommendations.length">
+        <h3>Recomendaciones para ti</h3>
+        <p
+          v-for="recommendation in resultRecommendations"
+          :key="recommendation"
+        >
+          {{ recommendation }}
+        </p>
+      </template>
+      <NuxtLink to="/user/quiz" class="definition-quiz__exit"
+        >Continuar con mis cuestionarios</NuxtLink
+      >
+    </section>
+    <fieldset v-else :disabled="submitting" class="definition-quiz__card">
       <h2 ref="questionHeading" class="definition-quiz__step" tabindex="-1">
         Pregunta {{ position + 1 }} de {{ visible.length }}
         <span v-if="current.category"> · {{ current.category }}</span>
@@ -188,10 +244,8 @@ async function review() {
             {{ index + 1 }}
           </button>
         </div>
-        <p v-if="reviewed" role="status">
-          Terminaste la prueba. Tus respuestas no se han guardado ni evaluado.
-        </p>
-        <p v-else-if="remaining > 0">
+        <p v-if="submissionError" role="alert">{{ submissionError }}</p>
+        <p v-if="remaining > 0">
           {{ remaining }}
           {{ remaining === 1 ? 'pregunta pendiente' : 'preguntas pendientes' }}
           de responder o revisar.
@@ -224,15 +278,15 @@ async function review() {
             v-else
             type="button"
             class="definition-quiz__primary"
-            @click="review"
+            @click="submit"
           >
-            Revisar respuestas
+            {{ submitting ? 'Guardando…' : 'Guardar respuestas' }}
           </button>
         </div>
       </nav>
-    </section>
+    </fieldset>
     <NuxtLink to="/user/dashboard" class="definition-quiz__exit">
-      Salir de la prueba
+      Volver al inicio
     </NuxtLink>
   </main>
 </template>

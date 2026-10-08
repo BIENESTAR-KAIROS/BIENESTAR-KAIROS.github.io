@@ -1,3 +1,4 @@
-<template>
-  <div class="">hello admin</div>
-</template>
+<script setup lang="ts">
+definePageMeta({ layout: 'admin', redirect: '/admin/recommendations' })
+</script>
+<template><div /></template>

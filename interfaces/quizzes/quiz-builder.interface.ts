@@ -17,7 +17,6 @@ export interface BuilderOption {
   id: string
   text: string
   score: number | ''
-  children: BuilderQuestion[]
 }
 export interface BuilderQuestion {
   id: string
@@ -30,20 +29,33 @@ export interface BuilderQuestion {
   scoringMethod: 'sum' | 'mean' | 'max' | 'direct'
   required: boolean
   options: BuilderOption[]
+  children: BuilderQuestion[]
+  triggerOptionIds: string[]
   maxAnswers: number
   min: number
   max: number
   maxLength: number
 }
+export interface EvaluationInterpretation {
+  risk: RiskLevel | null
+  key?: string
+  label: string
+  min: number | ''
+  max?: number | '' | null
+  recommendations?: string
+}
 export interface EvaluationDimension {
   _id: string
   label: string
+  group?: string
+  unit?: string
+  scoreMultiplier?: number
   method: 'sum' | 'mean' | 'weighted_mean'
   items: { questionId: string; weight: number }[]
   missingAnswers: 'invalidate' | 'exclude'
   skippedQuestions: 'exclude' | 'zero'
   minimumAnsweredPercentage: number
-  interpretations: { risk: RiskLevel; label: string; min: number | '' }[]
+  interpretations: EvaluationInterpretation[]
 }
 export interface EvaluationConfiguration {
   schemaVersion: 1
@@ -80,6 +92,7 @@ export interface DefinitionQuestion {
   }
 }
 export interface CreateQuestionnaireRequest {
+  hasRecomendations: boolean
   institution: string
   title: string
   description: string

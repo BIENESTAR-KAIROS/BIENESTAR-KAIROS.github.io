@@ -12,7 +12,11 @@ async function load() {
   error.value = false
   try {
     flow.value = await userStore.loadQuestionnaireFlow()
-    if (flow.value.isActive && flow.value.nextQuestionnaireId) {
+    if (
+      flow.value.isActive &&
+      flow.value.nextQuestionnaireId &&
+      !flow.value.questionnaires.length
+    ) {
       await navigateTo(`/user/quiz/${flow.value.nextQuestionnaireId}`, {
         replace: true,
       })
@@ -41,6 +45,7 @@ onMounted(load)
   <PosibleQuizzes
     v-else-if="flow"
     :questionnaires="flow.questionnaires"
-    :sequence-complete="flow.isActive"
+    :sequence-complete="flow.isActive && !flow.nextQuestionnaireId"
+    :next-questionnaire-id="flow.nextQuestionnaireId"
   />
 </template>

@@ -15,6 +15,11 @@ const navLinks = [
   { title: 'Mis usuarios', to: '/institute/my-users', icon: 'users' },
   { title: 'Mis estadísticas', to: '/institute/stats', icon: 'chart' },
   { title: 'Mis cuestionarios', to: '/institute/quizzes', icon: 'clipboard' },
+  {
+    title: 'Recomendaciones',
+    to: '/institute/recommendations',
+    icon: 'clipboard',
+  },
   { title: 'Mis configuraciones', to: '/institute/settings', icon: 'settings' },
 ]
 
@@ -180,6 +185,12 @@ onMounted(() => {
         >
           Vista de administrador
         </NuxtLink>
+        <NuxtLink
+          v-if="canViewAdmin"
+          to="/admin/recommendations"
+          class="institute-nav__switch"
+          >Recomendaciones de KAIROS e instituciones</NuxtLink
+        >
         <NuxtLink to="/user/dashboard" class="institute-nav__switch">
           Ver como alumno
         </NuxtLink>

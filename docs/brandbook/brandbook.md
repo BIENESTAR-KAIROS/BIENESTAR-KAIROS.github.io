@@ -106,6 +106,16 @@ Violeta profundo en navegación. Lavanda en acciones, selección y acentos. Fond
 
 Esquemas basados en código. Acción lavanda + blanco: combinación observada con contraste insuficiente para texto pequeño (p. 19); requiere ajuste antes de reutilizar. Administración global no tiene un diseño reciente.
 
+### Administración general · extensión del 7 de octubre de 2026
+
+**Evidencia: IMPLEMENTADO POR INSTRUCCIÓN DEL USUARIO, POSTERIOR A LA AUDITORÍA INICIAL.**
+
+El administrador KAIROS utiliza el layout independiente `layouts/admin.vue` y `components/admin/AdminNavigation.vue`. Su ancla es el verde petróleo oscuro `#04474A`, un tono ya utilizado en el formulario sociodemográfico, más oscuro que el `#065C5D` de estudiantes. Conserva Figtree, canvas `#F4F8F9`, superficies blancas, iconos lineales y foco visible.
+
+Navegación lateral de 272 px en escritorio; por debajo de 960 px, barra superior y menú temporal. El estado del menú es local a esta navegación. La única opción de sección inicial es **Recomendaciones**; el cierre de sesión permanece al pie. El acceso histórico `/admin/dashboard` redirige a `/admin/recommendations`. No se montan las barras de estudiante o institución en este layout.
+
+Esta extensión incorpora una tercera variante de contexto; no altera la evidencia histórica de las dos variantes auditadas. El PDF está pendiente de incorporar la variante de administración general.
+
 ## 6. Paleta de estudiantes
 
 Usar los colores por su función, no por los nombres históricos del tema Vuetify.

@@ -7,6 +7,7 @@ import type { IUserDetail } from '~/interfaces/user/user-detail.interface'
 import { campusLabels, translateValue } from '~/utils/translations'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import QuestionnaireRetakes from './questionnaire-retakes.vue'
+import DefinitionDimensionResult from './definition-dimension-result.vue'
 
 interface IUserSchedule {
   _id?: string
@@ -127,15 +128,18 @@ const chronologicalResults = computed(() =>
 )
 
 const chartPoints = computed(() =>
-  chronologicalResults.value.slice(-6).map((result) => ({
-    score: result.score,
-    low: result.score < LOW_SCORE,
-    title: result.questionnaireTitle,
-    label: new Date(result.createdAt).toLocaleDateString('es-MX', {
-      month: 'short',
-      day: 'numeric',
-    }),
-  })),
+  chronologicalResults.value
+    .filter((result) => result.schemaVersion !== 2 && result.score !== null)
+    .slice(-6)
+    .map((result) => ({
+      score: result.score!,
+      low: result.score! < LOW_SCORE,
+      title: result.questionnaireTitle,
+      label: new Date(result.createdAt).toLocaleDateString('es-MX', {
+        month: 'short',
+        day: 'numeric',
+      }),
+    })),
 )
 
 /**
@@ -518,10 +522,53 @@ onMounted(() => {
                     <td
                       class="table__score"
                       :class="{
-                        'table__score--warn': result.score < LOW_SCORE,
+                        'table__score--definition': result.schemaVersion === 2,
+                        'table__score--warn':
+                          result.schemaVersion !== 2 &&
+                          result.score !== null &&
+                          result.score < LOW_SCORE,
                       }"
                     >
-                      {{ result.score }} / {{ MAX_SCORE }}.0
+                      <template v-if="result.schemaVersion === 2">
+                        <p
+                          v-if="
+                            !result.evaluation?.overall &&
+                            !result.evaluation?.dimensions.length
+                          "
+                        >
+                          Sin evaluación configurada
+                        </p>
+                        <DefinitionDimensionResult
+                          v-if="result.evaluation?.overall"
+                          :dimension="result.evaluation.overall"
+                        />
+                        <DefinitionDimensionResult
+                          v-for="dimension in result.evaluation?.dimensions ??
+                          []"
+                          :key="dimension.dimensionId"
+                          :dimension="dimension"
+                        />
+                        <p v-if="result.evaluation?.alarm.triggered">
+                          {{ result.evaluation.alarm.label }}
+                        </p>
+                        <details v-if="result.recommendations?.length">
+                          <summary>
+                            Recomendaciones asignadas ({{
+                              result.recommendations.length
+                            }})
+                          </summary>
+                          <p
+                            v-for="r in result.recommendations"
+                            :key="`${r.recommendationId}-${r.dimensionId}`"
+                          >
+                            {{ r.text }}
+                          </p>
+                        </details>
+                      </template>
+                      <template v-else
+                        >{{ result.score ?? 'Sin puntaje' }} /
+                        {{ MAX_SCORE }}.0</template
+                      >
                     </td>
                     <td class="table__pad-lg table__right table__muted">
                       {{ formatDate(result.createdAt) }}
@@ -972,6 +1019,24 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+.table__score--definition {
+  white-space: normal;
+  min-width: 230px;
+  max-width: 460px;
+  overflow-wrap: anywhere;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+.table__score--definition p {
+  margin: 6px 0;
+}
+.table__score--definition summary {
+  cursor: pointer;
+}
+.table__score--definition summary:focus-visible {
+  outline: 3px solid #655080;
+  outline-offset: 3px;
+}
 .table__score--warn {
   color: #8a5a1f;
 }

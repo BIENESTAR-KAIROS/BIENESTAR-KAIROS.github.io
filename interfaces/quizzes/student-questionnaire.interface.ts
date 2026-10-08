@@ -10,6 +10,8 @@ export interface StudentDefinitionQuestion extends Omit<
 export interface StudentQuestionnaireDefinition {
   _id: string
   schemaVersion: 2
+  revision: number
+  attemptId?: string
   title: string
   description: string
   canAccessQuestionHistory: boolean

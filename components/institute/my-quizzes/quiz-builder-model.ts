@@ -52,7 +52,7 @@ export function createOption(
   text = '',
   score: number | '' = '',
 ): BuilderOption {
-  return { id: createObjectId(), text, score, children: [] }
+  return { id: createObjectId(), text, score }
 }
 export function createQuestion(): BuilderQuestion {
   return {
@@ -66,6 +66,8 @@ export function createQuestion(): BuilderQuestion {
     scoringMethod: 'sum',
     required: true,
     options: [createOption(), createOption()],
+    children: [],
+    triggerOptionIds: [],
     maxAnswers: 2,
     min: 0,
     max: 100,
@@ -86,19 +88,38 @@ export function createExample(): BuilderQuestion {
   detail.presentation = 'textarea'
   detail.text = '¿Quieres compartir más detalles?'
   detail.required = false
-  frequency.options[1].children.push(detail)
-  question.options[0].children.push(frequency)
+  detail.triggerOptionIds = [frequency.options[1].id]
+  frequency.children.push(detail)
+  frequency.triggerOptionIds = [question.options[0].id]
+  question.children.push(frequency)
   return question
 }
 export function allBuilderQuestions(
   questions: BuilderQuestion[],
 ): BuilderQuestion[] {
-  return questions.flatMap((q) => [
-    q,
-    ...allBuilderQuestions(
-      hasOptions(q.type) ? q.options.flatMap((o) => o.children) : [],
-    ),
-  ])
+  return questions.flatMap((q) => [q, ...allBuilderQuestions(q.children)])
+}
+/** Each conditional question belongs to its parent once, even with several triggers. */
+export function visibleBuilderChildren(
+  question: BuilderQuestion,
+  selected: string[],
+): BuilderQuestion[] {
+  if (!hasOptions(question.type)) return []
+  return question.children.filter((child) =>
+    child.triggerOptionIds.some((id) => selected.includes(id)),
+  )
+}
+export function removeBuilderOption(question: BuilderQuestion, index: number) {
+  const option = question.options[index]
+  if (!option) return
+  question.options.splice(index, 1)
+  question.children = question.children.filter((child) => {
+    child.triggerOptionIds = child.triggerOptionIds.filter(
+      (id) => id !== option.id,
+    )
+    return child.triggerOptionIds.length > 0
+  })
+  question.maxAnswers = Math.min(question.maxAnswers, question.options.length)
 }
 export function flattenQuestions(
   questions: BuilderQuestion[],
@@ -144,16 +165,13 @@ export function flattenQuestions(
               ? { maxLength: q.maxLength }
               : {},
     })
-    if (hasOptions(q.type))
-      q.options.forEach((o) =>
-        o.children.forEach((child) =>
-          visit(child, {
-            questionId: q.id,
-            operator: 'includesAny',
-            optionIds: [o.id],
-          }),
-        ),
-      )
+    q.children.forEach((child) =>
+      visit(child, {
+        questionId: q.id,
+        operator: 'includesAny',
+        optionIds: [...child.triggerOptionIds],
+      }),
+    )
   }
   questions.forEach((q) => visit(q))
   return flat
@@ -162,6 +180,7 @@ export function createDimension(label = ''): EvaluationDimension {
   return {
     _id: createObjectId(),
     label,
+    scoreMultiplier: 1,
     method: 'sum',
     items: [],
     missingAnswers: 'invalidate',
@@ -190,6 +209,21 @@ export function validateBuilder(
   questions.forEach((q, i) => {
     const prefix = `Pregunta ${i + 1}: `
     if (!q.text) errors.push(prefix + 'escribe el enunciado.')
+    if (q.visibleWhen) {
+      const condition = q.visibleWhen
+      const parent = questions.find((item) => item._id === condition.questionId)
+      if (
+        !parent ||
+        parent.order >= q.order ||
+        !condition.optionIds.length ||
+        !condition.optionIds.every((id) =>
+          parent.options.some((o) => o._id === id),
+        )
+      )
+        errors.push(
+          prefix + 'selecciona al menos una opción válida para mostrarla.',
+        )
+    }
     if (q.options.some((o) => !o.text))
       errors.push(prefix + 'completa todas las opciones.')
     if (
@@ -253,24 +287,47 @@ export function validateBuilder(
     )
       errors.push(`${name}: la cobertura debe estar entre 0 y 100.`)
     if (
-      d.interpretations.length &&
-      d.interpretations.some(
-        (band, j) =>
+      d.scoreMultiplier != null &&
+      (!Number.isFinite(d.scoreMultiplier) || d.scoreMultiplier < 0.000001)
+    )
+      errors.push(`${name}: el multiplicador debe ser un número positivo.`)
+    const keys = d.interpretations.flatMap((band) =>
+      band.key ? [band.key] : [],
+    )
+    if (new Set(keys).size !== keys.length)
+      errors.push(`${name}: las claves de los niveles deben ser únicas.`)
+    if (d.interpretations.length > 20)
+      errors.push(`${name}: puedes configurar hasta 20 niveles.`)
+    if (
+      d.interpretations.some((band, index, bands) => {
+        const next = bands[index + 1]
+        return (
+          !band.label.trim() ||
           band.min === '' ||
           !Number.isFinite(band.min) ||
-          (j > 0 && Number(band.min) <= Number(d.interpretations[j - 1].min)),
-      )
+          band.min < 0 ||
+          (next && Number(band.min) >= Number(next.min)) ||
+          (band.max != null &&
+            band.max !== '' &&
+            (!Number.isFinite(band.max) ||
+              band.max < band.min ||
+              (next && Number(band.max) >= Number(next.min))))
+        )
+      })
     )
       errors.push(
-        `${name}: define límites crecientes para riesgo moderado y alto.`,
+        `${name}: completa los nombres y usa límites crecientes sin superposiciones.`,
       )
   })
   evaluation.alarms.forEach((alarm) => {
     if (
       alarm.enabled &&
       (!alarm.risks.length ||
-        !evaluation.dimensions.find((d) => d._id === alarm.dimensionId)
-          ?.interpretations.length)
+        !alarm.risks.every((risk) =>
+          evaluation.dimensions
+            .find((d) => d._id === alarm.dimensionId)
+            ?.interpretations.some((band) => band.risk === risk),
+        ))
     )
       errors.push(
         'Cada alarma habilitada necesita rangos de riesgo y al menos un nivel seleccionado.',
@@ -302,14 +359,19 @@ export function restoreBuilderQuestions(
         id: o._id,
         text: o.text,
         score: o.score ?? '',
-        children: [],
       })),
+      children: [],
+      triggerOptionIds: [...(q.visibleWhen?.optionIds ?? [])],
       maxAnswers: q.constraints.maxSelections ?? 2,
       min: q.constraints.min ?? 0,
       max: q.constraints.max ?? 100,
       maxLength: q.constraints.maxLength ?? 500,
     })
   }
+  if (restored.size !== flat.length)
+    throw new Error(
+      'Las preguntas del cuestionario deben tener identificadores únicos.',
+    )
   const roots: BuilderQuestion[] = []
   for (const q of ordered) {
     const question = restored.get(q._id)!
@@ -319,18 +381,25 @@ export function restoreBuilderQuestions(
     }
     const condition = q.visibleWhen
     const parent = restored.get(condition.questionId)
-    const option = parent?.options.find((o) => o.id === condition.optionIds[0])
-    // The visual tree currently supports one triggering option per child.
-    // Reject unsupported imported definitions rather than silently losing rules.
+    const parentDefinition = flat.find(
+      (item) => item._id === condition.questionId,
+    )
     if (
-      !option ||
-      condition.optionIds.length !== 1 ||
+      !parent ||
+      !parentDefinition ||
+      parentDefinition.order >= q.order ||
+      !hasOptions(parent.type) ||
+      !condition.optionIds.length ||
+      new Set(condition.optionIds).size !== condition.optionIds.length ||
+      !condition.optionIds.every((id) =>
+        parent.options.some((o) => o.id === id),
+      ) ||
       condition.operator !== 'includesAny'
     )
       throw new Error(
-        'Esta definición tiene condiciones que el constructor todavía no puede editar.',
+        'Una condición debe incluir opciones existentes de una pregunta anterior.',
       )
-    option.children.push(question)
+    parent.children.push(question)
   }
   if (!roots.length || allBuilderQuestions(roots).length !== flat.length)
     throw new Error(

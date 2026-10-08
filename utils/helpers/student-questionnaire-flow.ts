@@ -10,6 +10,10 @@ export function resolveStudentQuestionnaireRoute(
   redirectTo: string | null
   questionnaire: StudentQuestionnaireItem | null
 } {
+  const independent = flow.questionnaires.find(
+    (q) => q.questionnaireId === id && !q.solved,
+  )
+  if (independent) return { redirectTo: null, questionnaire: independent }
   if (flow.isActive && flow.nextQuestionnaireId !== id) {
     return {
       redirectTo: flow.nextQuestionnaireId

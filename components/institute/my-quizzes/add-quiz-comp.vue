@@ -29,6 +29,7 @@ const publishing = ref(false)
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
 const evaluation = ref(createEvaluation())
+const hasRecommendations = ref(false)
 const saving = ref(false)
 const errors = ref<string[]>([])
 const errorPanel = ref<HTMLElement | null>(null)
@@ -59,13 +60,20 @@ async function saveQuestionnaire(publish = false) {
     ...configuration.dimensions,
     ...(configuration.overall ? [configuration.overall] : []),
   ]) {
+    dimension.skippedQuestions = 'exclude'
     dimension.label = dimension.label.trim()
+    dimension.interpretations.forEach((band) => {
+      band.label = band.label.trim()
+      if (band.max === '') band.max = null
+      if (band.key === '') delete band.key
+    })
     if (dimension.method !== 'weighted_mean')
       dimension.items.forEach((item) => {
         item.weight = 1
       })
   }
   const payload: CreateQuestionnaireRequest = {
+    hasRecomendations: hasRecommendations.value,
     institution: institution!,
     title: title.value.trim(),
     description: description.value.trim(),
@@ -76,6 +84,7 @@ async function saveQuestionnaire(publish = false) {
     let definition: QuestionnaireDefinition
     if (props.questionnaireId) {
       const update: UpdateQuestionnaireRequest = {
+        hasRecomendations: payload.hasRecomendations,
         title: payload.title,
         description: payload.description,
         questions: payload.questions,
@@ -134,6 +143,7 @@ async function loadDefinition() {
     questions.value = restored
     activeId.value = restored[0].id
     evaluation.value = data.evaluationConfiguration
+    hasRecommendations.value = data.hasRecomendations ?? false
     savedDefinition.value = data
   } catch (error) {
     loadError.value = isAxiosError<{ message?: string }>(error)
@@ -166,22 +176,24 @@ watch(message, (value, _, onCleanup) => {
   }, 4500)
   onCleanup(() => window.clearTimeout(timeout))
 })
-const ruleOption = ref('')
+const ruleOptions = ref<string[]>([])
 const totalChildren = computed(
   () => allQuestions.value.length - questions.value.length,
 )
-const rules = computed(() =>
-  hasOptions(activeQuestion.value.type)
-    ? activeQuestion.value.options.filter((option) => option.children.length)
-    : [],
-)
+const rules = computed(() => activeQuestion.value.children)
+const triggerLabels = (ids: string[]) =>
+  activeQuestion.value.options
+    .filter((option) => ids.includes(option.id))
+    .map((option) => option.text || 'Opción sin texto')
+    .join(' / ')
 const typeLabel = (type: string) =>
   questionTypes.find((item) => item.value === type)?.label
 
 watch(
   () => activeQuestion.value.options.map((option) => option.id),
   (ids) => {
-    if (!ids.includes(ruleOption.value)) ruleOption.value = ids[0] || ''
+    ruleOptions.value = ruleOptions.value.filter((id) => ids.includes(id))
+    if (!ruleOptions.value.length) ruleOptions.value = ids.slice(0, 1)
   },
   { immediate: true },
 )
@@ -209,12 +221,11 @@ function moveQuestion(direction: number) {
   message.value = `Pregunta movida a la posición ${target + 1}.`
 }
 function addRule() {
-  const option = activeQuestion.value.options.find(
-    (item) => item.id === ruleOption.value,
-  )
-  if (!option) return
-  option.children.push(createQuestion())
-  message.value = 'Subpregunta añadida debajo de la opción seleccionada.'
+  if (!ruleOptions.value.length) return
+  const child = createQuestion()
+  child.triggerOptionIds = [...ruleOptions.value]
+  activeQuestion.value.children.push(child)
+  message.value = 'Subpregunta añadida con las opciones seleccionadas.'
 }
 </script>
 
@@ -419,49 +430,49 @@ function addRule() {
               <p>Qué aparece según lo que responda el alumno.</p>
             </div>
             <template v-if="hasOptions(activeQuestion.type)">
-              <div v-for="option in rules" :key="option.id" class="qb-rule">
-                <span class="qb-eyebrow">Si responde</span
-                ><strong>{{ option.text || 'Opción sin texto' }}</strong
-                ><span class="qb-eyebrow">Entonces</span>
-                <p v-if="option.children.length">
-                  Mostrar {{ option.children.length }}
-                  {{
-                    option.children.length === 1
-                      ? 'subpregunta'
-                      : 'subpreguntas'
-                  }}
-                  de esta opción.
-                </p>
+              <div v-for="child in rules" :key="child.id" class="qb-rule">
+                <span class="qb-eyebrow">Si responde cualquiera de</span>
+                <strong>{{ triggerLabels(child.triggerOptionIds) }}</strong>
+                <span class="qb-eyebrow">Mostrar</span>
+                <p>{{ child.text || 'Subpregunta sin enunciado' }}</p>
               </div>
               <p v-if="!rules.length" class="qb-muted">
                 Aún no hay reglas. Añade una subpregunta a una opción.
               </p>
               <div class="qb-rule-form">
-                <label class="qb-field"
-                  ><span>Si responde</span
-                  ><select v-model="ruleOption">
-                    <option
-                      v-for="(option, index) in activeQuestion.options"
-                      :key="option.id"
+                <fieldset class="qb-evaluation-group">
+                  <legend>Si responde cualquiera de estas opciones</legend>
+                  <label
+                    v-for="(option, index) in activeQuestion.options"
+                    :key="option.id"
+                    class="qb-check"
+                  >
+                    <input
+                      v-model="ruleOptions"
+                      type="checkbox"
                       :value="option.id"
+                    />
+                    <span
+                      >{{ String.fromCharCode(65 + index) }} ·
+                      {{ option.text || 'Opción sin texto' }}</span
                     >
-                      {{ String.fromCharCode(65 + index) }} ·
-                      {{ option.text || 'Opción sin texto' }}
-                    </option>
-                  </select></label
-                >
+                  </label>
+                </fieldset>
                 <button
                   type="button"
                   class="qb-button qb-button--dashed"
+                  :disabled="!ruleOptions.length"
                   @click="addRule"
                 >
                   + Añadir regla
                 </button>
               </div>
               <p class="qb-muted">
-                Las subpreguntas se editan debajo de su opción y pueden tener
-                más subpreguntas. Solo aparecen cuando su pregunta origen está
-                visible y se elige esa opción.
+                Selecciona una o más opciones para añadir una regla. Las
+                subpreguntas se editan debajo de las opciones de respuesta y
+                pueden tener más subpreguntas. Solo aparecen cuando su pregunta
+                origen está visible y se elige alguna de sus opciones
+                activadoras.
               </p>
             </template>
             <p v-else class="qb-muted">
@@ -508,6 +519,18 @@ function addRule() {
         v-model="evaluation"
         :questions="scoredQuestions"
       />
+      <section class="qb-panel" aria-labelledby="qb-recommendations-title">
+        <h2 id="qb-recommendations-title">Recomendaciones</h2>
+        <label class="qb-check">
+          <input v-model="hasRecommendations" type="checkbox" />
+          <span>Asignar recomendaciones según los resultados</span>
+        </label>
+        <p class="qb-muted">
+          Se aplicarán las reglas de recomendaciones que coincidan con la
+          calificación. Si no hay coincidencias, el resultado se guardará sin
+          asignar una recomendación.
+        </p>
+      </section>
       <p class="qb-status" role="status" aria-live="polite">{{ message }}</p>
     </fieldset>
 

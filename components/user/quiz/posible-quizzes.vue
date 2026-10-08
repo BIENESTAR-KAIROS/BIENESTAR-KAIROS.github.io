@@ -3,6 +3,7 @@ import type { StudentQuestionnaireItem } from '~/interfaces/quizzes/student-ques
 defineProps<{
   questionnaires: StudentQuestionnaireItem[]
   sequenceComplete?: boolean
+  nextQuestionnaireId?: string | null
 }>()
 </script>
 
@@ -13,9 +14,9 @@ defineProps<{
       <h1 class="quizzes__title">Responder un cuestionario</h1>
       <p class="quizzes__intro">
         <template v-if="questionnaires.length > 0">
-          Tu organización tiene {{ questionnaires.length }}
+          Tienes {{ questionnaires.length }}
           {{ questionnaires.length === 1 ? 'cuestionario' : 'cuestionarios' }}
-          para ti. Puedes elegir entre los que están disponibles para responder.
+          disponibles. Puedes elegir cuál responder.
         </template>
         <template v-else-if="sequenceComplete">
           No tienes cuestionarios pendientes en tu secuencia por ahora.
@@ -25,6 +26,14 @@ defineProps<{
         </template>
       </p>
     </header>
+
+    <NuxtLink
+      v-if="nextQuestionnaireId"
+      :to="`/user/quiz/${nextQuestionnaireId}`"
+      class="quizzes__cta"
+    >
+      Continuar mi secuencia
+    </NuxtLink>
 
     <div v-if="questionnaires.length" class="quizzes__grid">
       <article
@@ -100,7 +109,7 @@ defineProps<{
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5f767e;
+  color: #4b5f68;
 }
 
 .quizzes__title {
@@ -170,7 +179,7 @@ defineProps<{
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #5f767e;
+  color: #4b5f68;
   text-wrap: pretty;
 }
 

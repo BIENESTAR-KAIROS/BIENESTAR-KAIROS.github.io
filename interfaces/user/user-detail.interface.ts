@@ -1,7 +1,15 @@
+import type {
+  DefinitionEvaluation,
+  AssignedRecommendation,
+} from '~/interfaces/quizzes/definition-result.interface'
+
 export interface IQuestionnaireResultItem {
   questionnaireResultId: string
   questionnaireTitle: string
-  score: number
+  score: number | null
+  schemaVersion?: number
+  evaluation?: DefinitionEvaluation
+  recommendations?: AssignedRecommendation[]
   createdAt: Date
 }
 

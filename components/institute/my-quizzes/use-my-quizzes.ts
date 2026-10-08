@@ -18,6 +18,8 @@ export type QuizzesState = 'loading' | 'error' | 'empty' | 'ready'
  */
 function audienceLabelFor(quiz: IInstituteQuizListItem): string {
   if (quiz.status === 'draft') return 'Sin publicar'
+  if (quiz.audience === 'global')
+    return 'Todos los estudiantes · asignación global'
   const groups = quiz.assignedGroups ?? []
   if (groups.length === 0) return 'Toda la institución'
   if (groups.length === 1) return groups[0].name
@@ -117,7 +119,9 @@ export function useMyQuizzes() {
     status: quiz.status,
     schemaVersion: quiz.schemaVersion,
     readonly: Boolean(
-      !quiz.institution?.id || quiz.institution.id !== instituteId.value,
+      quiz.ownerType === 'platform' ||
+      !quiz.institution?.id ||
+      quiz.institution.id !== instituteId.value,
     ),
     questionsCount: quiz.questionsCount ?? 0,
     groups: quiz.assignedGroups ?? [],
