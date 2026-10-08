@@ -10,6 +10,7 @@ import {
   hasOptions,
   questionTypes,
   presentations,
+  removeBuilderOption,
 } from './quiz-builder-model'
 
 const question = defineModel<BuilderQuestion>({ required: true })
@@ -17,10 +18,7 @@ defineProps<{ nested?: boolean }>()
 const emit = defineEmits<{ announce: [message: string] }>()
 
 function changeType(type: BuilderQuestionType) {
-  if (
-    !hasOptions(type) &&
-    question.value.options.some((option) => option.children.length)
-  ) {
+  if (!hasOptions(type) && question.value.children.length) {
     emit(
       'announce',
       'Elimina las subpreguntas antes de cambiar a un tipo sin opciones.',
@@ -44,16 +42,17 @@ function moveOption(index: number, direction: number) {
 }
 
 function removeOption(index: number) {
-  question.value.options.splice(index, 1)
-  question.value.maxAnswers = Math.min(
-    question.value.maxAnswers,
-    question.value.options.length,
+  removeBuilderOption(question.value, index)
+  emit(
+    'announce',
+    'Opción eliminada. Se conservan las subpreguntas activadas por otras opciones.',
   )
-  emit('announce', 'Opción eliminada junto con sus subpreguntas y reglas.')
 }
 
 function addChild(option: BuilderOption) {
-  option.children.push(createQuestion())
+  const child = createQuestion()
+  child.triggerOptionIds = [option.id]
+  question.value.children.push(child)
   emit('announce', 'Subpregunta añadida a esta opción.')
 }
 </script>
@@ -198,7 +197,6 @@ function addChild(option: BuilderOption) {
           v-for="(option, index) in question.options"
           :key="option.id"
           class="qb-option"
-          :class="{ 'qb-option--branch': option.children.length }"
         >
           <div class="qb-option-main">
             <span class="qb-letter">{{ String.fromCharCode(65 + index) }}</span>
@@ -243,7 +241,7 @@ function addChild(option: BuilderOption) {
                 type="button"
                 class="qb-icon qb-danger"
                 :disabled="question.options.length <= 2"
-                :aria-label="`Eliminar opción ${index + 1} y sus subpreguntas`"
+                :aria-label="`Eliminar opción ${index + 1}`"
                 @click="removeOption(index)"
               >
                 <v-icon icon="mdi-trash-can-outline" size="18" />
@@ -259,38 +257,6 @@ function addChild(option: BuilderOption) {
               <v-icon icon="mdi-subdirectory-arrow-right" size="16" /> Añadir
               subpregunta
             </button>
-            <span v-if="option.children.length" class="qb-badge"
-              >{{ option.children.length }} subpreguntas</span
-            >
-          </div>
-          <div v-if="option.children.length" class="qb-children">
-            <div
-              v-for="(child, childIndex) in option.children"
-              :key="child.id"
-              class="qb-child"
-            >
-              <div class="qb-row">
-                <h3>Subpregunta {{ index + 1 }}.{{ childIndex + 1 }}</h3>
-                <button
-                  type="button"
-                  class="qb-icon qb-danger"
-                  :aria-label="`Eliminar subpregunta ${index + 1}.${childIndex + 1}`"
-                  @click="option.children.splice(childIndex, 1)"
-                >
-                  <v-icon icon="mdi-trash-can-outline" size="18" />
-                </button>
-              </div>
-              <p class="qb-muted">
-                Se muestra al elegir «{{
-                  option.text || `Opción ${index + 1}`
-                }}».
-              </p>
-              <BuilderQuestionEditor
-                v-model="option.children[childIndex]"
-                nested
-                @announce="emit('announce', $event)"
-              />
-            </div>
           </div>
         </div>
         <button
@@ -342,6 +308,61 @@ function addChild(option: BuilderOption) {
           max="5000"
         /><small>Entre 1 y 5,000 caracteres.</small></label
       >
+    </section>
+    <section v-if="question.children.length" class="qb-panel">
+      <h2>Subpreguntas condicionales</h2>
+      <p class="qb-muted">
+        Cada subpregunta aparece una sola vez al elegir cualquiera de sus
+        opciones activadoras, siempre que esta pregunta esté visible.
+      </p>
+      <div
+        v-for="(child, childIndex) in question.children"
+        :key="child.id"
+        class="qb-child"
+      >
+        <div class="qb-row">
+          <h3>Subpregunta {{ childIndex + 1 }}</h3>
+          <button
+            type="button"
+            class="qb-icon qb-danger"
+            :aria-label="`Eliminar subpregunta ${childIndex + 1}`"
+            @click="question.children.splice(childIndex, 1)"
+          >
+            <v-icon icon="mdi-trash-can-outline" size="18" />
+          </button>
+        </div>
+        <fieldset
+          class="qb-evaluation-group"
+          :aria-describedby="`condition-help-${child.id}`"
+        >
+          <legend>Mostrar si responde cualquiera de estas opciones</legend>
+          <label
+            v-for="(option, index) in question.options"
+            :key="option.id"
+            class="qb-check"
+          >
+            <input
+              v-model="child.triggerOptionIds"
+              type="checkbox"
+              :value="option.id"
+              :disabled="
+                child.triggerOptionIds.length === 1 &&
+                child.triggerOptionIds.includes(option.id)
+              "
+            />
+            <span>{{ option.text || `Opción ${index + 1}` }}</span>
+          </label>
+          <p :id="`condition-help-${child.id}`" class="qb-muted">
+            Mantén al menos una opción seleccionada. Al eliminar una opción,
+            también se eliminan las subpreguntas que dependan solo de ella.
+          </p>
+        </fieldset>
+        <BuilderQuestionEditor
+          v-model="question.children[childIndex]"
+          nested
+          @announce="emit('announce', $event)"
+        />
+      </div>
     </section>
   </div>
 </template>

@@ -17,7 +17,6 @@ export interface BuilderOption {
   id: string
   text: string
   score: number | ''
-  children: BuilderQuestion[]
 }
 export interface BuilderQuestion {
   id: string
@@ -30,6 +29,8 @@ export interface BuilderQuestion {
   scoringMethod: 'sum' | 'mean' | 'max' | 'direct'
   required: boolean
   options: BuilderOption[]
+  children: BuilderQuestion[]
+  triggerOptionIds: string[]
   maxAnswers: number
   min: number
   max: number

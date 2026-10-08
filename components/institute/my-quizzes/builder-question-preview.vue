@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import type { BuilderQuestion } from '~/interfaces/quizzes/quiz-builder.interface'
-import { hasOptions } from './quiz-builder-model'
+import { hasOptions, visibleBuilderChildren } from './quiz-builder-model'
 
 const props = defineProps<{ question: BuilderQuestion; number?: number }>()
 const selected = ref<string[]>([])
 const answer = ref('')
 const instanceId = useId()
-const activeOptions = computed(() =>
-  hasOptions(props.question.type)
-    ? props.question.options.filter((option) =>
-        selected.value.includes(option.id),
-      )
-    : [],
+const activeChildren = computed(() =>
+  visibleBuilderChildren(props.question, selected.value),
 )
 const textLimit = computed(() =>
   Math.max(1, Math.min(5000, Number(props.question.maxLength) || 500)),
@@ -134,13 +130,9 @@ function selectOption(id: string) {
         placeholder="Escribe tu respuesta"
       /><small>{{ answer.length }} / {{ textLimit }}</small></label
     >
-    <div
-      v-for="option in activeOptions"
-      :key="option.id"
-      class="qb-preview-branch"
-    >
+    <div v-if="activeChildren.length" class="qb-preview-branch">
       <BuilderQuestionPreview
-        v-for="child in option.children"
+        v-for="child in activeChildren"
         :key="child.id"
         :question="child"
       />
