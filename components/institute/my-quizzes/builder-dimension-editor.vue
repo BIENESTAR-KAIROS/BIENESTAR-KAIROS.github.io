@@ -112,13 +112,6 @@ function toggleInterpretations(enabled: boolean) {
         </select></label
       >
       <label class="qb-field"
-        ><span>Preguntas ocultas por una condición</span
-        ><select v-model="dimension.skippedQuestions">
-          <option value="exclude">Excluir del cálculo</option>
-          <option value="zero">Aportar cero al cálculo</option>
-        </select></label
-      >
-      <label class="qb-field"
         ><span>Cobertura mínima (%)</span
         ><input
           v-model.number="dimension.minimumAnsweredPercentage"
@@ -130,8 +123,8 @@ function toggleInterpretations(enabled: boolean) {
     </div>
     <p class="qb-muted">
       La cobertura se mide sobre las preguntas visibles. Una respuesta sin
-      puntuación no cuenta como dato evaluable. Aportar cero por una condición
-      no crea una respuesta del alumno.
+      puntuación no cuenta como dato evaluable. Las preguntas ocultas y sus
+      respuestas quedan excluidas de la calificación y de la cobertura.
     </p>
     <label class="qb-check"
       ><input

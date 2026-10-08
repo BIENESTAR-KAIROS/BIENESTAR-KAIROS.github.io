@@ -122,6 +122,10 @@ onMounted(load)
           </p>
         </section>
         <h2>Evaluación guardada</h2>
+        <p>
+          Asignación de recomendaciones:
+          {{ definition.hasRecomendations ? 'Habilitada' : 'Deshabilitada' }}.
+        </p>
         <p v-if="!definition.evaluationConfiguration.dimensions.length">
           Sin dimensiones.
         </p>

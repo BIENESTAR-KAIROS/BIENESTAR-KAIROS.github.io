@@ -80,6 +80,7 @@ export interface DefinitionQuestion {
   }
 }
 export interface CreateQuestionnaireRequest {
+  hasRecomendations: boolean
   institution: string
   title: string
   description: string

@@ -29,6 +29,7 @@ const publishing = ref(false)
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
 const evaluation = ref(createEvaluation())
+const hasRecommendations = ref(false)
 const saving = ref(false)
 const errors = ref<string[]>([])
 const errorPanel = ref<HTMLElement | null>(null)
@@ -59,6 +60,7 @@ async function saveQuestionnaire(publish = false) {
     ...configuration.dimensions,
     ...(configuration.overall ? [configuration.overall] : []),
   ]) {
+    dimension.skippedQuestions = 'exclude'
     dimension.label = dimension.label.trim()
     if (dimension.method !== 'weighted_mean')
       dimension.items.forEach((item) => {
@@ -66,6 +68,7 @@ async function saveQuestionnaire(publish = false) {
       })
   }
   const payload: CreateQuestionnaireRequest = {
+    hasRecomendations: hasRecommendations.value,
     institution: institution!,
     title: title.value.trim(),
     description: description.value.trim(),
@@ -76,6 +79,7 @@ async function saveQuestionnaire(publish = false) {
     let definition: QuestionnaireDefinition
     if (props.questionnaireId) {
       const update: UpdateQuestionnaireRequest = {
+        hasRecomendations: payload.hasRecomendations,
         title: payload.title,
         description: payload.description,
         questions: payload.questions,
@@ -134,6 +138,7 @@ async function loadDefinition() {
     questions.value = restored
     activeId.value = restored[0].id
     evaluation.value = data.evaluationConfiguration
+    hasRecommendations.value = data.hasRecomendations ?? false
     savedDefinition.value = data
   } catch (error) {
     loadError.value = isAxiosError<{ message?: string }>(error)
@@ -508,6 +513,18 @@ function addRule() {
         v-model="evaluation"
         :questions="scoredQuestions"
       />
+      <section class="qb-panel" aria-labelledby="qb-recommendations-title">
+        <h2 id="qb-recommendations-title">Recomendaciones</h2>
+        <label class="qb-check">
+          <input v-model="hasRecommendations" type="checkbox" />
+          <span>Asignar recomendaciones según los resultados</span>
+        </label>
+        <p class="qb-muted">
+          Se aplicarán las reglas de recomendaciones que coincidan con la
+          calificación. Si no hay coincidencias, el resultado se guardará sin
+          asignar una recomendación.
+        </p>
+      </section>
       <p class="qb-status" role="status" aria-live="polite">{{ message }}</p>
     </fieldset>
 
