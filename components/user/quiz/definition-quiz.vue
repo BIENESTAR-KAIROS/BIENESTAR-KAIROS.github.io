@@ -28,6 +28,18 @@ const showErrors = ref(false)
 const submitting = ref(false)
 const submissionError = ref('')
 const saved = ref<DefinitionSubmissionResult | null>(null)
+const resultRecommendations = computed(() => {
+  if (!saved.value) return []
+  const evaluation = saved.value.evaluation
+  return [
+    ...new Set([
+      ...saved.value.recommendations.map((item) => item.text),
+      ...[evaluation.overall, ...evaluation.dimensions]
+        .map((item) => item?.recommendations)
+        .filter((text): text is string => !!text),
+    ]),
+  ]
+})
 const auth = useAuthStore()
 const visibilityMessage = ref('')
 const questionHeading = ref<HTMLElement | null>(null)
@@ -185,13 +197,13 @@ async function submit() {
     <section v-if="saved" class="definition-quiz__card" role="status">
       <h2 ref="questionHeading" tabindex="-1">Tus respuestas se guardaron</h2>
       <p>Gracias por completar el cuestionario.</p>
-      <template v-if="saved.recommendations.length">
+      <template v-if="resultRecommendations.length">
         <h3>Recomendaciones para ti</h3>
         <p
-          v-for="recommendation in saved.recommendations"
-          :key="`${recommendation.recommendationId}-${recommendation.dimensionId}`"
+          v-for="recommendation in resultRecommendations"
+          :key="recommendation"
         >
-          {{ recommendation.text }}
+          {{ recommendation }}
         </p>
       </template>
       <NuxtLink to="/user/quiz" class="definition-quiz__exit"

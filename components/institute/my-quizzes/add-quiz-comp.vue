@@ -62,6 +62,11 @@ async function saveQuestionnaire(publish = false) {
   ]) {
     dimension.skippedQuestions = 'exclude'
     dimension.label = dimension.label.trim()
+    dimension.interpretations.forEach((band) => {
+      band.label = band.label.trim()
+      if (band.max === '') band.max = null
+      if (band.key === '') delete band.key
+    })
     if (dimension.method !== 'weighted_mean')
       dimension.items.forEach((item) => {
         item.weight = 1

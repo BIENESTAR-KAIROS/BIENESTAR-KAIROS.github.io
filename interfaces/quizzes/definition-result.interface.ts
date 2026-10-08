@@ -1,8 +1,12 @@
 export interface DimensionResult {
   dimensionId: string
   label: string
+  group?: string
+  unit?: string
   score: number | null
   interpretation: string | null
+  interpretationKey?: string | null
+  recommendations?: string | null
   status: string
 }
 export interface DefinitionEvaluation {

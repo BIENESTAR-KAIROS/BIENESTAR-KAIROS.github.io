@@ -7,6 +7,7 @@ import type { IUserDetail } from '~/interfaces/user/user-detail.interface'
 import { campusLabels, translateValue } from '~/utils/translations'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import QuestionnaireRetakes from './questionnaire-retakes.vue'
+import DefinitionDimensionResult from './definition-dimension-result.vue'
 
 interface IUserSchedule {
   _id?: string
@@ -537,25 +538,16 @@ onMounted(() => {
                         >
                           Sin evaluación configurada
                         </p>
-                        <p v-if="result.evaluation?.overall">
-                          {{ result.evaluation.overall.label }}:
-                          {{ result.score ?? 'Sin puntaje evaluable' }}
-                        </p>
-                        <p
+                        <DefinitionDimensionResult
+                          v-if="result.evaluation?.overall"
+                          :dimension="result.evaluation.overall"
+                        />
+                        <DefinitionDimensionResult
                           v-for="dimension in result.evaluation?.dimensions ??
                           []"
                           :key="dimension.dimensionId"
-                        >
-                          {{ dimension.label }}:
-                          {{
-                            dimension.score ??
-                            (dimension.status === 'no_visible_questions'
-                              ? 'No aplica'
-                              : 'Sin puntaje evaluable')
-                          }}<span v-if="dimension.interpretation">
-                            · {{ dimension.interpretation }}</span
-                          >
-                        </p>
+                          :dimension="dimension"
+                        />
                         <p v-if="result.evaluation?.alarm.triggered">
                           {{ result.evaluation.alarm.label }}
                         </p>

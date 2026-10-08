@@ -36,15 +36,26 @@ export interface BuilderQuestion {
   max: number
   maxLength: number
 }
+export interface EvaluationInterpretation {
+  risk: RiskLevel | null
+  key?: string
+  label: string
+  min: number | ''
+  max?: number | '' | null
+  recommendations?: string
+}
 export interface EvaluationDimension {
   _id: string
   label: string
+  group?: string
+  unit?: string
+  scoreMultiplier?: number
   method: 'sum' | 'mean' | 'weighted_mean'
   items: { questionId: string; weight: number }[]
   missingAnswers: 'invalidate' | 'exclude'
   skippedQuestions: 'exclude' | 'zero'
   minimumAnsweredPercentage: number
-  interpretations: { risk: RiskLevel; label: string; min: number | '' }[]
+  interpretations: EvaluationInterpretation[]
 }
 export interface EvaluationConfiguration {
   schemaVersion: 1
