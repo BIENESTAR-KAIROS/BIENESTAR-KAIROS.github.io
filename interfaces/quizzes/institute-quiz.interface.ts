@@ -29,6 +29,8 @@ export interface IInstituteQuizCreator {
 
 /** Un cuestionario tal como lo devuelve el listado. */
 export interface IInstituteQuizListItem {
+  ownerType?: 'platform' | 'institution'
+  audience?: 'global' | 'institution' | 'groups'
   id: string
   title: string
   description?: string
@@ -85,8 +87,7 @@ export interface IInstituteQuizCard {
   status?: 'draft' | 'published'
   /**
    * Un cuestionario que no pertenece a tu institución —la base que diseña
-   * Kairos— se ve pero no se toca. Hoy el listado se pide filtrado por
-   * institución, así que siempre llega en `false`; la tarjeta ya sabe pintarlo.
+   * Kairos— se ve pero no se toca. El catálogo incluye las asignaciones globales.
    */
   readonly: boolean
   questionsCount: number
