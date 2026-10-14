@@ -48,7 +48,7 @@ const roleLabel = computed(() => {
 const campusName = computed(() => {
   return (
     user.value?.studentData?.campusInformation?.name ||
-    user.value?.institute?.name ||
+    authStore.activeInstitute?.name ||
     'Campus pendiente'
   )
 })
@@ -85,6 +85,7 @@ function formatDate(value?: Date | string | number) {
 }
 
 async function fetchQuestionnaireHistory() {
+  if (authStore.isStudentPreview) return
   if (!user.value?._id) return
 
   try {

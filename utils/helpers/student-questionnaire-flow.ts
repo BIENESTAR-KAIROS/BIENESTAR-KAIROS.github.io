@@ -10,6 +10,10 @@ export function resolveStudentQuestionnaireRoute(
   redirectTo: string | null
   questionnaire: StudentQuestionnaireItem | null
 } {
+  const preview = [...flow.questionnaires, ...flow.queue].find(
+    (q) => q.questionnaireId === id && q.canPreview,
+  )
+  if (preview) return { redirectTo: null, questionnaire: preview }
   const independent = flow.questionnaires.find(
     (q) => q.questionnaireId === id && !q.solved,
   )

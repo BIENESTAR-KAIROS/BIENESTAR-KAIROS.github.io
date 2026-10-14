@@ -7,7 +7,7 @@ import type { InstituteSetting } from '~/interfaces/institute/institute-setting.
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
 const instituteId = computed(() => {
-  const institute = auth.user?.institute
+  const institute = auth.activeInstitute
   return typeof institute === 'string' ? institute : institute?._id
 })
 const setting = ref<InstituteSetting | null>(null)

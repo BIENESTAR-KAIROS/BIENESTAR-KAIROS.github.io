@@ -10,7 +10,9 @@ import type {
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
 const isAdmin = computed(
-  () => auth.user?.roles.includes(UserRolEnum.KAIROS_ADMIN) ?? false,
+  () =>
+    !auth.isInstitutionContext &&
+    (auth.user?.roles.includes(UserRolEnum.KAIROS_ADMIN) ?? false),
 )
 const catalog = ref<RecommendationCatalog>({
   recommendations: [],
@@ -62,9 +64,9 @@ function emptyForm() {
     revision: 0,
     origin: isAdmin.value ? 'kairos' : 'institution',
     instituteId:
-      typeof auth.user?.institute === 'string'
-        ? auth.user.institute
-        : (auth.user?.institute?._id ?? ''),
+      typeof auth.activeInstitute === 'string'
+        ? auth.activeInstitute
+        : (auth.activeInstitute?._id ?? ''),
     questionnaireId: '',
     target: 'overall',
     dimensionId: '',

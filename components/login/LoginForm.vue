@@ -4,6 +4,7 @@ import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
+import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
 const { $axios, $router } = useNuxtApp()
 
@@ -49,6 +50,7 @@ const clearPasswordError = () => {
 }
 
 const login = async () => {
+  if (isLoading.value) return
   clearSubmitError()
 
   if (!validateForm()) {
@@ -66,9 +68,11 @@ const login = async () => {
 
     if (authStore.isAuthenticated) {
       userStore.user = authStore.user
-      if (
-        authStore.user?.roles[1] == UserRolEnum.INSTITUTION_ADMIN ||
-        authStore.user?.roles[2] == UserRolEnum.INSTITUTION_STAFF
+      if (authStore.user?.roles.includes(UserRolEnum.KAIROS_ADMIN)) {
+        $router.push('/admin/registration')
+      } else if (
+        authStore.user?.roles.includes(UserRolEnum.INSTITUTION_ADMIN) ||
+        authStore.user?.roles.includes(UserRolEnum.INSTITUTION_STAFF)
       ) {
         $router.push('/institute/dashboard')
       } else {
@@ -76,8 +80,11 @@ const login = async () => {
       }
     }
   } catch (error) {
-    console.error(error)
-    submitError.value = 'No pudimos iniciar sesión con esos datos.'
+    const message = getApiErrorMessage(error, '')
+    submitError.value =
+      message === 'Confirma tu correo electrónico antes de iniciar sesión.'
+        ? message
+        : 'No pudimos iniciar sesión con esos datos.'
   } finally {
     isLoading.value = false
   }
@@ -89,7 +96,7 @@ const login = async () => {
     <div class="login-form__card">
       <div class="login-form__header">
         <h2>¡Qué gusto verte!</h2>
-        <p>Entra con tu correo institucional.</p>
+        <p>Entra con el correo con el que te registraste.</p>
       </div>
 
       <label class="login-form__field">
@@ -129,7 +136,7 @@ const login = async () => {
           ¿Olvidaste tu contraseña?
         </NuxtLink>
 
-        <p v-if="submitError" class="login-form__submit-error">
+        <p v-if="submitError" class="login-form__submit-error" role="alert">
           {{ submitError }}
         </p>
 

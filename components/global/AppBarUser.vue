@@ -44,7 +44,7 @@ const isOpen = computed(() => appStore.isNavBarOpen)
 
 const isActive = (to: string) => route.path.startsWith(to)
 
-const institute = computed(() => authStore.user?.institute)
+const institute = computed(() => authStore.activeInstitute)
 
 watch(mobile, () => {
   if (isOpen.value && mobile.value) {

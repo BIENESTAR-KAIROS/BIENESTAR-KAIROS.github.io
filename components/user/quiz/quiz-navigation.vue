@@ -9,12 +9,14 @@ import {
   type IQuizResponse,
 } from '~/store/quiz'
 import type { SendQuestionAnswerDto } from '~/interfaces/quizzes/questionnaire-answere.interface'
+import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
 const route = useRoute()
 const { $router } = useNuxtApp()
 const quizStore = useQuizStore()
+const auth = useAuthStore()
 const userStore = useUserStore()
 
 const isSending = ref(false)
@@ -24,7 +26,7 @@ const showHistory = ref(false)
 const actualQuestion = computed(() => quizStore.actualQuestion)
 
 const canAccessQuestionHistory = computed(
-  () => quizStore.canAccessQuestionHistory,
+  () => auth.isStudentPreview || quizStore.canAccessQuestionHistory,
 )
 
 const isLastQuestion = computed(
@@ -87,6 +89,7 @@ const collectAnswers = (): SendQuestionAnswerDto[] =>
   expandQuiz(quizStore.quiz).filter(isAnswered).map(cleanAnswer)
 
 async function finalizeQuiz() {
+  if (auth.isStudentPreview) return
   if (!isFinished.value) {
     errorMessage.value = `Te faltan ${remainingQuestions.value} ${
       remainingQuestions.value === 1 ? 'pregunta' : 'preguntas'
@@ -212,7 +215,7 @@ async function finalizeQuiz() {
           v-else
           type="button"
           class="quiz-nav__primary"
-          :disabled="isSending"
+          :disabled="isSending || auth.isStudentPreview"
           @click="finalizeQuiz"
         >
           {{ isSending ? 'Enviando…' : 'Finalizar' }}

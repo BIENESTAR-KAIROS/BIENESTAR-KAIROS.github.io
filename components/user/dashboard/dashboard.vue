@@ -45,6 +45,7 @@ const initials = computed(() => {
 })
 
 async function fetchCheckInSummary() {
+  if (authStore.isStudentPreview) return
   try {
     const response = await $axios.get<ICheckInSummary>('/check-in/summary')
     checkInSummary.value = response.data
@@ -54,6 +55,7 @@ async function fetchCheckInSummary() {
 }
 
 async function submitCheckIn(mood: MoodEnum) {
+  if (authStore.isStudentPreview) return
   try {
     isSubmittingCheckIn.value = true
     const response = await $axios.post<ICheckInSummary>('/check-in', { mood })
@@ -69,6 +71,7 @@ async function submitCheckIn(mood: MoodEnum) {
 }
 
 async function fetchTodayTasks() {
+  if (authStore.isStudentPreview) return
   try {
     const response = await $axios.get<ITrackingTask[]>('/tracking/today')
     todayTasks.value = response.data
@@ -78,6 +81,7 @@ async function fetchTodayTasks() {
 }
 
 async function toggleTask(recommendationId: string) {
+  if (authStore.isStudentPreview) return
   try {
     togglingTaskIds.value.push(recommendationId)
     const response = await $axios.post<ITrackingToggleResponse>(
@@ -197,6 +201,7 @@ onMounted(async () => {
           <CheckInCard
             :summary="checkInSummary"
             :is-submitting="isSubmittingCheckIn"
+            :readonly="authStore.isStudentPreview"
             @submit="submitCheckIn"
           />
         </div>

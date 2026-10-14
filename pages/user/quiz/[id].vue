@@ -47,10 +47,16 @@ definePageMeta({ layout: 'empty-login', key: (route) => route.path })
     @retry="load"
   />
   <DefinitionQuiz
-    v-else-if="questionnaire?.schemaVersion === 2 && questionnaire.canRespond"
+    v-else-if="
+      questionnaire?.schemaVersion === 2 &&
+      (questionnaire.canRespond || questionnaire.canPreview)
+    "
   />
   <Quiz
-    v-else-if="questionnaire?.canRespond && questionnaire.schemaVersion !== 2"
+    v-else-if="
+      (questionnaire?.canRespond || questionnaire?.canPreview) &&
+      questionnaire?.schemaVersion !== 2
+    "
   />
   <QuestionnaireFlowState
     v-else

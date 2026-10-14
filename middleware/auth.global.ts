@@ -32,6 +32,8 @@ const authRoutes: string[] = [
   // ? ADMIN links
   '/admin/dashboard',
   '/admin/recommendations',
+  '/admin/registration',
+  '/admin/institutions',
 ]
 const mainUserAuthRoute = '/user/dashboard'
 const mainInstituteAuthRoute = '/institute/dashboard'
@@ -73,6 +75,28 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
 
       const isAuthenticated = authStore.isAuthenticated
+      if (
+        isAuthenticated &&
+        authStore.user?.roles.includes(UserRolEnum.KAIROS_ADMIN)
+      ) {
+        if (
+          to.path.startsWith('/institute/') &&
+          to.path !== '/institute/login'
+        ) {
+          await authStore.restoreInstitutionContext()
+          if (!authStore.isInstitutionContext)
+            return navigateTo('/admin/institutions')
+        } else if (
+          to.path.startsWith('/user/') &&
+          to.path !== '/user/verification'
+        ) {
+          await authStore.restoreInstitutionContext()
+          if (!authStore.isStudentPreview)
+            return navigateTo('/admin/institutions?view=student')
+        } else {
+          authStore.clearInstitutionContext()
+        }
+      }
 
       // * ============ User is not authenticated ============
       if (!isAuthenticated) {

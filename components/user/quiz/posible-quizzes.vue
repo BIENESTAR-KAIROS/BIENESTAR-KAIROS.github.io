@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import type { StudentQuestionnaireItem } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
+const auth = useAuthStore()
 defineProps<{
   questionnaires: StudentQuestionnaireItem[]
   sequenceComplete?: boolean
@@ -11,12 +13,23 @@ defineProps<{
   <div class="quizzes">
     <header class="quizzes__header">
       <span class="quizzes__eyebrow">Cuestionarios</span>
-      <h1 class="quizzes__title">Responder un cuestionario</h1>
+      <h1 class="quizzes__title">
+        {{
+          auth.isStudentPreview
+            ? 'Explorar cuestionarios'
+            : 'Responder un cuestionario'
+        }}
+      </h1>
       <p class="quizzes__intro">
         <template v-if="questionnaires.length > 0">
           Tienes {{ questionnaires.length }}
           {{ questionnaires.length === 1 ? 'cuestionario' : 'cuestionarios' }}
-          disponibles. Puedes elegir cuál responder.
+          disponibles.
+          {{
+            auth.isStudentPreview
+              ? 'Puedes abrirlos sin guardar respuestas. La secuencia conserva el orden configurado por la institución.'
+              : 'Puedes elegir cuál responder.'
+          }}
         </template>
         <template v-else-if="sequenceComplete">
           No tienes cuestionarios pendientes en tu secuencia por ahora.
@@ -71,7 +84,7 @@ defineProps<{
         >
           {{
             quiz.canPreview && !quiz.canRespond
-              ? 'Probar sin guardar'
+              ? 'Explorar cuestionario'
               : quiz.questionnaireId === 'demographic' && quiz.solved
                 ? 'Actualizar mis respuestas'
                 : 'Responder el cuestionario'

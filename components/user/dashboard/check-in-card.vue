@@ -7,6 +7,7 @@ import {
 const props = defineProps<{
   summary: ICheckInSummary | null
   isSubmitting: boolean
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -56,7 +57,11 @@ const minutesUntilNextCheckIn = computed(() => {
 })
 
 const canSubmit = computed(
-  () => !!pendingMood.value && !props.isSubmitting && canCheckInNow.value,
+  () =>
+    !props.readonly &&
+    !!pendingMood.value &&
+    !props.isSubmitting &&
+    canCheckInNow.value,
 )
 
 function selectMood(mood: MoodEnum) {

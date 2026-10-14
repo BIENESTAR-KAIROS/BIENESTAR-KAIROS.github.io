@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import type { ITrackingMonthlyStatsResponse } from '~/interfaces/tracking/tracking-stats.interface'
+const auth = useAuthStore()
 
 const { $axios } = useNuxtApp()
 
@@ -38,6 +40,7 @@ function colorForCount(count: number): string {
 }
 
 async function fetchMonthlyStats() {
+  if (auth.isStudentPreview) return
   try {
     isLoading.value = true
     const response = await $axios.get<ITrackingMonthlyStatsResponse>(

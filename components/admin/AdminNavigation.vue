@@ -123,6 +123,36 @@ async function logout() {
         class="admin-navigation__links"
       >
         <NuxtLink
+          to="/admin/institutions"
+          class="admin-navigation__link"
+          :class="{
+            'admin-navigation__link--active': route.path.startsWith(
+              '/admin/institutions',
+            ),
+          }"
+          :aria-current="
+            route.path.startsWith('/admin/institutions') ? 'page' : undefined
+          "
+          @click="closeMenu"
+        >
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M3 21h18M5 21V8l7-5 7 5v13M9 10h1m4 0h1M9 14h1m4 0h1M10 21v-4h4v4"
+            />
+          </svg>
+          Instituciones
+        </NuxtLink>
+        <NuxtLink
           to="/admin/recommendations"
           class="admin-navigation__link"
           :class="{ 'admin-navigation__link--active': active }"
@@ -146,18 +176,46 @@ async function logout() {
           </svg>
           Recomendaciones
         </NuxtLink>
+        <NuxtLink
+          to="/admin/registration"
+          class="admin-navigation__link"
+          :class="{
+            'admin-navigation__link--active': route.path.startsWith(
+              '/admin/registration',
+            ),
+          }"
+          :aria-current="
+            route.path.startsWith('/admin/registration') ? 'page' : undefined
+          "
+          @click="closeMenu"
+        >
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 5h18v14H3zM3 6l9 7 9-7" />
+          </svg>
+          Registro y acceso
+        </NuxtLink>
       </nav>
       <footer class="admin-navigation__footer">
         <nav aria-label="Cambiar de vista" class="admin-navigation__links">
           <NuxtLink
-            to="/institute/dashboard"
+            to="/admin/institutions"
             class="admin-navigation__link"
             @click="closeMenu"
           >
-            Vista de instituto
+            Elegir institución
           </NuxtLink>
           <NuxtLink
-            to="/user/dashboard"
+            to="/admin/institutions?view=student"
             class="admin-navigation__link"
             @click="closeMenu"
           >

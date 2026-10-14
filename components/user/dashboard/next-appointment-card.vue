@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
+const auth = useAuthStore()
 interface IUpcomingAppointment {
   _id: string
   appointmentDate: string
@@ -35,6 +37,7 @@ const specialistName = computed(
 )
 
 async function fetchUpcomingAppointment() {
+  if (auth.isStudentPreview) return
   try {
     isLoading.value = true
     const response = await $axios.get<IUpcomingAppointment[]>(

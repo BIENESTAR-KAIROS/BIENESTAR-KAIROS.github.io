@@ -2,7 +2,9 @@
 import PosibleQuizzes from '~/components/user/quiz/posible-quizzes.vue'
 import QuestionnaireFlowState from '~/components/user/quiz/questionnaire-flow-state.vue'
 import type { StudentQuestionnaireFlow } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
+import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
+const auth = useAuthStore()
 const userStore = useUserStore()
 const isLoading = ref(true)
 const error = ref(false)
@@ -13,6 +15,7 @@ async function load() {
   try {
     flow.value = await userStore.loadQuestionnaireFlow()
     if (
+      !auth.isStudentPreview &&
       flow.value.isActive &&
       flow.value.nextQuestionnaireId &&
       !flow.value.questionnaires.length
@@ -44,8 +47,22 @@ onMounted(load)
   />
   <PosibleQuizzes
     v-else-if="flow"
-    :questionnaires="flow.questionnaires"
+    :questionnaires="
+      auth.isStudentPreview
+        ? [
+            ...flow.queue,
+            ...flow.questionnaires.filter(
+              (q) =>
+                !flow!.queue.some(
+                  (entry) => entry.questionnaireId === q.questionnaireId,
+                ),
+            ),
+          ]
+        : flow.questionnaires
+    "
     :sequence-complete="flow.isActive && !flow.nextQuestionnaireId"
-    :next-questionnaire-id="flow.nextQuestionnaireId"
+    :next-questionnaire-id="
+      auth.isStudentPreview ? null : flow.nextQuestionnaireId
+    "
   />
 </template>

@@ -41,7 +41,7 @@ async function saveQuestionnaire(publish = false) {
   if (saving.value || loading.value || loadError.value) return
   const flat = flattenQuestions(questions.value)
   errors.value = validateBuilder(title.value, flat, evaluation.value)
-  const institute = auth.user?.institute
+  const institute = auth.activeInstitute
   const institution = typeof institute === 'string' ? institute : institute?._id
   if (!institution)
     errors.value.push(

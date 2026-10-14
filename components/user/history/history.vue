@@ -25,6 +25,7 @@ function formatDate(value?: Date | string | number) {
 }
 
 async function fetchQuestionnaireHistory() {
+  if (authStore.isStudentPreview) return
   if (!authStore.user?._id) return
 
   try {

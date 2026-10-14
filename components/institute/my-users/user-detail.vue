@@ -21,7 +21,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const userId = route.params.userId as string
-const instituteId = authStore.user?.institute?._id || authStore.user?.institute
+const instituteId = authStore.activeInstitute?._id || authStore.activeInstitute
 
 const userDetail = ref<IUserDetail | null>(null)
 const isLoading = ref(false)
