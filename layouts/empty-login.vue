@@ -1,7 +1,15 @@
+<script setup lang="ts">
+import StudentPreviewBanner from '~/components/admin/institutions/StudentPreviewBanner.vue'
+import { useAuthStore } from '~/store/auth'
+const auth = useAuthStore()
+</script>
 <template>
   <v-app class="login-bg">
     <v-main>
-      <NuxtPage />
+      <StudentPreviewBanner />
+      <NuxtPage
+        :key="`${auth.institutionContextMode}:${auth.activeInstitute?._id ?? 'self'}`"
+      />
     </v-main>
   </v-app>
 </template>

@@ -3,8 +3,7 @@ import { useAuthStore } from './auth'
 import type { StudentQuestionnaireFlow } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
 import type { UserRegisterRequestDto } from '~/dto/request/user/user-register.request.dto'
 import type { StudentDataRequestDto } from '~/dto/request/user/user-student-data.request.dto'
-import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
-import type AuthRegisterDto from '~/interfaces/register/register.dto'
+import type { RegistrationResponse } from '~/interfaces/register/registration-response.interface'
 import type {
   IUser,
   IUserQuestionnaireQueue,
@@ -18,43 +17,32 @@ import { translateGender } from '~/utils/constants/translations'
 export const useUserStore = defineStore('user', {
   state: () => {
     return {
-      registerUser: {} as AuthRegisterDto,
       user: null as IUser | null,
       lastQuizId: null as string | null,
       questionnaireFlow: null as StudentQuestionnaireFlow | null,
     }
   },
   actions: {
-    async registerUser(user: UserRegisterRequestDto): Promise<ILoginResponse> {
+    async registerUser(
+      user: UserRegisterRequestDto,
+    ): Promise<RegistrationResponse> {
       const nuxtApp = useNuxtApp()
 
-      user.studentData = {
-        ...user.studentData,
-        gender: translateGender(user.studentData!.gender!.toString()),
+      const payload: UserRegisterRequestDto = {
+        ...user,
+        email: user.email.trim().toLowerCase(),
+        studentData: user.studentData
+          ? {
+              age: user.studentData.age,
+              gender: translateGender(user.studentData.gender!.toString()),
+            }
+          : undefined,
       }
-
-      let message = ''
-      const response = await nuxtApp.$axios
-        .post<{
-          user: IUser
-          accessToken: string
-          message?: string
-          statusCode?: number
-        }>('/user', user)
-        .catch((error) => {
-          if (error.response.data.statusCode == 409)
-            message = `El correo electrónico ya está registrado`
-          else
-            message = `Error al registrar el usuario: ${error.response.data.message}`
-        })
-
-      this.user = response?.data.user || null
-
-      return {
-        user: response?.data.user || ({} as IUser),
-        accessToken: response?.data.accessToken || '',
-        message: message || 'Usuario registrado correctamente',
-      }
+      const { data } = await nuxtApp.$axios.post<RegistrationResponse>(
+        '/user',
+        payload,
+      )
+      return data
     },
     async updateUserStudentData(
       id: string,
@@ -88,15 +76,21 @@ export const useUserStore = defineStore('user', {
       const auth = useAuthStore()
       if (!auth.user) throw new Error('No hay una sesión activa.')
       const userId = auth.user._id
+      const contextId = auth.institutionContext?._id
+      const contextMode = auth.institutionContextMode
       this.questionnaireFlow = null
       const { data } = await useNuxtApp().$axios.get<StudentQuestionnaireFlow>(
         '/questionnaire/student-flow',
       )
       // An old response must not be reused after a change of account.
-      if (useAuthStore().user?._id !== userId)
+      if (
+        auth.user?._id !== userId ||
+        auth.institutionContext?._id !== contextId ||
+        auth.institutionContextMode !== contextMode
+      )
         throw new Error('La sesión cambió. Vuelve a intentarlo.')
       this.questionnaireFlow = data
-      this.user = auth.user
+      this.user = { ...auth.user }
       this.user.questionnaireQueue = { queue: data.isActive ? data.queue : [] }
       return data
     },

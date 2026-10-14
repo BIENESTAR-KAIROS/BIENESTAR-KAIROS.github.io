@@ -7,11 +7,16 @@ import type { IDashboardStatisticsInstituteResponse } from '~/dto/response/insti
 const { $axios } = useNuxtApp()
 const authStore = useAuthStore()
 const instituteStore = useInstituteStore()
+instituteStore.statistics = null
+let mounted = true
+onBeforeUnmount(() => {
+  mounted = false
+})
 
 const isLoading = ref(false)
 
 const instituteIdForStats =
-  authStore.user?.institute?._id || authStore.user?.institute
+  authStore.activeInstitute?._id || authStore.activeInstitute
 
 onMounted(async () => {
   try {
@@ -21,7 +26,7 @@ onMounted(async () => {
       `/institute/${instituteIdForStats}/dashboard-statistics`,
     )
 
-    instituteStore.statistics = data
+    if (mounted) instituteStore.statistics = data
   } catch (error) {
     console.error(error)
   } finally {

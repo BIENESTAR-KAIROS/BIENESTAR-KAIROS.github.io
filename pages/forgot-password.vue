@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AuthShell from '~/components/global/AuthShell.vue'
 import { required, validEmail } from '~/utils/helpers/form-rules'
+import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
 definePageMeta({
   layout: 'empty-login',
@@ -34,6 +35,7 @@ const clearEmailError = () => {
 }
 
 const sendRecoveryEmail = async () => {
+  if (isLoading.value) return
   submitError.value = ''
   successMessage.value = ''
 
@@ -46,17 +48,21 @@ const sendRecoveryEmail = async () => {
     const response = await $axios.post<{ success: boolean }>(
       '/auth/forgot-password',
       {
-        email: email.value,
+        email: email.value.trim().toLowerCase(),
       },
     )
 
     if (response.data.success)
       successMessage.value =
         'Correo de recuperación enviado. Revisa tu bandeja de entrada y la carpeta de spam.'
-    else throw new Error('No se pudo enviar el correo de recuperación.')
+    else
+      submitError.value =
+        'No encontramos una cuenta con ese correo. Revisa la dirección o crea una cuenta.'
   } catch (error) {
-    console.error(error)
-    submitError.value = 'Error al enviar el correo de recuperación.'
+    submitError.value = getApiErrorMessage(
+      error,
+      'No pudimos enviar el correo de recuperación. Vuelve a intentarlo.',
+    )
   } finally {
     isLoading.value = false
   }
@@ -94,13 +100,14 @@ const sendRecoveryEmail = async () => {
           }}</small>
         </label>
 
-        <p v-if="successMessage" class="forgot-form__success">
+        <p v-if="successMessage" class="forgot-form__success" role="status">
           {{ successMessage }}
         </p>
 
         <p
           v-if="submitError"
           class="forgot-form__error forgot-form__error--submit"
+          role="alert"
         >
           {{ submitError }}
         </p>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import { computed, onMounted, ref, watch } from 'vue'
+const auth = useAuthStore()
 
 interface IBook {
   key: string
@@ -100,7 +102,8 @@ function toggleSaved(book: IBook) {
     next.add(book.key)
   }
   savedBooks.value = next
-  localStorage.setItem('kairos_saved_books', JSON.stringify([...next]))
+  if (!auth.isStudentPreview)
+    localStorage.setItem('kairos_saved_books', JSON.stringify([...next]))
 }
 
 function leaveReview() {
@@ -111,7 +114,8 @@ function leaveReview() {
     const key = 'kairos_book_reviews'
     const existing = JSON.parse(localStorage.getItem(key) || '[]')
     existing.push({ review, date: new Date().toISOString() })
-    localStorage.setItem(key, JSON.stringify(existing))
+    if (!auth.isStudentPreview)
+      localStorage.setItem(key, JSON.stringify(existing))
     alert('¡Gracias! Guardamos tu comentario en este dispositivo.')
   }
 }

@@ -4,6 +4,7 @@ import type { UserGenderEnum } from '~/interfaces/user/enum/user-gender.enum'
 import AuthShell from '../global/AuthShell.vue'
 import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
+import { getApiErrorMessage, hasErrorStatus } from '~/utils/helpers/http-errors'
 
 const userStore = useUserStore()
 
@@ -16,7 +17,6 @@ const defaultRegisterData: Ref<UserRegisterRequestDto> = ref({
   studentData: {
     age: 17,
     gender: '' as UserGenderEnum,
-    groupIds: ['684fd320efc0e3279a38cc0a', '685b035d36aa0b3c141cf75a'],
   },
 })
 
@@ -84,6 +84,7 @@ const validateRegisterForm = () => {
 }
 
 async function register() {
+  if (isLoading.value) return
   submitError.value = ''
 
   if (!validateRegisterForm()) {
@@ -95,37 +96,21 @@ async function register() {
   try {
     isLoading.value = true
 
-    const response = await userStore.registerUser(defaultRegisterData.value)
-    if (response.message === 'Usuario registrado correctamente') {
-      nuxtApp.$Swal.fire({
-        icon: 'success',
-        title: 'Registro Exitoso',
-        text: 'Usuario registrado correctamente. Te llegará un correo de confirmación de cuenta para poder terminar tu registro.',
-      })
-    } else if (
-      response.message === 'El correo electrónico ya está registrado'
-    ) {
-      nuxtApp.$Swal.fire({
-        icon: 'error',
-        title: 'Error de Registro',
-        text: 'El correo electrónico ya está registrado. Por favor, intenta con otro correo.',
-      })
-      submitError.value = response.message
-      return
-    } else {
-      nuxtApp.$Swal.fire({
-        icon: 'error',
-        title: 'Error de Registro',
-        text: 'Ocurrió un error al registrar el usuario. Por favor, intenta nuevamente.',
-      })
-      submitError.value = response.message
-      return
-    }
+    await userStore.registerUser(defaultRegisterData.value)
+    await nuxtApp.$Swal.fire({
+      icon: 'success',
+      title: 'Registro Exitoso',
+      text: 'Usuario registrado correctamente. Te llegará un correo de confirmación de cuenta para poder terminar tu registro.',
+    })
 
     nuxtApp.$router.push('/')
   } catch (error) {
-    console.error(error)
-    submitError.value = 'No pudimos completar tu registro.'
+    submitError.value = hasErrorStatus(error, 409)
+      ? 'El correo electrónico ya está registrado. Inicia sesión o recupera tu contraseña.'
+      : getApiErrorMessage(
+          error,
+          'No pudimos completar tu registro. Vuelve a intentarlo.',
+        )
   } finally {
     isLoading.value = false
   }
@@ -141,7 +126,10 @@ async function register() {
       <div class="register-form__card">
         <div class="register-form__header">
           <h2>Crear cuenta</h2>
-          <p>Completa tus datos para empezar.</p>
+          <p>
+            Usa tu correo personal o el de tu institución. Te enviaremos un
+            enlace para confirmar tu cuenta.
+          </p>
         </div>
 
         <div class="register-form__grid register-form__grid--double">
@@ -278,7 +266,7 @@ async function register() {
           </label>
         </div>
 
-        <p v-if="submitError" class="register-form__submit-error">
+        <p v-if="submitError" class="register-form__submit-error" role="alert">
           {{ submitError }}
         </p>
 

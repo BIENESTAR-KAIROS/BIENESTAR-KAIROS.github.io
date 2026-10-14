@@ -63,6 +63,7 @@ async function toggleTask(recommendationId: string) {
 }
 
 onMounted(async () => {
+  if (authStore.isStudentPreview) return
   try {
     isLoading.value = true
     await Promise.all([fetchTodayTasks(), fetchMonthlyStreak()])

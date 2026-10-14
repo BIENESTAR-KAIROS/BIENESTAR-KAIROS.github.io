@@ -116,6 +116,10 @@ Navegación lateral de 272 px en escritorio; por debajo de 960 px, barra superio
 
 Esta extensión incorpora una tercera variante de contexto; no altera la evidencia histórica de las dos variantes auditadas. El PDF está pendiente de incorporar la variante de administración general.
 
+Actualización de navegación · 14 de octubre de 2026: administración general incorpora **Instituciones**, **Recomendaciones** y **Registro y acceso**. El listado de instituciones lleva al alta en una página separada y permite abrir el panel de una institución. Durante ese acceso se conserva la variante violeta institucional y se muestra una franja con el nombre de la institución, los permisos de administración institucional y un enlace para volver al administrador general. La cuenta mantiene su identidad global; la selección corresponde al contexto de trabajo. El PDF está pendiente de incorporar este patrón.
+
+Actualización de navegación · 14 de octubre de 2026: **Vista de alumno** del administrador general abre primero un selector de institución. La exploración conserva la variante verde de estudiantes y una franja persistente con el nombre de la institución, el aviso de que no se guardan respuestas ni cambios y enlaces para cambiar institución o volver al administrador general. Los cuestionarios pueden explorarse sin completar la secuencia. Este contexto no modifica la membresía de la cuenta. El PDF está pendiente de incorporar este patrón.
+
 ## 6. Paleta de estudiantes
 
 Usar los colores por su función, no por los nombres históricos del tema Vuetify.

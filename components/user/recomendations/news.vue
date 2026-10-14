@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import { computed, onMounted, ref, watch } from 'vue'
+const auth = useAuthStore()
 
 interface INewsArticle {
   title: string
@@ -72,7 +74,11 @@ function toggleSaved(article: INewsArticle) {
     ? savedArticles.value.filter((item) => item.url !== article.url)
     : [...savedArticles.value, { title: article.title, url: article.url }]
 
-  localStorage.setItem('kairos_saved_news', JSON.stringify(savedArticles.value))
+  if (!auth.isStudentPreview)
+    localStorage.setItem(
+      'kairos_saved_news',
+      JSON.stringify(savedArticles.value),
+    )
 }
 
 function toggleTopic(topic: string) {
@@ -80,15 +86,17 @@ function toggleTopic(topic: string) {
     ? followedTopics.value.filter((item) => item !== topic)
     : [...followedTopics.value, topic]
 
-  localStorage.setItem(
-    'kairos_news_topics',
-    JSON.stringify(followedTopics.value),
-  )
+  if (!auth.isStudentPreview)
+    localStorage.setItem(
+      'kairos_news_topics',
+      JSON.stringify(followedTopics.value),
+    )
 }
 
 function toggleWeeklyDigest() {
   weeklyDigest.value = !weeklyDigest.value
-  localStorage.setItem('kairos_weekly_digest', String(weeklyDigest.value))
+  if (!auth.isStudentPreview)
+    localStorage.setItem('kairos_weekly_digest', String(weeklyDigest.value))
 }
 
 function showMore() {

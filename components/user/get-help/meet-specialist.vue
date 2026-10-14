@@ -4,7 +4,7 @@ import { specialists } from './specialists-data'
 import { useAuthStore } from '~/store/auth'
 
 const authStore = useAuthStore()
-const institute = computed(() => authStore.user?.institute)
+const institute = computed(() => authStore.activeInstitute)
 
 function isEmail(value: string): boolean {
   return value.includes('@')

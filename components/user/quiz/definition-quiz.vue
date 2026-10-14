@@ -118,11 +118,16 @@ async function selectQuestion(id: string) {
 }
 function next() {
   showErrors.value = true
-  if (!current.value || errors.value.get(current.value._id)) return
+  if (
+    !current.value ||
+    (!auth.isStudentPreview && errors.value.get(current.value._id))
+  )
+    return
   const nextQuestion = visible.value[position.value + 1]
   if (nextQuestion) void selectQuestion(nextQuestion._id)
 }
 async function submit() {
+  if (auth.isStudentPreview) return
   if (submitting.value || saved.value || !definition.value || !auth.user) return
   const invalid = visible.value.find((q) => errors.value.get(q._id))
   if (invalid) {
@@ -252,7 +257,7 @@ async function submit() {
         </p>
         <div class="definition-quiz__actions">
           <button
-            v-if="definition.canAccessQuestionHistory"
+            v-if="definition.canAccessQuestionHistory || auth.isStudentPreview"
             type="button"
             :aria-expanded="showHistory"
             @click="showHistory = !showHistory"
@@ -278,6 +283,7 @@ async function submit() {
             v-else
             type="button"
             class="definition-quiz__primary"
+            :disabled="auth.isStudentPreview"
             @click="submit"
           >
             {{ submitting ? 'Guardando…' : 'Guardar respuestas' }}

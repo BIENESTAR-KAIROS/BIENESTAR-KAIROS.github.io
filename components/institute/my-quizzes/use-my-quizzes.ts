@@ -101,7 +101,7 @@ export function useMyQuizzes() {
   }
 
   const instituteId = computed(() => {
-    const institute = authStore.user?.institute
+    const institute = authStore.activeInstitute
     if (!institute) return undefined
     return typeof institute === 'string' ? institute : institute._id
   })

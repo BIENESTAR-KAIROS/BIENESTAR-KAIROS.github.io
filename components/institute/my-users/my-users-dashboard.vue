@@ -10,7 +10,7 @@ import type {
 const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
 
-const instituteId = authStore.user?.institute?._id || authStore.user?.institute
+const instituteId = authStore.activeInstitute?._id || authStore.activeInstitute
 
 const isLoadingUsers = ref(false)
 const usersError = ref('')

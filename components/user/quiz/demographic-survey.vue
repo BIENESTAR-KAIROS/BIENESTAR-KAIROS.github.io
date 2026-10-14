@@ -184,7 +184,7 @@ for (const block of blocks) {
 }
 
 const asksExtraQuestions = computed(() => {
-  const instituteId = authStore.user?.institute?._id
+  const instituteId = authStore.activeInstitute?._id
 
   return !!instituteId && authStore.isBlockedForInstitutes.includes(instituteId)
 })
@@ -277,6 +277,7 @@ const draftKey = computed(
 )
 
 function loadDraft() {
+  if (authStore.isStudentPreview) return
   try {
     const raw = window.localStorage.getItem(draftKey.value)
 
@@ -294,6 +295,7 @@ function loadDraft() {
 }
 
 function clearDraft() {
+  if (authStore.isStudentPreview) return
   try {
     window.localStorage.removeItem(draftKey.value)
   } catch (error) {
@@ -304,6 +306,7 @@ function clearDraft() {
 watch(
   answers,
   () => {
+    if (authStore.isStudentPreview) return
     try {
       window.localStorage.setItem(draftKey.value, JSON.stringify(answers))
     } catch (error) {
@@ -355,7 +358,9 @@ const hasSubmitted = computed(
     !!authStore.user?.studentData?.demographicSurveyCompleted,
 )
 const isLocked = computed(() => availability.value?.canUpdate === false)
-const showForm = computed(() => !hasSubmitted.value || isEditing.value)
+const showForm = computed(
+  () => authStore.isStudentPreview || !hasSubmitted.value || isEditing.value,
+)
 
 const lastSubmittedData = computed<Record<string, unknown> | null>(
   () =>
@@ -468,6 +473,7 @@ function startEditing() {
 }
 
 async function saveAnswers() {
+  if (authStore.isStudentPreview) return
   if (!isComplete.value || isSaving.value) return
 
   isSaving.value = true
@@ -498,6 +504,16 @@ async function saveAnswers() {
     clearDraft()
     isEditing.value = false
     try {
+      if (authStore.isStudentPreview) {
+        if (
+          ![...flow.queue, ...flow.questionnaires].some(
+            (item) => item.questionnaireId === 'demographic' && item.canPreview,
+          )
+        ) {
+          await $router.replace('/user/quiz')
+        }
+        return
+      }
       await loadSurveyState()
     } catch {
       // The answers were saved. Retry loading, never submit them again automatically.
@@ -606,7 +622,11 @@ onBeforeUnmount(() => {
           >
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          Tu avance se guarda en este dispositivo
+          {{
+            authStore.isStudentPreview
+              ? 'Exploración sin guardar borradores'
+              : 'Tu avance se guarda en este dispositivo'
+          }}
         </span>
       </header>
 
@@ -616,11 +636,18 @@ onBeforeUnmount(() => {
             <section class="demographic__progress-card">
               <div class="demographic__progress-text">
                 <span class="demographic__progress-title">
-                  Llena el siguiente cuestionario para completar tu registro
+                  {{
+                    authStore.isStudentPreview
+                      ? 'Explora las preguntas disponibles para esta institución'
+                      : 'Llena el siguiente cuestionario para completar tu registro'
+                  }}
                 </span>
                 <span class="demographic__progress-meta">
-                  {{ totalCount }} preguntas · alrededor de 2 minutos · puedes
-                  salir y volver
+                  {{ totalCount }} preguntas<template
+                    v-if="!authStore.isStudentPreview"
+                  >
+                    · alrededor de 2 minutos · puedes salir y volver</template
+                  >
                 </span>
               </div>
               <div class="demographic__progress-meter">
@@ -799,13 +826,19 @@ onBeforeUnmount(() => {
               <button
                 type="button"
                 class="demographic__submit"
-                :disabled="!isComplete || isSaving"
+                :disabled="
+                  authStore.isStudentPreview || !isComplete || isSaving
+                "
                 @click="saveAnswers"
               >
                 {{ isSaving ? 'Guardando…' : 'Guardar mis respuestas' }}
               </button>
               <span class="demographic__actions-note">
-                <template v-if="remainingCount > 0">
+                <template v-if="authStore.isStudentPreview"
+                  >Las respuestas de exploración se descartan al
+                  salir.</template
+                >
+                <template v-else-if="remainingCount > 0">
                   {{ remainingCount }}
                   {{ remainingCount === 1 ? 'pregunta' : 'preguntas' }} por
                   responder. Tu avance se guarda en este dispositivo.

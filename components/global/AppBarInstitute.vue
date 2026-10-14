@@ -35,7 +35,7 @@ const isOpen = computed(() => appStore.isNavBarOpen)
 
 const isActive = (to: string) => route.path.startsWith(to)
 
-const institute = computed(() => authStore.user?.institute)
+const institute = computed(() => authStore.activeInstitute)
 
 const campus = computed(() => institute.value?.campuses?.[0]?.name)
 
