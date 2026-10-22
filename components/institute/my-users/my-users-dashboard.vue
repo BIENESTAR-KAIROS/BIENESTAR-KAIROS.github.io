@@ -109,6 +109,7 @@ const isStudent = (user: IUserSummary) => user.roles.includes('STUDENT')
 
 /** El diseño muestra una sola etiqueta por persona, no todos sus roles. */
 function roleLabel(user: IUserSummary) {
+  if (user.isDemo) return 'Alumno demo'
   const primary = isStudent(user)
     ? 'STUDENT'
     : (user.roles.find((role) => role !== 'STUDENT') ?? '')

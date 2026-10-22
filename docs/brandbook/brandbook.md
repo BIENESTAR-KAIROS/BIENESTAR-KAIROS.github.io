@@ -120,6 +120,8 @@ Actualización de navegación · 14 de octubre de 2026: administración general 
 
 Actualización de navegación · 14 de octubre de 2026: **Vista de alumno** del administrador general abre primero un selector de institución. La exploración conserva la variante verde de estudiantes y una franja persistente con el nombre de la institución, el aviso de que no se guardan respuestas ni cambios y enlaces para cambiar institución o volver al administrador general. Los cuestionarios pueden explorarse sin completar la secuencia. Este contexto no modifica la membresía de la cuenta. El PDF está pendiente de incorporar este patrón.
 
+Actualización de navegación · 22 de octubre de 2026: administración general incorpora **Usuarios**, con acceso al directorio, perfiles e historial y asignación del conjunto demo por institución. Conserva la variante verde oscuro de administración y distingue los datos de ejemplo mediante la etiqueta «Demo». El PDF está pendiente de incorporar esta navegación.
+
 ## 6. Paleta de estudiantes
 
 Usar los colores por su función, no por los nombres históricos del tema Vuetify.

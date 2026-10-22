@@ -6,6 +6,7 @@ export interface IUserSummary {
   email: string
   roles: string[]
   active: boolean
+  isDemo?: boolean
   registrationDate: Date
   lastAccess?: Date
   quizCountLastSixMonths: number

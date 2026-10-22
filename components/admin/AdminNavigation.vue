@@ -123,6 +123,35 @@ async function logout() {
         class="admin-navigation__links"
       >
         <NuxtLink
+          to="/admin/users"
+          class="admin-navigation__link"
+          :class="{
+            'admin-navigation__link--active':
+              route.path.startsWith('/admin/users'),
+          }"
+          :aria-current="
+            route.path.startsWith('/admin/users') ? 'page' : undefined
+          "
+          @click="closeMenu"
+        >
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <circle cx="9" cy="7" r="4" />
+            <path
+              d="M2 21v-2a7 7 0 0 1 14 0v2M17 3a4 4 0 0 1 0 8M19 14a7 7 0 0 1 3 5v2"
+            />
+          </svg>
+          Usuarios
+        </NuxtLink>
+        <NuxtLink
           to="/admin/institutions"
           class="admin-navigation__link"
           :class="{

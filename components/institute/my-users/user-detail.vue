@@ -440,6 +440,9 @@ onMounted(() => {
         <div class="hero__copy">
           <div class="hero__name-row">
             <span class="hero__name">{{ fullName }}</span>
+            <span v-if="userDetail.isDemo" class="badge"
+              >Demo · datos de ejemplo</span
+            >
             <span v-if="needsAttention" class="badge badge--warn">
               Requiere atención
             </span>
