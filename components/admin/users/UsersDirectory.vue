@@ -3,6 +3,7 @@ import type { AdminUsersPage } from '~/interfaces/user/admin-user.interface'
 import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import { genderLabel, institutionLabels, userName } from './user-labels'
+import UserManager from '~/components/global/users/UserManager.vue'
 import DemoAssignment from './DemoAssignment.vue'
 
 const { $axios } = useNuxtApp()
@@ -13,7 +14,7 @@ const loading = ref(true)
 const error = ref('')
 const optionsError = ref('')
 const page = ref(1)
-const limit = ref(25)
+const limit = ref(10)
 const filters = reactive({
   search: '',
   institutionId: '',
@@ -59,6 +60,10 @@ async function loadOptions() {
     optionsError.value = 'No pudimos cargar las instituciones y los campus.'
   }
 }
+function refreshUsers() {
+  load()
+  loadOptions()
+}
 function applyFilters() {
   page.value = 1
   load()
@@ -99,6 +104,7 @@ onBeforeUnmount(() => {
         Consulta las cuentas registradas, su información y los cuestionarios que
         han contestado.
       </p>
+      <UserManager :institutions="institutions" @changed="refreshUsers" />
     </header>
     <div v-if="result" class="user-counts" aria-label="Totales registrados">
       <div>
@@ -245,6 +251,11 @@ onBeforeUnmount(() => {
                     :aria-label="`Ver perfil de ${userName(u)}`"
                     >Ver perfil</NuxtLink
                   >
+                  <UserManager
+                    :user-id="u._id"
+                    :institutions="institutions"
+                    @changed="refreshUsers"
+                  />
                 </td>
               </tr>
             </tbody>
@@ -253,6 +264,7 @@ onBeforeUnmount(() => {
         <nav class="user-pagination" aria-label="Paginación de usuarios">
           <label
             >Por página<select v-model.number="limit" @change="applyFilters">
+              <option :value="10">10</option>
               <option :value="25">25</option>
               <option :value="50">50</option>
               <option :value="100">100</option>
