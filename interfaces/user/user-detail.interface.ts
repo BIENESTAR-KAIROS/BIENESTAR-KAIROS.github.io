@@ -21,6 +21,7 @@ export interface IUserDetail {
   email: string
   roles: string[]
   active: boolean
+  isDemo?: boolean
   registrationDate: Date
   lastAccess?: Date
   studentData?: Record<string, unknown>

@@ -34,6 +34,7 @@ const authRoutes: string[] = [
   '/admin/recommendations',
   '/admin/registration',
   '/admin/institutions',
+  '/admin/users',
 ]
 const mainUserAuthRoute = '/user/dashboard'
 const mainInstituteAuthRoute = '/institute/dashboard'

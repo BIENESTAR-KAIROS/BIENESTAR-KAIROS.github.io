@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UserManager from '~/components/global/users/UserManager.vue'
 import { useAuthStore } from '~/store/auth'
 import { roleLabels } from '~/utils/translations'
 import type {
@@ -10,6 +11,11 @@ import type {
 const { $axios, $router } = useNuxtApp()
 const authStore = useAuthStore()
 
+const canManage = computed(() =>
+  authStore.user?.roles?.some((role) =>
+    ['KAIROS_ADMIN', 'INSTITUTION_ADMIN'].includes(role),
+  ),
+)
 const instituteId = authStore.activeInstitute?._id || authStore.activeInstitute
 
 const isLoadingUsers = ref(false)
@@ -109,6 +115,9 @@ const isStudent = (user: IUserSummary) => user.roles.includes('STUDENT')
 
 /** El diseño muestra una sola etiqueta por persona, no todos sus roles. */
 function roleLabel(user: IUserSummary) {
+  if (user.isDemo) return 'Alumno demo'
+  if (user.roles.includes('KAIROS_ADMIN'))
+    return roleLabels.KAIROS_ADMIN || 'Administrador KAIROS'
   const primary = isStudent(user)
     ? 'STUDENT'
     : (user.roles.find((role) => role !== 'STUDENT') ?? '')
@@ -299,6 +308,11 @@ onBeforeUnmount(() => {
           ×
         </button>
       </div>
+      <UserManager
+        v-if="canManage && instituteId"
+        :institution-id="String(instituteId)"
+        @changed="fetchUsers"
+      />
     </header>
 
     <div class="users__body">
@@ -370,7 +384,8 @@ onBeforeUnmount(() => {
                         <span class="person__name">{{
                           getFullName(user)
                         }}</span>
-                        <span class="person__email">{{ user.email }}</span>
+                        <span class="person__email">{{ user.email }}</span
+                        ><span v-if="!user.active">Cuenta desactivada</span>
                       </span>
                     </div>
                   </td>
@@ -414,6 +429,20 @@ onBeforeUnmount(() => {
                       Contactar
                     </a>
                     <span v-else class="row__cta">Ver detalle →</span>
+                    <span v-if="user.isDemo" class="demo-readonly"
+                      >Demo · solo consulta</span
+                    >
+                    <span
+                      v-else-if="user.roles.includes('KAIROS_ADMIN')"
+                      class="demo-readonly"
+                      >Solo consulta · gestionar desde KAIROS</span
+                    >
+                    <UserManager
+                      v-else-if="canManage && instituteId"
+                      :user-id="user._id"
+                      :institution-id="String(instituteId)"
+                      @changed="fetchUsers"
+                    />
                   </td>
                 </tr>
               </tbody>
@@ -444,6 +473,14 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.demo-readonly {
+  display: block;
+  font-size: 12px;
+  color: #5c4a75;
+}
+.table__right :deep(.management-trigger) {
+  margin: 6px;
+}
 .users {
   min-height: 100%;
   display: flex;

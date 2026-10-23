@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MyStats from '~/components/institute/my-stats/my-stats.client.vue'
+import MyStats from '~/components/institute/my-stats/questionnaire-stats.vue'
 
 definePageMeta({
   layout: 'institute',
