@@ -49,3 +49,9 @@ export interface AdminUserDetail {
     limit: number
   }
 }
+
+export interface DemoAssignmentResult {
+  assigned: boolean
+  assignedCount: number
+  demoResults: { questionnaires: number; generated: number } | null
+}

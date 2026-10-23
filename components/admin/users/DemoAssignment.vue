@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
-import type { DemoUsersStatus } from '~/interfaces/user/admin-user.interface'
+import type {
+  DemoAssignmentResult,
+  DemoUsersStatus,
+} from '~/interfaces/user/admin-user.interface'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 const props = defineProps<{ institutions: RegistrationInstitute[] }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -62,13 +65,16 @@ async function setAssignment(value: boolean) {
   message.value = ''
   error.value = ''
   try {
-    await $axios.patch(`/admin/users/demos/institutions/${target._id}`, {
-      assigned: value,
-      ...(value ? { count } : {}),
-    })
+    const { data } = await $axios.patch<DemoAssignmentResult>(
+      `/admin/users/demos/institutions/${target._id}`,
+      {
+        assigned: value,
+        ...(value ? { count } : {}),
+      },
+    )
     await load()
     message.value = value
-      ? `${count.toLocaleString('es-MX')} alumnos demo están asignados a ${target.name}.`
+      ? `${count.toLocaleString('es-MX')} alumnos demo están asignados a ${target.name}. Se generaron ${data.demoResults?.generated ?? 0} resultados nuevos para ${data.demoResults?.questionnaires ?? 0} cuestionarios; los existentes se conservaron.`
       : `Se quitó la asociación de demos con ${target.name}. Los perfiles y su historial se conservan.`
     emit('changed')
   } catch (cause) {
@@ -91,9 +97,10 @@ onMounted(load)
     <h2 id="demo-title">Usuarios demo por institución</h2>
     <p>
       Elige cuántos alumnos del conjunto de 5,000 demos quieres compartir, con
-      sus respuestas y resultados de ejemplo. La cantidad elegida será el total
-      asignado a esa institución. Reducirla o quitar la asignación conserva los
-      perfiles, su historial y las asignaciones a otras instituciones.
+      resultados de ejemplo para cada cuestionario activo y publicado de la
+      institución. La cantidad elegida será el total asignado a esa institución.
+      Reducirla o quitar la asignación conserva los perfiles, su historial y las
+      asignaciones a otras instituciones.
     </p>
     <form class="user-actions" @submit.prevent="setAssignment(true)">
       <label
@@ -136,11 +143,18 @@ onMounted(load)
           busy ||
           loading ||
           status?.total !== 5000 ||
-          !validCount ||
-          assigned === desiredCount
+          !validCount
         "
       >
-        {{ assigned ? 'Actualizar cantidad' : 'Asignar demos' }}
+        {{
+          busy
+            ? 'Preparando resultados…'
+            : assigned === desiredCount
+              ? 'Completar resultados demo'
+              : assigned
+                ? 'Actualizar cantidad'
+                : 'Asignar demos'
+        }}
       </button>
       <button
         type="button"
