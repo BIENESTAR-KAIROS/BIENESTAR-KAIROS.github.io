@@ -4,11 +4,22 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 ## Setup
 
-Use Node.js 25.x and npm. Dependencies are tracked in `package-lock.json`:
+Use Node.js 26.13.0 LTS (pinned in `.node-version`) and npm. With fnm:
 
 ```bash
-npm install
+fnm install
+fnm use
+npm ci
 ```
+
+Restart any running development server after switching Node versions.
+App Platform's documented buildpack currently supports Node through 26.12.1.
+The `engines` range accepts that security release while `.node-version` keeps
+local development on 26.13.0 LTS, which contains the same security fixes.
+Merge changes into the app's configured branch (`main`) to trigger autodeploy,
+then verify the selected Node version and deployment status in DigitalOcean.
+Nuxt remains pinned to 3.21.1 pending its separate migration; this runtime and
+dependency update does not resolve all advisories affecting Nuxt 3.
 
 ## Development Server
 

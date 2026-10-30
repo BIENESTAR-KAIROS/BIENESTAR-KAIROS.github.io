@@ -73,7 +73,7 @@ Roles de la app (ver `interfaces/user/enum/user-rol.enum.ts` y
 - **Lenguaje**: TypeScript + Vue SFC (`<script setup lang="ts">`).
 - **Lint/format**: ESLint (`@nuxt/eslint`, config Nuxt/TypeScript) + Prettier
   (sin punto y coma, comillas simples — ver `.prettierrc`).
-- **Node**: versión `25.x` (ver `engines` en `package.json`).
+- **Node**: versión `26.13.0` LTS (ver `.node-version` y `engines` en `package.json`).
 
 ## Estructura del repo
 
