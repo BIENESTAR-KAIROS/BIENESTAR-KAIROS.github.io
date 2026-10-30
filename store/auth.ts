@@ -17,8 +17,7 @@ export const useAuthStore = defineStore('auth', {
       institutionContext: null as IInstitute | null,
       institutionContextError: '',
       institutionContextMode: 'institution' as
-        | 'institution'
-        | 'student-preview',
+        'institution' | 'student-preview',
       isBlockedForInstitutes: ['69751025bc2e095ec7a37e00'],
     }
   },

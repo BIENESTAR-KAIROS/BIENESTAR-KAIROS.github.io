@@ -1,17 +1,7 @@
 export type BuilderQuestionType =
-  | 'single_choice'
-  | 'multiple_choice'
-  | 'number'
-  | 'text'
-  | 'date'
+  'single_choice' | 'multiple_choice' | 'number' | 'text' | 'date'
 export type QuestionPresentation =
-  | 'radio'
-  | 'select'
-  | 'scale'
-  | 'checkbox'
-  | 'number'
-  | 'textarea'
-  | 'date'
+  'radio' | 'select' | 'scale' | 'checkbox' | 'number' | 'textarea' | 'date'
 export type RiskLevel = 'low' | 'moderate' | 'high'
 export interface BuilderOption {
   id: string

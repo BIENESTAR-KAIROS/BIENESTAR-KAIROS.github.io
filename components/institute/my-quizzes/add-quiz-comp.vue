@@ -161,8 +161,8 @@ const title = ref('')
 const description = ref('')
 const questions = ref([createQuestion()])
 const activeId = ref(questions.value[0].id)
-const activeQuestion = computed(
-  () => questions.value.find((question) => question.id === activeId.value)!,
+const activeQuestion = computed(() =>
+  questions.value.find((question) => question.id === activeId.value)!,
 )
 const activeIndex = computed(() =>
   questions.value.findIndex((question) => question.id === activeId.value),

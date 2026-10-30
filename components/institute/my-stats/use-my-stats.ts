@@ -43,11 +43,7 @@ export const EMPTY_FILTERS: IStatsFilters = {
 
 /** Los tres estados que el tablero puede tomar además del normal. */
 export type StatsState =
-  | 'loading'
-  | 'error'
-  | 'first-period'
-  | 'insufficient-sample'
-  | 'ready'
+  'loading' | 'error' | 'first-period' | 'insufficient-sample' | 'ready'
 
 const analyticsPath = (endpoint: string) =>
   `/api/analytics/${ANALYTICS_DB}/${ANALYTICS_QUESTIONNAIRE}/${endpoint}`

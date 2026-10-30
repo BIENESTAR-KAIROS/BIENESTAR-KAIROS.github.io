@@ -91,8 +91,7 @@ const metaLine = computed(() => {
   if (studentData.value?.age) parts.push(`${studentData.value.age} años`)
 
   const campus = studentData.value?.campusInformation as
-    | Record<string, unknown>
-    | undefined
+    Record<string, unknown> | undefined
 
   if (campus) {
     for (const value of Object.values(campus)) {
@@ -106,8 +105,7 @@ const metaLine = computed(() => {
 
 const campusEntries = computed(() => {
   const campus = studentData.value?.campusInformation as
-    | Record<string, unknown>
-    | undefined
+    Record<string, unknown> | undefined
 
   if (!campus) return []
 

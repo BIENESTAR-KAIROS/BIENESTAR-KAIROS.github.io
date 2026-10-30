@@ -46,7 +46,8 @@ export default withNuxt({
       'error',
       'kebab-case',
       {
-        ignores: [],
+        // Vue's default v-model event keeps the modelValue prop's casing.
+        ignores: ['update:modelValue'],
       },
     ],
   },
