@@ -52,6 +52,55 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   statsApi.interceptors.request.use((config) => {
+    // Keep the legacy statistics routes on their existing service during migration.
+    // Only these exact relative paths may carry the session bearer to Gowther.
+    if (
+      config.url === '/v1/session' ||
+      config.url === '/v1/statistics/periods'
+    ) {
+      const auth = useAuthStore()
+      if (
+        !auth.isAuthenticated ||
+        auth.isStudentPreview ||
+        !nuxtApp.$router.currentRoute.value.path.startsWith('/institute/')
+      )
+        throw new Error('La sesión institucional no está disponible.')
+      const base = import.meta.dev
+        ? nuxtApp.$config.public.gowtherLocalBase
+        : nuxtApp.$config.public.gowtherBase
+      let target: URL
+      try {
+        target = new URL(base)
+      } catch {
+        throw new Error('El servicio de períodos no está configurado.')
+      }
+      const local = ['localhost', '127.0.0.1', '[::1]'].includes(
+        target.hostname,
+      )
+      if (
+        target.username ||
+        target.password ||
+        target.search ||
+        target.hash ||
+        target.pathname !== '/' ||
+        (target.protocol !== 'https:' &&
+          !(import.meta.dev && local && target.protocol === 'http:'))
+      )
+        throw new Error(
+          'El servicio de períodos no está configurado correctamente.',
+        )
+      config.baseURL = target.origin
+      config.timeout = 15000
+      config.withCredentials = false
+      config.headers.set('Authorization', `Bearer ${auth.accessToken}`)
+      config.headers.delete('X-Gowther-Service-Token')
+      config.headers.delete('X-Kairos-Institution')
+      config.headers.delete('X-Kairos-View')
+      if (auth.isInstitutionContext)
+        config.headers.set('X-Kairos-Institution', auth.institutionContext!._id)
+      return config
+    }
+
     if (process.env.PROD) {
       config.baseURL = nuxtApp.$config.public.apiStatsBase
     } else {

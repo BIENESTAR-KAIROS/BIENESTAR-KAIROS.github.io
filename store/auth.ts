@@ -6,6 +6,7 @@ import { useUserStore } from './user'
 import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
 import type { IUser } from '~/interfaces/user/user.interface'
 import type { IInstitute } from '~/interfaces/institute/institute.interface'
+import type { StatisticsSession } from '~/interfaces/stats/statistics-period.interface'
 import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 export const useAuthStore = defineStore('auth', {
@@ -120,6 +121,45 @@ export const useAuthStore = defineStore('auth', {
 
       // Set user profile
       //await this.getMyUser()
+    },
+    async validateStatisticsSession(signal?: AbortSignal) {
+      const token = this.accessToken
+      const actorId = this.user?._id || this.user?.id
+      const institution = this.activeInstitute
+      const institutionId =
+        typeof institution === 'string' ? institution : institution?._id
+      const { $statsApi } = useNuxtApp()
+      const { data } = await $statsApi.get<StatisticsSession>('/v1/session', {
+        signal,
+      })
+      const currentInstitution = this.activeInstitute
+      const currentId =
+        typeof currentInstitution === 'string'
+          ? currentInstitution
+          : currentInstitution?._id
+      if (
+        token !== this.accessToken ||
+        institutionId !== currentId ||
+        actorId !== (this.user?._id || this.user?.id) ||
+        data.version !== 1 ||
+        data.actorId !== actorId ||
+        data.institutionId !== institutionId ||
+        !Number.isSafeInteger(data.expiresAt) ||
+        data.expiresAt <= Date.now() / 1000 ||
+        !Array.isArray(data.permissions) ||
+        !data.permissions.includes('statistics:read') ||
+        new Set(data.permissions).size !== data.permissions.length ||
+        data.permissions.some(
+          (permission) =>
+            !['statistics:read', 'statistics:periods:write'].includes(
+              permission,
+            ),
+        )
+      )
+        throw new Error(
+          'No pudimos validar el acceso institucional a los períodos.',
+        )
+      return data
     },
     async logout() {
       const { $axios } = useNuxtApp()

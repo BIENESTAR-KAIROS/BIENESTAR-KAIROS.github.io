@@ -13,6 +13,9 @@ export default defineNuxtConfig({
       apiLocalBase: `${process.env.API_LOCAL_BASE_URL}`,
       apiStatsBase: `${process.env.API_STATS_BASE_URL}`,
       apiLocalStatsBase: `${process.env.API_LOCAL_STATS_BASE_URL}`,
+      gowtherBase: process.env.API_GOWTHER_BASE_URL || '',
+      gowtherLocalBase:
+        process.env.API_LOCAL_GOWTHER_BASE_URL || 'http://127.0.0.1:8082',
       apiVersion: `${process.env.API_VERSION}`,
     },
   },

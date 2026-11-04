@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatisticsPeriods from './statistics-periods.vue'
 import QuestionnaireQueueEditor from './questionnaire-queue-editor.vue'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '~/store/auth'
@@ -117,10 +118,10 @@ onBeforeUnmount(() => requestVersion++)
     </div>
     <div v-else-if="!setting" class="settings-state">
       <v-icon icon="mdi-tune-variant" size="32" aria-hidden="true" />
-      <h2>Aún no tienes configuraciones disponibles</h2>
+      <h2>Aún no hay configuración de cuestionarios</h2>
       <p>
-        Cuando se cree una configuración para tu institución, podrás activarla o
-        desactivarla aquí.
+        Cuando se cree la configuración de cuestionarios de tu institución,
+        podrás administrarla aquí.
       </p>
     </div>
     <template v-else>
@@ -261,6 +262,7 @@ onBeforeUnmount(() => requestVersion++)
         </button>
       </div>
     </template>
+    <StatisticsPeriods />
   </section>
 </template>
 
