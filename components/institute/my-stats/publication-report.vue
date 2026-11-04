@@ -14,6 +14,7 @@ const props = defineProps<{
   response: StatisticsPublicationResponse
   labels: PublicationLabels
   title: string
+  syntheticPreview?: boolean
 }>()
 const report = computed(() => props.response.report)
 const metricLabel = (m: PublicationMetric, index: number) =>
@@ -25,6 +26,10 @@ const metricLabel = (m: PublicationMetric, index: number) =>
 
 <template>
   <section class="publication-report" aria-label="Informe estadístico">
+    <p v-if="syntheticPreview" class="panel protected">
+      Datos sintéticos de validación local. No representan alumnos ni una
+      publicación guardada en la base de datos.
+    </p>
     <div
       v-if="response.status === 'suppressed'"
       class="panel protected"
@@ -39,7 +44,13 @@ const metricLabel = (m: PublicationMetric, index: number) =>
     </div>
     <template v-else-if="report">
       <header class="panel">
-        <p class="eyebrow">Alumnos reales · Informe fijado</p>
+        <p class="eyebrow">
+          {{
+            syntheticPreview
+              ? 'Prueba sintética · Gowther'
+              : 'Alumnos reales · Informe fijado'
+          }}
+        </p>
         <h2>{{ title }}</h2>
         <p>
           Revisión {{ report.scope.revision.definitionRevision }} ·
@@ -51,14 +62,24 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           (fin sin incluir).
         </p>
         <p>
-          Calculado el
+          {{
+            syntheticPreview
+              ? 'Fecha de referencia de la prueba:'
+              : 'Calculado el'
+          }}
           {{ formatPeriodInstant(report.calculatedAt, 'America/Mexico_City') }}
           · America/Mexico_City
         </p>
         <p>
           Se usa el último intento presentado por persona dentro de este período
-          y revisión. Este informe permanece igual en consultas posteriores,
-          aunque lleguen respuestas tardías.
+          y revisión.
+          <template v-if="syntheticPreview"
+            >Este ejemplo se calcula en memoria y no escribe en Atlas.</template
+          >
+          <template v-else
+            >Este informe permanece igual en consultas posteriores, aunque
+            lleguen respuestas tardías.</template
+          >
         </p>
         <p v-for="reason in report.reasons" :key="reason">
           {{ publicationExplanation(reason) }}

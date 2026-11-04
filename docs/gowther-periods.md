@@ -147,3 +147,48 @@ institucional. Se preservan Figtree, violeta institucional, superficies y radios
 El botón nuevo usa violeta profundo con blanco; foco visible, etiquetas, estados
 anunciados y columnas apiladas en móvil. La auditoría inicial es histórica; no se
 modifica el brandbook por incorporar este bloque local.
+
+## Visor local con cálculos sintéticos
+
+Desde el repositorio del frontend, con `npm install` ya ejecutado y Go disponible:
+
+```bash
+node scripts/preview-statistics.mjs
+```
+
+Abre `http://127.0.0.1:8766`. Termina con Ctrl+C. Por defecto ejecuta
+`go run ./cmd/statistics-preview` en el repositorio hermano `../gowther` y renderiza
+las mismas tarjetas de informes. Si está en otra ruta, usa `--gowther-dir RUTA`.
+Si el puerto está ocupado, usa `--port 8767`. No requiere levantar Escanor, Nuxt ni
+la API de Gowther. Para validar sin servidor: agrega `--check`.
+
+| Caso                        | Qué comprobar                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Resultados completos        | 100 personas ficticias, media/mediana 3, modas 1–5, desviación √2 en las dimensiones; general 3 y desviación 0. |
+| Distribución sesgada        | Dimensión A: media 3.8, mediana/moda 5; B: media 2.2, mediana/moda 1.                                           |
+| Omisiones obligatorias: 10% | Publica con advertencia y 90 puntuaciones, sin convertir ausencias en cero.                                     |
+| Omisiones obligatorias: 20% | Oculta A y el general con explicación; B sigue disponible.                                                      |
+| Protección por diferencia   | Protege valores/cobertura de A, el general relacionado y reintentos; B permanece visible.                       |
+| Grupo insuficiente          | Nueve personas ficticias: sobre protegido sin conteos ni puntuaciones.                                          |
+| Último intento y reintentos | Solo cuentan los últimos puntajes; 20 reintentos, promedio 0.2 entre todos y 1 entre repetidores.               |
+| Respuestas sin puntuación   | Respuesta 100%, puntaje 90%, omisión obligatoria 0%; la pregunta informativa solo muestra cobertura.            |
+
+El comando de Go usa `analytics.Execute` y `publication.Protect`, con entregas
+normalizadas ficticias y fechas fijas. El contenedor JSON identifica explícitamente
+el origen sintético y la ausencia de persistencia. El alcance interno emula la
+política real únicamente para ejercitar sus protecciones; no reclasifica demos.
+La interfaz muestra el aviso sintético incluso en informes suprimidos.
+
+El visor solo escucha en loopback, no lee `.env`, no usa sesión ni conecta a Atlas.
+No agrega una ruta de prueba a la aplicación ni permite publicar estos ejemplos.
+No verifica la puntuación de Escanor, MongoDB, autenticación ni persistencia: esos
+recorridos requieren pruebas de integración independientes. El generador de demos
+por asignación y sus controles de administrador continúan pendientes.
+
+Para intercambiar exclusivamente estas fixtures de prueba, Gowther puede emitir
+el bundle con `go run ./cmd/statistics-preview > /tmp/gowther-preview.json` y el visor
+acepta `--fixtures /tmp/gowther-preview.json`. No usar exportaciones de alumnos.
+Las pruebas comprueban los ocho contratos, los valores esperados, las supresiones,
+la selección del último intento y el marcado visual sintético. Se mantienen los
+criterios institucionales del brandbook; la fuente usa Figtree si está instalada,
+con alternativa sans-serif local para funcionar sin descargar recursos externos.
