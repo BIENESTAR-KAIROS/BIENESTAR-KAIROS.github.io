@@ -29,7 +29,8 @@ peticiones y descarta sus respuestas, permisos y borrador anteriores.
 ## Transporte y configuración
 
 Se usa `$statsApi` para ambas generaciones de analítica durante la migración.
-**Solo las rutas relativas exactas** `/v1/session` y `/v1/statistics/periods` se
+**Solo las rutas relativas exactas** `/v1/session`, `/v1/statistics/periods` y
+`/v1/statistics/questionnaires/{ObjectId}` se
 redirigen al origen configurado de Gowther y reciben el bearer de `store/auth`.
 Las rutas de analítica anteriores conservan su origen y comportamiento. No se
 reconfigura globalmente `API_LOCAL_STATS_BASE_URL` ni se sustituye la API anterior.
@@ -76,6 +77,70 @@ entorno de desarrollo.
 No se envían intervalos ficticios a Atlas para probar la UI: los períodos son
 permanentes. El alta y reintento se verifican con almacenamiento sintético en la
 suite de Gowther; la revisión del navegador no acredita una escritura real.
+
+## Consulta de informes reales
+
+La ruta existente **Mis estadísticas** (`/institute/stats`) consume ahora Gowther.
+Reemplaza en esa ruta la consulta antigua de cuestionarios con filtros libres y
+población mixta. Los otros consumidores de la analítica anterior conservan su API;
+no hay fallback automático ni se envía el bearer de Gowther a sus endpoints.
+
+1. Registrar un período de la institución en Mis configuraciones.
+2. Esperar a su fin; solo los intervalos marcados `closed` por el servidor aparecen
+   en el selector de informes. Actualizar opciones vuelve a consultar ese estado.
+3. Elegir cuestionario, revisión y período, y pulsar **Consultar informe**. Cargar
+   la página o cambiar una selección no calcula ni publica un informe.
+4. La primera consulta elegible guarda el informe inmutable. La pantalla explica
+   este efecto antes de consultar. Consultas posteriores conservan el mismo informe.
+
+El catálogo procede de `GET /questionnaire` en Escanor, autorizado para la institución
+efectiva; incluye cuestionarios publicados schema 2, incluso inactivos. El catálogo
+solo ofrece la revisión actual. Para una anterior se indica su número conocido,
+sin inventar un listado de revisiones existentes. El servidor decide si hay entregas
+compatibles; la ausencia y los grupos pequeños conservan el mismo sobre protegido.
+La pantalla no admite fechas libres, combinaciones de períodos, filtros demográficos,
+exportación ni población demo. El flujo de simulación sigue siendo otro avance.
+
+La sesión se valida antes de cargar opciones y antes de consultar. La petición lleva
+exactamente `definitionRevision`, `from`, `until`; institución y permisos se resuelven
+en Escanor/Gowther. El cliente verifica alcance, contrato de publicación y estructura
+antes de dibujar. Cambios de cuenta, token, institución, revisión o período invalidan
+peticiones anteriores y limpian resultados. No se persisten informes en storage ni se
+reintenta automáticamente una consulta.
+
+Se muestran media, mediana, todas las modas (o «Sin moda»), desviación poblacional,
+rango, cobertura, razones y advertencias, con el redondeo solo en presentación.
+Las preguntas informativas publicadas sin valores numéricos muestran su cobertura.
+Un cero válido permanece cero; un valor protegido no se sustituye ni se reconstruye.
+Sin total definido no se suman dimensiones para fabricar uno. La cobertura protegida
+permanece oculta. Las omisiones describen ausencias, no un porcentaje de sesgo.
+Los reintentos distinguen promedio entre todos y entre repetidores, y respetan la
+supresión del bloque completo. La fecha de cálculo y las fechas del alcance se
+presentan en `America/Mexico_City`, indicada explícitamente.
+
+Los nombres actuales de preguntas/dimensiones se consultan opcionalmente mediante
+`GET /questionnaire/{id}/definition` solo para la revisión actual, comprobando ID y
+revisión. Si no coinciden, no están disponibles o se consulta una revisión anterior,
+se conserva una referencia al ID de la métrica/pregunta; nunca se atribuyen etiquetas
+actuales a resultados históricos. Un catálogo de revisiones y etiquetas históricas
+congeladas requiere ampliar el contrato; no se deducen desde respuestas individuales.
+
+Verificación reproducible sin red, `.env` ni base de datos:
+
+```bash
+node scripts/check-statistics-publication.mjs
+```
+
+Usa Node, TypeScript y Vue ya instalados con el proyecto; no instala un runner ni
+dependencias. Comprueba contrato/alcance, supresión, cero, preguntas informativas,
+modas, reintentos, render con fixtures, allowlist de rutas, bloqueo de períodos
+abiertos y descarte de respuestas tardías al cambiar de institución. Con
+`--preview /ruta/absoluta/ejemplo.html` genera una vista estática sintética aislada
+para revisar los componentes; no añade rutas de prueba ni datos demo a la aplicación.
+Se ejecutaron también lint, build y revisión visual del estado autenticado sin
+períodos y del render sintético. La primera publicación con datos de desarrollo
+queda pendiente de registrar un período real elegido por la institución; no se
+crearon períodos ni publicaciones en Atlas durante este avance.
 
 Referencias visuales: brandbook, secciones 5, 7–12, 15–16 y 19–21, y auditoría
 institucional. Se preservan Figtree, violeta institucional, superficies y radios.

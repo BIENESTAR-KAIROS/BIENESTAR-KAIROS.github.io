@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '~/store/auth'
+import { isGowtherRoute } from '~/utils/helpers/gowther-route'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const api = axios.create({
@@ -54,10 +55,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   statsApi.interceptors.request.use((config) => {
     // Keep the legacy statistics routes on their existing service during migration.
     // Only these exact relative paths may carry the session bearer to Gowther.
-    if (
-      config.url === '/v1/session' ||
-      config.url === '/v1/statistics/periods'
-    ) {
+    if (isGowtherRoute(config.url)) {
       const auth = useAuthStore()
       if (
         !auth.isAuthenticated ||
