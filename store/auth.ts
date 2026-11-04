@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { isAxiosError } from 'axios'
 import { useQuizStore } from './quiz'
 import { useUserStore } from './user'
 
@@ -120,12 +121,39 @@ export const useAuthStore = defineStore('auth', {
       // Set user profile
       //await this.getMyUser()
     },
+    async logout() {
+      const { $axios } = useNuxtApp()
+      const token = this.accessToken
+      if (token) {
+        try {
+          await $axios.post('/auth/logout', undefined, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 5000,
+          })
+        } catch (error) {
+          // Invalid/expired tokens already grant no access. Network/503 failures
+          // must leave the credential available so the user can retry revocation.
+          if (!isAxiosError(error) || error.response?.status !== 401) {
+            // Axios errors include the Authorization header; never retain it in UI errors.
+            // eslint-disable-next-line preserve-caught-error
+            throw new Error('No pudimos cerrar la sesión. Vuelve a intentarlo.')
+          }
+        }
+      }
+      if (this.accessToken !== token) {
+        throw new Error('La sesión cambió. Vuelve a intentarlo.')
+      }
+      this.clearAuth()
+    },
     clearAuth() {
       this.clearInstitutionContext()
       this.institutionContextError = ''
       const nuxtApp = useNuxtApp()
 
       this.accessToken = ''
+      this.expiresAt = 0
+      useQuizStore().$reset()
+      useUserStore().$reset()
 
       // Clear axios auth header
       nuxtApp.$axios.defaults.headers.common.Authorization = ''

@@ -52,12 +52,20 @@ watch(mobile, () => {
   }
 })
 
+const signingOut = ref(false)
+const logoutError = ref('')
+
 async function logout() {
+  if (signingOut.value) return
+  signingOut.value = true
+  logoutError.value = ''
   try {
-    authStore.clearAuth()
-    $router.push('/')
-  } catch (error) {
-    console.error(error)
+    await authStore.logout()
+    await $router.push('/')
+  } catch {
+    logoutError.value = 'No pudimos cerrar la sesión. Vuelve a intentarlo.'
+  } finally {
+    signingOut.value = false
   }
 }
 
@@ -223,7 +231,16 @@ onMounted(async () => {
             >
           </span>
         </div>
-        <button type="button" class="kairos-nav__logout" @click="logout">
+        <p v-if="logoutError" class="kairos-nav__logout-error" role="alert">
+          {{ logoutError }}
+        </p>
+        <button
+          type="button"
+          class="kairos-nav__logout"
+          :disabled="signingOut"
+          :aria-busy="signingOut"
+          @click="logout"
+        >
           <svg
             width="18"
             height="18"
@@ -237,7 +254,7 @@ onMounted(async () => {
             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
             <path d="M10 17l-5-5 5-5M5 12h11" />
           </svg>
-          Cerrar sesión
+          {{ signingOut ? 'Cerrando sesión…' : 'Cerrar sesión' }}
         </button>
       </div>
     </div>
@@ -394,5 +411,21 @@ onMounted(async () => {
 
 .kairos-nav__logout:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.kairos-nav__logout:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.kairos-nav__logout:disabled {
+  cursor: wait;
+}
+
+.kairos-nav__logout-error {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
 }
 </style>

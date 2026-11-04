@@ -13,6 +13,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       nuxtApp.$router.currentRoute.value.path.startsWith('/user/')
     if (
       studentPreview &&
+      config.url !== '/auth/logout' &&
       !['get', 'head', 'options'].includes(
         (config.method || 'get').toLowerCase(),
       )

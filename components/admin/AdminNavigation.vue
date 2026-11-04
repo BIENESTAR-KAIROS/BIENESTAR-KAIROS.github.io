@@ -32,7 +32,7 @@ async function logout() {
   signingOut.value = true
   logoutError.value = ''
   try {
-    await auth.clearAuth()
+    await auth.logout()
     await navigateTo('/')
   } catch {
     logoutError.value = 'No pudimos cerrar la sesión. Vuelve a intentarlo.'
@@ -256,6 +256,7 @@ async function logout() {
           type="button"
           class="admin-navigation__logout"
           :disabled="signingOut"
+          :aria-busy="signingOut"
           @click="logout"
         >
           <svg
