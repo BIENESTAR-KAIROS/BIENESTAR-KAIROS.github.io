@@ -1,6 +1,11 @@
 import axios from 'axios'
 import { useAuthStore } from '~/store/auth'
-import { isGowtherRoute } from '~/utils/helpers/gowther-route'
+import {
+  isGowtherRoute,
+  isGowtherDemoRoute,
+} from '~/utils/helpers/gowther-route'
+
+import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const api = axios.create({
@@ -57,12 +62,25 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Only these exact relative paths may carry the session bearer to Gowther.
     if (isGowtherRoute(config.url)) {
       const auth = useAuthStore()
+      const demo = isGowtherDemoRoute(config.url)
+      const path = nuxtApp.$router.currentRoute.value.path
+      const requestedInstitution = config.headers.get('X-Kairos-Institution')
+      const adminDemo =
+        demo &&
+        (path === '/admin/demos' || path === '/admin/demos/') &&
+        auth.user?.roles.includes(UserRolEnum.KAIROS_ADMIN)
       if (
         !auth.isAuthenticated ||
         auth.isStudentPreview ||
-        !nuxtApp.$router.currentRoute.value.path.startsWith('/institute/')
+        (demo ? !adminDemo : !path.startsWith('/institute/'))
       )
         throw new Error('La sesión institucional no está disponible.')
+      if (
+        demo &&
+        (typeof requestedInstitution !== 'string' ||
+          !/^(?!0{24}$)[a-f0-9]{24}$/.test(requestedInstitution))
+      )
+        throw new Error('Selecciona una institución para configurar la demo.')
       const base = import.meta.dev
         ? nuxtApp.$config.public.gowtherLocalBase
         : nuxtApp.$config.public.gowtherBase
@@ -94,7 +112,12 @@ export default defineNuxtPlugin((nuxtApp) => {
       config.headers.delete('X-Gowther-Service-Token')
       config.headers.delete('X-Kairos-Institution')
       config.headers.delete('X-Kairos-View')
-      if (auth.isInstitutionContext)
+      if (demo)
+        config.headers.set(
+          'X-Kairos-Institution',
+          requestedInstitution as string,
+        )
+      else if (auth.isInstitutionContext)
         config.headers.set('X-Kairos-Institution', auth.institutionContext!._id)
       return config
     }

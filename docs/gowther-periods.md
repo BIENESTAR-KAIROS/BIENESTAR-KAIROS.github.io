@@ -182,8 +182,8 @@ La interfaz muestra el aviso sintético incluso en informes suprimidos.
 El visor solo escucha en loopback, no lee `.env`, no usa sesión ni conecta a Atlas.
 No agrega una ruta de prueba a la aplicación ni permite publicar estos ejemplos.
 No verifica la puntuación de Escanor, MongoDB, autenticación ni persistencia: esos
-recorridos requieren pruebas de integración independientes. El generador de demos
-por asignación y sus controles de administrador continúan pendientes.
+recorridos requieren pruebas de integración independientes. La configuración y consulta de demos persistidas se administran por separado
+en [Configuración demo](gowther-demos.md).
 
 Para intercambiar exclusivamente estas fixtures de prueba, Gowther puede emitir
 el bundle con `go run ./cmd/statistics-preview > /tmp/gowther-preview.json` y el visor

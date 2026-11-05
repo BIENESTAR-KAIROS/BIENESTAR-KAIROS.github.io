@@ -4,7 +4,6 @@ import type { RegistrationInstitute } from '~/interfaces/institution/registratio
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import { genderLabel, institutionLabels, userName } from './user-labels'
 import UserManager from '~/components/global/users/UserManager.vue'
-import DemoAssignment from './DemoAssignment.vue'
 
 const { $axios } = useNuxtApp()
 const institutions = ref<RegistrationInstitute[]>([])
@@ -126,7 +125,16 @@ onBeforeUnmount(() => {
       {{ optionsError }}
       <button type="button" @click="loadOptions">Volver a intentar</button>
     </div>
-    <DemoAssignment :institutions="institutions" @changed="load" />
+    <section class="user-panel">
+      <h2>Usuarios y estadísticas demo</h2>
+      <p>
+        Asigna los usuarios de ejemplo y configura sus resultados en la sección
+        de demos.
+      </p>
+      <NuxtLink to="/admin/demos" class="user-secondary"
+        >Ir a configuración demo</NuxtLink
+      >
+    </section>
     <section
       class="user-panel"
       aria-label="Listado de usuarios"

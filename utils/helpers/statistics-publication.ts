@@ -28,7 +28,11 @@ export function validDefinitionRevision(value: string): boolean {
     /^(0|[1-9][0-9]{0,15})$/.test(value) && Number.isSafeInteger(Number(value))
   )
 }
-function metric(value: unknown, question: boolean) {
+export function validatePublicationMetric(
+  value: unknown,
+  question: boolean,
+  minimum = 10,
+) {
   const m = object(value)
   ensure(typeof m.id === 'string' && m.id.length > 0 && m.id.length <= 128)
   ensure(
@@ -83,7 +87,7 @@ function metric(value: unknown, question: boolean) {
   }
   if (m.values !== null) {
     const v = object(m.values)
-    ensure(integer(v.count, 10))
+    ensure(integer(v.count, minimum))
     for (const key of ['mean', 'median', 'populationStdDev', 'min', 'max'])
       ensure(finite(v[key]))
     ensure(
@@ -175,7 +179,7 @@ export function parseStatisticsPublication(
       Array.isArray(r.questions) &&
       r.questions.length <= 100,
   )
-  r.metrics.forEach((m) => metric(m, false))
-  r.questions.forEach((m) => metric(m, true))
+  r.metrics.forEach((m) => validatePublicationMetric(m, false))
+  r.questions.forEach((m) => validatePublicationMetric(m, true))
   return value as StatisticsPublicationResponse
 }

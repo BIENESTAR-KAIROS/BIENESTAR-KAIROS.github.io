@@ -122,6 +122,8 @@ Actualización de navegación · 14 de octubre de 2026: **Vista de alumno** del 
 
 Actualización de navegación · 22 de octubre de 2026: administración general incorpora **Usuarios**, con acceso al directorio, perfiles e historial y asignación del conjunto demo por institución. Conserva la variante verde oscuro de administración y distingue los datos de ejemplo mediante la etiqueta «Demo». El PDF está pendiente de incorporar esta navegación.
 
+Actualización de navegación · 4 de noviembre de 2026: por instrucción del usuario, administración general incorpora **Configuración demo** (`/admin/demos`). Agrupa el selector de institución, la asignación de usuarios de ejemplo y la configuración/consulta de estadísticas sintéticas. **Usuarios** conserva un enlace a esta sección. Se mantiene la variante verde oscuro de administración, sin cambiar el contexto institucional de la cuenta. La etiqueta «Demo · Datos sintéticos» acompaña los resultados. El PDF está pendiente de incorporar esta navegación; la auditoría inicial se conserva como evidencia histórica.
+
 ## 6. Paleta de estudiantes
 
 Usar los colores por su función, no por los nombres históricos del tema Vuetify.
