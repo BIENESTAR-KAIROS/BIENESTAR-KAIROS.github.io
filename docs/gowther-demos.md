@@ -3,7 +3,8 @@
 Implementación local del 4 de noviembre de 2026. Ruta `/admin/demos`, exclusiva de
 KAIROS_ADMIN. Sigue el contrato de Gowther ADR 0020 y el worker continuo de ADR 0021.
 El proceso se inicia por separado con `make run-worker` en Gowther; no arranca desde
-HTTP ni reemplaza el generador heredado de asignación de Escanor.
+HTTP y reconcilia las asignaciones según ADR 0022. Escanor conserva el generador heredado
+solo en producción hasta su migración.
 
 ## Recorrido
 
@@ -13,7 +14,9 @@ HTTP ni reemplaza el generador heredado de asignación de Escanor.
 2. Asignar la cantidad de usuarios de ejemplo mediante el formulario existente de
    Escanor, ahora ubicado aquí. El valor inicial sin asignación es 100. Se conservan
    las cantidades existentes, presets y máximo de 5,000 de ese servicio. La asignación
-   puede completar ejemplos heredados; no los convierte en generaciones de Gowther.
+   en desarrollo/test registra un estado persistente: el worker genera los instrumentos
+   compatibles con una normal inicial (centro 0.5, dispersión 0.15). No convierte
+   historiales heredados en resultados de Gowther.
 3. Elegir un cuestionario activo, publicado y schema v2 del catálogo de la institución.
    Consultar la asignación/revisión/huella, configuraciones retenidas y trabajo actual.
 4. Elegir distribución uniforme, normal o sesgo alto/bajo. La normal usa centro 0..1
@@ -31,7 +34,11 @@ HTTP ni reemplaza el generador heredado de asignación de Escanor.
    sintética. Muestra media, mediana, moda, desviación poblacional y cobertura por
    dimensión/pregunta, con reglas de supresión y sus motivos. Una nueva generación
    no se muestra hasta estar completa. Sus controles se presentan separados del borrador.
-8. Cancelar requiere una confirmación dentro de la pantalla. Cancela el job exacto;
+8. Cambiar cantidad en la misma asignación retira la revisión obsoleta y regenera
+   con los últimos controles y semilla de cada cuestionario. Quitar demos programa
+   retiro y limpieza sin eliminar perfiles ni historial compartido. Reasignar inicia
+   otra asignación con controles normales; no hereda los de la anterior.
+9. Cancelar requiere una confirmación dentro de la pantalla. Cancela el job exacto;
    no borra la activa. El worker limpia automáticamente las candidatas terminales
    y generaciones retiradas, estas últimas después de al menos un minuto. La limpieza
    puede tardar más por trabajos en curso; mientras tanto se bloquea otra generación.
@@ -96,3 +103,10 @@ composición, formularios, datos y estados (8–16); auditorías frontend/instit
 como evidencia de patrones recientes y deuda heredada. No se adoptan como norma los
 colores de bajo contraste ni los focos imperceptibles documentados. Nueva navegación
 registrada en el brandbook; su PDF permanece pendiente de actualizar.
+
+La generación automática respeta jobs cancelados/fallidos de la revisión vigente.
+Guardar la misma cantidad no reinicia esos jobs: solicitar otra generación explícita
+o cambiar efectivamente la asignación. Un cambio de definición no provoca recálculo
+automático. El botón Guardar asignación no promete rellenar resultados heredados;
+el mensaje de respuesta distingue `generationMode: gowther` de legacy. No se conoce
+la disponibilidad del worker desde la UI; se mantiene Actualizar estado.

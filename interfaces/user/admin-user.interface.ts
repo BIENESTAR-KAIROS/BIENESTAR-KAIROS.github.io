@@ -51,6 +51,7 @@ export interface AdminUserDetail {
 }
 
 export interface DemoAssignmentResult {
+  generationMode?: 'gowther' | 'legacy'
   assigned: boolean
   assignedCount: number
   demoResults: { questionnaires: number; generated: number } | null

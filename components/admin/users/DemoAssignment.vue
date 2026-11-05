@@ -85,9 +85,15 @@ async function setAssignment(value: boolean) {
       },
     )
     await load()
-    message.value = value
-      ? `${count.toLocaleString('es-MX')} alumnos demo están asignados a ${target.name}. Se generaron ${data.demoResults?.generated ?? 0} resultados nuevos para ${data.demoResults?.questionnaires ?? 0} cuestionarios; los existentes se conservaron.`
-      : `Se quitó la asociación de demos con ${target.name}. Los perfiles y su historial se conservan.`
+    if (data.generationMode === 'gowther') {
+      message.value = value
+        ? `${count.toLocaleString('es-MX')} alumnos demo están asignados a ${target.name}. Los cambios de asignación se procesarán automáticamente para los cuestionarios compatibles cuando el servicio esté disponible. Consulta el estado abajo; las solicitudes canceladas no se vuelven a generar sin un cambio de asignación o una nueva solicitud.`
+        : `Se quitó la asignación de demos de ${target.name}. Sus estadísticas de ejemplo se retirarán y limpiarán automáticamente. Los perfiles, el historial compartido y las demos de otras instituciones se conservan.`
+    } else {
+      message.value = value
+        ? `${count.toLocaleString('es-MX')} alumnos demo están asignados a ${target.name}. Se generaron ${data.demoResults?.generated ?? 0} resultados nuevos para ${data.demoResults?.questionnaires ?? 0} cuestionarios; los existentes se conservaron.`
+        : `Se quitó la asociación de demos con ${target.name}. Los perfiles y su historial se conservan.`
+    }
     changed = true
   } catch (cause) {
     error.value = getApiErrorMessage(
@@ -112,8 +118,8 @@ onMounted(load)
     <p>
       Elige cuántos usuarios de ejemplo compartir con {{ institution?.name }}.
       Reducir la cantidad o quitar la asignación conserva los perfiles, su
-      historial y las asignaciones a otras instituciones. Después, configura
-      abajo la distribución y solicita las estadísticas demo de un cuestionario.
+      historial compartido y las asignaciones a otras instituciones. Consulta
+      abajo el estado de las estadísticas demo y ajusta su distribución.
     </p>
     <form @submit.prevent="setAssignment(true)">
       <fieldset
@@ -162,9 +168,9 @@ onMounted(load)
         >
           {{
             busy
-              ? 'Preparando resultados…'
+              ? 'Guardando asignación…'
               : assigned === desiredCount
-                ? 'Completar resultados demo'
+                ? 'Guardar asignación'
                 : assigned
                   ? 'Actualizar cantidad'
                   : 'Asignar demos'
