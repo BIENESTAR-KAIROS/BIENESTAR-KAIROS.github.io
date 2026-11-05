@@ -69,11 +69,18 @@ heredados con generaciones activas de Gowther.
 
 ## Verificación
 
+Las gráficas compartidas de media/mediana, dispersión y cobertura están descritas
+en [informes institucionales](gowther-periods.md#gráficas-de-los-informes).
+En demos usan la variante administrativa y la revisión de la generación activa;
+conservan la etiqueta sintética y el fallback de nombres para revisiones anteriores.
+
 - `npm run lint` y `npm run build`.
 - `node scripts/check-demo-setup.mjs`: contratos, cero, supresión, mínimo demo/real,
   render de resultados, allowlist, interceptor real Axios con transporte en memoria,
   autorización del frontend, reintentos exactos y respuestas tardías al cambiar contexto/sesión.
 - `node scripts/check-statistics-publication.mjs`: regresión de informes reales.
+- `node scripts/check-publication-charts.mjs`: escalas independientes, cero,
+  valores negativos, supresión y denominadores de cobertura, sin servicios.
 - Los scripts usan únicamente fixtures sintéticas y Vue/TypeScript ya instalados;
   no leen `.env`, no hacen HTTP, no escriben Atlas y no agregan un runner ni dependencias.
 - Revisión visual autenticada: 360, 768 y 1440 px; menú, foco, selección, controles

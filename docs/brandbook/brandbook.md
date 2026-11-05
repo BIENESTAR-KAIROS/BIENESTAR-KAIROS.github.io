@@ -326,6 +326,16 @@ Estado explícito: atención, promedio o favorable deben aparecer como etiqueta.
 
 Los umbrales de cobertura, anonimato y puntuación pertenecen a reglas operativas del producto. No son tokens de marca ni criterios clínicos validados por esta auditoría.
 
+Extensión de gráficas · 4 de noviembre de 2026: los informes publicados y demo
+comparten barras de media con marca discontinua de mediana, intervalos de dispersión
+y barras separadas de cobertura/omisiones obligatorias. Conservan verde oscuro en
+administración y violeta en institución. Cada fila declara su eje independiente
+cuando no hay rangos teóricos verificables; no equiparar escalas por color o longitud.
+Los valores y denominadores acompañan la gráfica, con tabla accesible y motivos de
+supresión visibles. No depender de hover o color, no dibujar protegidos como cero ni
+presentar dispersión como incertidumbre o diagnóstico. Esta extensión es un patrón
+implementado posterior a la auditoría inicial; el PDF está pendiente de incorporarla.
+
 ## 16. Diseñar también lo que falta
 
 Los estados son parte del componente, no pantallas improvisadas al final.

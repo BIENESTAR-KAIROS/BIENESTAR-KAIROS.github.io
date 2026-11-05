@@ -5,6 +5,7 @@ import type {
   PublicationMetric,
 } from '~/interfaces/stats/statistics-publication.interface'
 import PublicationMetricCard from '~/components/institute/my-stats/publication-metric.vue'
+import PublicationCharts from '~/components/institute/my-stats/publication-charts.vue'
 import { demoProfileLabel } from '~/utils/translations/demo'
 import { formatPeriodInstant } from '~/utils/helpers/statistics-period-time'
 const props = defineProps<{
@@ -67,6 +68,15 @@ const name = (m: PublicationMetric, index: number, question = false) =>
         como identificadores para no mezclarlos con la revisión actual.
       </p>
     </header>
+    <PublicationCharts
+      context="admin"
+      :items="
+        report.metrics.map((metric, index) => ({
+          metric,
+          label: name(metric, index),
+        }))
+      "
+    />
     <h3>Resultado general y dimensiones</h3>
     <p v-if="!report.metrics.some((m) => m.kind === 'overall')">
       Esta revisión no define una puntuación general. Se muestran sus
@@ -87,6 +97,16 @@ const name = (m: PublicationMetric, index: number, question = false) =>
       <summary>
         Ver resultados por pregunta ({{ report.questions.length }})
       </summary>
+      <PublicationCharts
+        context="admin"
+        questions
+        :items="
+          report.questions.map((metric, index) => ({
+            metric,
+            label: name(metric, index, true),
+          }))
+        "
+      />
       <div class="demo-metrics-grid">
         <PublicationMetricCard
           v-for="(metric, index) in report.questions"

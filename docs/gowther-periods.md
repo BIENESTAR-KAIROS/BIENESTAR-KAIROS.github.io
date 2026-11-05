@@ -78,6 +78,36 @@ No se envían intervalos ficticios a Atlas para probar la UI: los períodos son
 permanentes. El alta y reintento se verifican con almacenamiento sintético en la
 suite de Gowther; la revisión del navegador no acredita una escritura real.
 
+## Gráficas de los informes
+
+Los informes reales y demo reutilizan `publication-charts.vue` sobre los agregados
+ya publicados: media con marca de mediana, media ±1 desviación estándar poblacional
+y cobertura. Incluyen valores textuales y tabla accesible; los SVG son decorativos
+para lectores de pantalla. Las preguntas se consultan dentro del detalle existente.
+Un selector de botones con estado anunciado permite ver una gráfica a la vez;
+la tabla reúne los valores de las tres vistas.
+No se agregan peticiones, datos individuales, filtros ni cambios de publicación.
+
+Cada métrica tiene su propio eje numérico: la API no declara los rangos teóricos y
+unidad/método iguales no acreditan escalas equivalentes. Los ejes incluyen cero,
+extremos observados y el intervalo de dispersión; no normalizan puntuaciones a 100
+ni ordenan las dimensiones por una supuesta gravedad. Un cero válido se representa;
+una puntuación suprimida no dibuja barras ni intervalos. Los motivos siguen visibles.
+El intervalo no es de confianza y no garantiza contener un porcentaje de personas.
+
+La cobertura usa `fraction` para dimensiones/total y `scoreFraction` para preguntas,
+con sus denominadores explícitos (participantes y aplicables respectivamente).
+La marca del 10% se aplica solo a `requiredMissingFraction`, sobre participantes;
+no a ausencias opcionales ni a la cobertura general. Los indicadores no se apilan,
+pues no son categorías excluyentes. Cobertura null o protegida permanece oculta,
+sin reconstruirse a partir de otras métricas; supresión por calidad puede mostrar
+la cobertura permitida por el servidor. La tabla respeta las mismas reglas.
+
+`node scripts/check-publication-charts.mjs` verifica ejes negativos/cero/porcentaje,
+supresión defensiva, cobertura y HTML accesible con fixtures en memoria. La
+distribución de frecuencias/histograma queda para ampliar el contrato de Gowther;
+no se aproxima mediante una campana normal desde estos agregados.
+
 ## Consulta de informes reales
 
 La ruta existente **Mis estadísticas** (`/institute/stats`) consume ahora Gowther.

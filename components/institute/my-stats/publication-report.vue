@@ -10,6 +10,7 @@ import {
 } from '~/utils/translations/statistics-publication'
 import { formatPeriodInstant } from '~/utils/helpers/statistics-period-time'
 import PublicationMetricCard from './publication-metric.vue'
+import PublicationCharts from './publication-charts.vue'
 const props = defineProps<{
   response: StatisticsPublicationResponse
   labels: PublicationLabels
@@ -85,6 +86,14 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           {{ publicationExplanation(reason) }}
         </p>
       </header>
+      <PublicationCharts
+        :items="
+          report.metrics.map((metric, index) => ({
+            metric,
+            label: metricLabel(metric, index),
+          }))
+        "
+      />
       <h2>Resultado general y dimensiones</h2>
       <p v-if="!report.metrics.some((m) => m.kind === 'overall')">
         Esta revisión no define un resultado general; se muestran únicamente las
@@ -142,6 +151,17 @@ const metricLabel = (m: PublicationMetric, index: number) =>
       </section>
       <details v-if="report.questions.length" class="questions">
         <summary>Ver resultados por pregunta</summary>
+        <PublicationCharts
+          questions
+          :items="
+            report.questions.map((metric, index) => ({
+              metric,
+              label:
+                labels.questions[metric.id] ||
+                `Pregunta ${index + 1} · ${metric.id}`,
+            }))
+          "
+        />
         <div class="metrics-grid">
           <PublicationMetricCard
             v-for="(question, index) in report.questions"
