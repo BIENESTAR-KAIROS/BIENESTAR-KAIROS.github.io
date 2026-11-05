@@ -1,8 +1,9 @@
 # Configuración demo en administración general
 
 Implementación local del 4 de noviembre de 2026. Ruta `/admin/demos`, exclusiva de
-KAIROS_ADMIN. Sigue el contrato de Gowther ADR 0020. No instala un dispatcher, inicia
-un worker desde HTTP ni reemplaza el generador heredado de asignación de Escanor.
+KAIROS_ADMIN. Sigue el contrato de Gowther ADR 0020 y el worker continuo de ADR 0021.
+El proceso se inicia por separado con `make run-worker` en Gowther; no arranca desde
+HTTP ni reemplaza el generador heredado de asignación de Escanor.
 
 ## Recorrido
 
@@ -22,15 +23,18 @@ un worker desde HTTP ni reemplaza el generador heredado de asignación de Escano
 5. Guardar y solicitar generación. Se crea una semilla Web Crypto de 32 bytes y se
    envía latestVersion+1 con la revisión de asignación y de definición observadas.
    El backend vuelve a comprobar todo y guarda configuración+job atómicamente.
-6. Actualizar estado manualmente. En espera significa que el equipo debe ejecutar el
-   worker por alcance en Gowther. No se muestra progreso porcentual inventado ni se
-   hacen sondeos ilimitados. El worker sigue operándose según ADR 0019/0020.
+6. El worker continuo descubre y ejecuta la solicitud. Mantener una sola instancia de
+   `make run-worker` en otra terminal de Gowther. Usar **Actualizar estado** para ver
+   el avance: no hay sondeos ilimitados ni porcentajes inventados. Estar en espera
+   no prueba que el proceso esté conectado; si no avanza, revisar el servicio.
 7. Ver estadísticas demo consulta exclusivamente la generación activa, etiquetada
    sintética. Muestra media, mediana, moda, desviación poblacional y cobertura por
    dimensión/pregunta, con reglas de supresión y sus motivos. Una nueva generación
    no se muestra hasta estar completa. Sus controles se presentan separados del borrador.
 8. Cancelar requiere una confirmación dentro de la pantalla. Cancela el job exacto;
-   no borra la activa. La limpieza sigue siendo responsabilidad del worker acotado.
+   no borra la activa. El worker limpia automáticamente las candidatas terminales
+   y generaciones retiradas, estas últimas después de al menos un minuto. La limpieza
+   puede tardar más por trabajos en curso; mientras tanto se bloquea otra generación.
 
 La API limita la lectura a 2,000 participantes y 200,000 observaciones como máximo;
 el límite concreto viene en `maxParticipants`. Una asignación más grande bloquea

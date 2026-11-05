@@ -233,7 +233,7 @@ async function confirmCancel() {
           <p v-if="inProgress" class="user-notice" role="status">
             {{
               job?.state === 'queued'
-                ? 'La solicitud está guardada y espera que el equipo KAIROS inicie la ejecución. Esta pantalla no inicia la generación automáticamente.'
+                ? 'La solicitud está guardada y en espera de procesamiento. Se ejecutará automáticamente cuando el servicio de generación esté disponible.'
                 : 'La nueva generación está en preparación. Se mostrará cuando esté completa.'
             }}
             Puedes actualizar el estado para consultar el avance.
@@ -243,8 +243,10 @@ async function confirmCancel() {
             class="demo-warning"
             role="status"
           >
-            Hay una limpieza pendiente. El equipo KAIROS debe completarla antes
-            de generar otra demo. Los resultados activos se conservan.
+            Hay una limpieza automática pendiente antes de generar otra demo.
+            Los resultados activos se conservan. Actualiza el estado en unos
+            momentos; si no cambia, solicita al equipo KAIROS revisar el
+            servicio.
           </p>
           <p v-if="job?.state === 'failed'" class="demo-warning" role="status">
             La generación no se completó. Actualiza el estado y solicita al

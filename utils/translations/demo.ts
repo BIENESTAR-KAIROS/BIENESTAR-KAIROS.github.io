@@ -44,7 +44,7 @@ export function demoError(error: unknown): string {
       demo_conflict:
         'La configuración, el cuestionario o el trabajo cambiaron. Actualiza el estado antes de continuar.',
       demo_cleanup_required:
-        'Hay resultados anteriores pendientes de limpieza. El equipo KAIROS debe completar esa limpieza antes de generar otra demo.',
+        'Hay resultados anteriores pendientes de limpieza automática. Actualiza el estado en unos momentos antes de generar otra demo.',
       demo_limit_exceeded:
         'La demo supera el límite de consulta de este cuestionario. Reduce la cantidad de usuarios asignados; no se mostrará una muestra parcial.',
       unsupported_demo_questionnaire:

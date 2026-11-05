@@ -340,7 +340,7 @@ export function useDemoSetup() {
       pending.value = null
       message.value =
         result.state === 'queued'
-          ? 'Solicitud guardada. La demo está en espera de ejecución por el equipo KAIROS.'
+          ? 'Solicitud guardada. La demo está en espera de procesamiento automático.'
           : 'Solicitud confirmada. Consulta el estado del trabajo.'
     } catch (cause) {
       if (!unchanged()) return
@@ -392,7 +392,7 @@ export function useDemoSetup() {
       if (result.id !== id || result.state !== 'cancelled')
         throw new Error('Unexpected cancellation')
       message.value =
-        'Trabajo cancelado. La generación activa se conserva; el equipo KAIROS completará la limpieza pendiente.'
+        'Trabajo cancelado. La generación activa se conserva; la limpieza pendiente se procesará automáticamente cuando el servicio esté disponible.'
     } catch (cause) {
       if (!unchanged()) return
       error.value = demoError(cause)
