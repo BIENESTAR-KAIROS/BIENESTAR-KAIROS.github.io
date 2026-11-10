@@ -3,6 +3,7 @@ import { useAuthStore } from '~/store/auth'
 import {
   isGowtherRoute,
   isGowtherDemoRoute,
+  isGowtherInstitutionDemoRoute,
 } from '~/utils/helpers/gowther-route'
 
 import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
@@ -63,6 +64,11 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (isGowtherRoute(config.url)) {
       const auth = useAuthStore()
       const demo = isGowtherDemoRoute(config.url)
+      if (
+        isGowtherInstitutionDemoRoute(config.url) &&
+        !['get', 'head'].includes((config.method || 'get').toLowerCase())
+      )
+        throw new Error('La consulta demo institucional es de solo lectura.')
       const path = nuxtApp.$router.currentRoute.value.path
       const requestedInstitution = config.headers.get('X-Kairos-Institution')
       const adminDemo =

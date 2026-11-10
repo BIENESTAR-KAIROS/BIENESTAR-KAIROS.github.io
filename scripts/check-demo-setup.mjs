@@ -426,6 +426,166 @@ try {
     undefined,
     'No bearer leaks into legacy service',
   )
+  // Institutional routes are GET/HEAD only and use the session context, never
+  // an arbitrary institution supplied by a component.
+  const institutionPath = `/v1/statistics/demos/questionnaires/${q}`
+  auth.user.roles = ['INSTITUTION_STAFF']
+  await client.get(institutionPath, {
+    headers: { 'X-Kairos-Institution': id(9) },
+  })
+  assert.equal(sent.headers.get('X-Kairos-Institution'), undefined)
+  assert.equal(sent.headers.get('Authorization'), `Bearer ${auth.accessToken}`)
+  auth.isInstitutionContext = true
+  auth.institutionContext = { _id: institution }
+  await client.get(`${institutionPath}/report`, {
+    headers: { 'X-Kairos-Institution': id(9) },
+  })
+  assert.equal(sent.headers.get('X-Kairos-Institution'), institution)
+  await assert.rejects(() => client.post(institutionPath, {}))
+  auth.isStudentPreview = true
+  await assert.rejects(() => client.get(institutionPath))
+  auth.isStudentPreview = false
+  const institutional = await import(
+    await compile('utils/helpers/institution-demo.ts')
+  )
+  const status = {
+    synthetic: true,
+    institutionId: institution,
+    questionnaireId: q,
+    assignment: { id: assignment, revision: 1, count: 5 },
+    jobState: 'completed',
+    hasActiveGeneration: true,
+    cleanupPending: false,
+  }
+  const institutionalReport = {
+    synthetic: true,
+    institutionId: institution,
+    questionnaireId: q,
+    assignmentId: assignment,
+    generationId: generation,
+    configurationVersion: 1,
+    definitionRevision: '3',
+    policyVersion: report.policyVersion,
+    calculatedAt: report.calculatedAt,
+    participants: 5,
+    questions: [],
+    metrics: [metric],
+  }
+  assert.equal(
+    institutional.parseInstitutionDemoStatus(status, institution, q),
+    status,
+  )
+  assert.equal(
+    institutional.parseInstitutionDemoReport(institutionalReport, status),
+    institutionalReport,
+  )
+  for (const patch of [
+    { synthetic: false },
+    { institutionId: id(9) },
+    { questionnaireId: id(9) },
+    { participants: 4 },
+    { assignmentId: id(9) },
+    { metrics: [metric, metric] },
+  ])
+    assert.throws(() =>
+      institutional.parseInstitutionDemoReport(
+        { ...institutionalReport, ...patch },
+        status,
+      ),
+    )
+  const InstitutionalReport = (
+    await import(await compile('components/institute/my-stats/demo-report.vue'))
+  ).default
+  const institutionalHTML = await renderToString(
+    createSSRApp({
+      render: () =>
+        h(InstitutionalReport, {
+          report: institutionalReport,
+          labels: {
+            questions: {},
+            metrics: { [dimension]: 'Dimensión sintética' },
+          },
+          title: 'Prueba institucional',
+        }),
+    }),
+  )
+  assert.match(institutionalHTML, /Datos sintéticos/)
+  assert.match(institutionalHTML, /<dd[^>]*>0<\/dd>/)
+  assert.ok(!institutionalHTML.includes('Guardar configuración'))
+  auth.activeInstitute = institution
+  auth.validateStatisticsSession = async () => ({
+    institutionId: auth.activeInstitute,
+  })
+  deps.stats.get = async (url) =>
+    url.endsWith('/report')
+      ? new Promise((resolve) => {
+          resolveReport = resolve
+        })
+      : { data: status }
+  let readSource = await readFile(
+    join(root, 'components/institute/my-stats/use-demo-stats.ts'),
+    'utf8',
+  )
+  readSource = readSource
+    .replace("import { useAuthStore } from '~/store/auth'", '')
+    .replace('const auth = useAuthStore()', 'const auth = deps.auth')
+    .replace(
+      'export function useDemoStats()',
+      'export function useDemoStats(deps)',
+    )
+    .replace(
+      'const { $axios, $statsApi } = useNuxtApp()',
+      'const $axios = deps.api; const $statsApi = deps.stats',
+    )
+  readSource = `import { ref, shallowRef, computed, watch } from '${import.meta.resolve('vue')}'\nconst onBeforeUnmount = () => {};\n${readSource}`
+  readSource = ts.transpileModule(readSource, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+    },
+  }).outputText
+  for (const [, specifier] of readSource.matchAll(/from ['"]([^'"]+)['"]/g)) {
+    const url = specifier.startsWith('~/')
+      ? await compile(specifier.slice(2) + '.ts')
+      : specifier.startsWith('file:')
+        ? specifier
+        : import.meta.resolve(specifier)
+    readSource = readSource
+      .replaceAll(`'${specifier}'`, `'${url}'`)
+      .replaceAll(`"${specifier}"`, `'${url}'`)
+  }
+  await writeFile(join(work, 'institution-composable.mjs'), readSource)
+  const { useDemoStats } = await import(
+    pathToFileURL(join(work, 'institution-composable.mjs'))
+  )
+  const readScope = effectScope(),
+    institutionalState = readScope.run(() => useDemoStats(deps))
+  await settle()
+  const oldRead = institutionalState.consult()
+  await settle()
+  auth.activeInstitute = id(8)
+  await settle()
+  resolveReport({ data: institutionalReport })
+  await oldRead
+  assert.equal(
+    institutionalState.report.value,
+    null,
+    'Late institutional report discarded after scope change',
+  )
+  auth.activeInstitute = institution
+  await settle()
+  const revokedRead = institutionalState.consult()
+  await settle()
+  auth.accessToken = 'another-session'
+  await settle()
+  resolveReport({ data: institutionalReport })
+  await revokedRead
+  assert.equal(
+    institutionalState.report.value,
+    null,
+    'Session change clears institutional report',
+  )
+  readScope.stop()
   delete globalThis.__demoQAAuth
   process.stdout.write(
     'PASS: demo contracts, protected values, cohort separation, render, exact retries, context/session races, and authenticated transport isolation.\n',

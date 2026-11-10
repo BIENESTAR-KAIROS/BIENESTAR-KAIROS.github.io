@@ -74,7 +74,7 @@ Las tarjetas reutilizan la presentación de métricas existente, con colores del
 administrativo. Solo se usan etiquetas de la revisión actual cuando coincide con la
 configuración del informe; una revisión anterior muestra IDs y aviso.
 
-No hay lectura demo institucional en este paso; los informes reales conservan sus
+El avance inicial no incluía lectura demo institucional (ver la sección de lectura del 9 de noviembre); los informes reales conservan sus
 rutas, períodos cerrados y política de publicación. No se mezclan resultados de ejemplo
 heredados con generaciones activas de Gowther.
 
@@ -110,3 +110,36 @@ o cambiar efectivamente la asignación. Un cambio de definición no provoca rec�
 automático. El botón Guardar asignación no promete rellenar resultados heredados;
 el mensaje de respuesta distingue `generationMode: gowther` de legacy. No se conoce
 la disponibilidad del worker desde la UI; se mantiene Actualizar estado.
+
+## Lectura desde el panel institucional (9 de noviembre de 2026)
+
+`/institute/stats` incorpora el selector **Alumnos reales / Datos demo**, inicialmente
+real. Cambiar de población desmonta la consulta anterior: no conserva resultados ni
+peticiones pendientes entre vistas. La demo no necesita un período de evaluación y
+no crea publicaciones reales. Reutiliza las gráficas/tablas con la variante violeta.
+
+La consulta usa GET `/v1/statistics/demos/questionnaires/{id}` y su sufijo `/report`.
+Escanor valida sesión/revocación, institución activa y membresía/rol vigente en una
+ruta de servicio independiente. Personal institucional lee solo su institución;
+el administrador global conserva su contexto institucional seleccionado. No se
+habilitan los endpoints administrativos para ese personal. La UI no ofrece semillas,
+controles de distribución, asignación, cancelación ni generación.
+
+El estado distingue espera, ejecución, activación, fallo/cancelación y limpieza.
+Sin asignación vigente explica el retiro; una revisión cambiada bloquea los datos
+anteriores. Durante un reemplazo compatible puede mostrarse la generación activa
+anterior con aviso. Los datos se limpian al cambiar sesión, institución o cuestionario;
+las respuestas tardías se descartan. Una nueva consulta valida todo otra vez.
+Etiquetas opcionales se usan solo si coinciden cuestionario y revisión.
+
+Verificación: `npm run lint`, `npm run build`, `node scripts/check-demo-setup.mjs`.
+Este último comprueba contratos, rechazo de mezcla real/demo/otra institución,
+conteos, render, cambios de sesión/contexto y transporte de solo lectura. Referencias
+visuales: brandbook secciones 5, 7–10, 12, 15–16 y 18–19; auditoría institucional.
+
+Revisión visual autenticada: administrador global en contexto UP, ASSIST con 100
+participantes sintéticos, 10 dimensiones y 70 preguntas. Se comprobaron las tres
+vistas de gráfica y el cambio entre poblaciones sin conservar el informe anterior.
+A 360 y 1440 px no se observó desbordamiento horizontal. La lectura de staff/admin
+institucional se verificó con pruebas de autorización; no se usaron credenciales
+personales de esos roles. No se crearon publicaciones reales durante la revisión.
