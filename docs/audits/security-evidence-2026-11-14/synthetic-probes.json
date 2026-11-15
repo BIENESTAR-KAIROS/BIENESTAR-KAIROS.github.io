@@ -1,0 +1,74 @@
+{
+  "scope": "offline synthetic tests; no database, network or real credentials",
+  "results": [
+    {
+      "name": "Profile serializes sensitive user fields",
+      "confirmed": true,
+      "details": {
+        "fields": ["password", "resetPasswordToken", "verificationToken"]
+      }
+    },
+    {
+      "name": "Login DTO retains reset token",
+      "confirmed": true,
+      "details": {
+        "field": "user.resetPasswordToken"
+      }
+    },
+    {
+      "name": "Calendar list has no actor or institution scope",
+      "confirmed": true,
+      "details": {
+        "query": {
+          "isActive": true
+        }
+      }
+    },
+    {
+      "name": "Calendar notes accept caller-supplied author without actor check",
+      "confirmed": true,
+      "details": {
+        "database": "mock only"
+      }
+    },
+    {
+      "name": "Chat routes have no guards and forward selected user ID",
+      "confirmed": true,
+      "details": {
+        "noExternalCall": true
+      }
+    },
+    {
+      "name": "Password reset DTO accepts an empty password",
+      "confirmed": true,
+      "details": {}
+    },
+    {
+      "name": "JWT signature/claims remain valid after password reset",
+      "confirmed": true,
+      "details": {
+        "limitation": "Verifier only; static review separately confirms reset has no denylist/session-version update"
+      }
+    },
+    {
+      "name": "Legacy statistics accepts minimum cohort of one",
+      "confirmed": true,
+      "details": {}
+    },
+    {
+      "name": "Legacy statistics returns values for an insufficient cohort",
+      "confirmed": true,
+      "details": {
+        "syntheticParticipants": 1,
+        "minimum": 8
+      }
+    },
+    {
+      "name": "Tracking checks subject membership but has no caller scope",
+      "confirmed": true,
+      "details": {
+        "database": "mock only"
+      }
+    }
+  ]
+}

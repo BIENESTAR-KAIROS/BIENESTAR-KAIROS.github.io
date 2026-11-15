@@ -1,0 +1,3 @@
+ok  	github.com/BIENESTAR-KAIROS/gowther/internal/httpapi	1.372s
+ok  	github.com/BIENESTAR-KAIROS/gowther/internal/publication	(cached)
+?   	github.com/BIENESTAR-KAIROS/gowther/internal/session	[no test files]

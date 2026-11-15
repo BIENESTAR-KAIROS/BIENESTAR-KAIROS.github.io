@@ -1,0 +1,13 @@
+
+> escanor-bienestarkairos@0.0.1 test
+> jest --runInBand --watchman=false --runTestsByPath src/auth/domain/use-cases/auth-logout.spec.ts src/auth/domain/use-cases/resolve-institution-context.spec.ts src/auth/domain/use-cases/validate-gowther-session.spec.ts
+
+PASS src/auth/domain/use-cases/validate-gowther-session.spec.ts
+PASS src/auth/domain/use-cases/auth-logout.spec.ts
+PASS src/auth/domain/use-cases/resolve-institution-context.spec.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       40 passed, 40 total
+Snapshots:   0 total
+Time:        1.461 s
+Ran all test suites within paths "src/auth/domain/use-cases/auth-logout.spec.ts", "src/auth/domain/use-cases/resolve-institution-context.spec.ts", "src/auth/domain/use-cases/validate-gowther-session.spec.ts".
