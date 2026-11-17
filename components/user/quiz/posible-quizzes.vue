@@ -85,9 +85,7 @@ defineProps<{
           {{
             quiz.canPreview && !quiz.canRespond
               ? 'Explorar cuestionario'
-              : quiz.questionnaireId === 'demographic' && quiz.solved
-                ? 'Actualizar mis respuestas'
-                : 'Responder el cuestionario'
+              : 'Responder el cuestionario'
           }}
         </NuxtLink>
         <p v-else class="quizzes__card-text">

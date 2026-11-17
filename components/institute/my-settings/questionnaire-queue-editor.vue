@@ -36,6 +36,7 @@ const queue = computed(() =>
 const normalize = (value: InstituteSetting['queue']) =>
   JSON.stringify(
     value
+      .filter((entry) => entry.questionnaireId !== 'demographic')
       .map((entry) => ({
         questionnaireId: entry.questionnaireId,
         order: entry.order,
@@ -71,8 +72,12 @@ function resetRows(
   options: QuestionnaireQueueOption[],
   setting: InstituteSetting,
 ) {
+  options = options.filter((option) => option.id !== 'demographic')
+  const eligibleQueue = setting.queue.filter(
+    (entry) => entry.questionnaireId !== 'demographic',
+  )
   const existing = new Map(
-    setting.queue.map((entry) => [entry.questionnaireId, entry.order]),
+    eligibleQueue.map((entry) => [entry.questionnaireId, entry.order]),
   )
   const available = new Set(options.map((option) => option.id))
   rows.value = [
@@ -81,7 +86,7 @@ function resetRows(
       selected: existing.has(option.id),
       order: existing.get(option.id) ?? '',
     })),
-    ...setting.queue
+    ...eligibleQueue
       .filter((entry) => !available.has(entry.questionnaireId))
       .map((entry) => ({
         id: entry.questionnaireId,

@@ -89,6 +89,14 @@ export const useUserStore = defineStore('user', {
         auth.institutionContextMode !== contextMode
       )
         throw new Error('La sesión cambió. Vuelve a intentarlo.')
+      data.queue = data.queue.filter((q) => q.questionnaireId !== 'demographic')
+      data.questionnaires = data.questionnaires.filter(
+        (q) => q.questionnaireId !== 'demographic',
+      )
+      if (data.nextQuestionnaireId === 'demographic') {
+        data.nextQuestionnaireId =
+          data.queue.find((q) => !q.solved)?.questionnaireId ?? null
+      }
       this.questionnaireFlow = data
       this.user = { ...auth.user }
       this.user.questionnaireQueue = { queue: data.isActive ? data.queue : [] }

@@ -17,10 +17,6 @@ const user = computed(() => authStore.user)
 const questionnaireAnswers = ref<QuestionnaireAnswerByUserResponseDto[]>([])
 const isLoadingHistory = ref(false)
 
-const demographicSurveyCompleted = computed(() => {
-  return user.value?.studentData?.demographicSurveyCompleted || false
-})
-
 const fullName = computed(() => {
   return [user.value?.name, user.value?.lastName, user.value?.surName]
     .filter((value): value is string => Boolean(value))
@@ -54,12 +50,6 @@ const campusName = computed(() => {
 })
 
 const joinDateLabel = computed(() => formatDate(user.value?.createdAt))
-
-const surveyBadgeLabel = computed(() =>
-  demographicSurveyCompleted.value
-    ? 'Cuestionario sociodemográfico completo'
-    : 'Cuestionario sociodemográfico pendiente',
-)
 
 function formatLabel(value: string) {
   return value
@@ -124,16 +114,6 @@ onMounted(() => {
           <span class="profile__badge profile__badge--role">{{
             roleLabel
           }}</span>
-          <span
-            class="profile__badge"
-            :class="
-              demographicSurveyCompleted
-                ? 'profile__badge--survey-done'
-                : 'profile__badge--survey-pending'
-            "
-          >
-            {{ surveyBadgeLabel }}
-          </span>
         </div>
       </div>
 
@@ -288,16 +268,6 @@ onMounted(() => {
 .profile__badge--role {
   background: #dbf2f4;
   color: #065c5d;
-}
-
-.profile__badge--survey-done {
-  background: #f0eaf5;
-  color: #5c4a75;
-}
-
-.profile__badge--survey-pending {
-  background: #fdf1e3;
-  color: #8a5a1f;
 }
 
 .profile__edit-button {

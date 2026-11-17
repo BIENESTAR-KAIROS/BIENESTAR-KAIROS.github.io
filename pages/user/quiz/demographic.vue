@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import DemographicSurvey from '~/components/user/quiz/demographic-survey.vue'
+import QuestionnaireFlowState from '~/components/user/quiz/questionnaire-flow-state.vue'
 definePageMeta({ alias: '/user/quiz/demographic-survey' })
 </script>
 
 <template>
-  <DemographicSurvey />
+  <QuestionnaireFlowState
+    title="Cuestionario no disponible"
+    message="El cuestionario sociodemográfico está desactivado y ya no admite respuestas."
+  />
 </template>

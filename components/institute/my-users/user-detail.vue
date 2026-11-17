@@ -644,12 +644,12 @@ onMounted(() => {
                 <dd>{{ formatDate(userDetail.lastAccess) }}</dd>
               </div>
               <div v-if="studentData" class="facts__item">
-                <dt>Encuesta demográfica</dt>
+                <dt>Encuesta demográfica (desactivada)</dt>
                 <dd>
                   {{
                     studentData.demographicSurveyCompleted
-                      ? 'Completada'
-                      : 'No completada'
+                      ? 'Con respuestas históricas'
+                      : 'Sin respuestas históricas'
                   }}
                 </dd>
               </div>
