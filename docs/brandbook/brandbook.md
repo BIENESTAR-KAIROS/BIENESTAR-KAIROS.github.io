@@ -9,7 +9,7 @@ Ventana de referencia: 8 de agosto a 22 de septiembre de 2026 (45 días transcur
 - [Detalle del sistema de usuario](auditoria-usuario.md)
 - [Detalle del sistema institucional](auditoria-institucional.md)
 
-**Actualización de navegación · 18 de noviembre de 2026.** El administrador de KAIROS gestiona las plantillas en «Cuestionarios globales». Las instituciones incorporan referencias o copias desde «Cuestionarios disponibles» y las consultan en «Mis cuestionarios». El alumnado ve «Cuestionarios disponibles» y elige cuál responder. El PDF conserva la navegación del corte inicial.
+**Actualización de navegación · 18 de noviembre de 2026.** El administrador de KAIROS gestiona las plantillas en «Cuestionarios globales». Las instituciones incorporan referencias o copias desde «Cuestionarios disponibles» y las consultan en «Mis cuestionarios». En el panel institucional, el catálogo tiene entrada propia en la navegación. El carrito se abre desde un botón flotante en escritorio y junto al logo en la barra superior móvil. El alumnado ve «Cuestionarios disponibles» y elige cuál responder. El PDF conserva la navegación del corte inicial.
 
 ## 1. Brandbook del producto digital
 

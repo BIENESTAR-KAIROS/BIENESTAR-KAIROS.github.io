@@ -1,19 +1,11 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/store/auth'
-import type {
-  CatalogQuestionnaire,
-  CatalogSelection,
-} from '~/interfaces/quizzes/catalog.interface'
+import { useQuestionnaireCart } from '~/store/questionnaire-cart'
+import type { CatalogQuestionnaire } from '~/interfaces/quizzes/catalog.interface'
 import BuilderDefinitionView from './builder-definition-view.vue'
 const props = defineProps<{ global?: boolean }>()
-const auth = useAuthStore()
-const instituteId = computed(() => {
-  const institution = auth.activeInstitute
-  return typeof institution === 'string' ? institution : institution?._id
-})
+const cart = useQuestionnaireCart()
 const { $axios } = useNuxtApp()
 const entries = ref<CatalogQuestionnaire[]>([])
-const cart = ref<CatalogSelection[]>([])
 const preview = ref('')
 const loading = ref(true)
 const busy = ref(false)
@@ -38,9 +30,8 @@ async function load() {
   }
 }
 watch(
-  instituteId,
+  () => cart.institutionId,
   () => {
-    cart.value = []
     preview.value = ''
     notice.value = ''
     entries.value = []
@@ -49,44 +40,8 @@ watch(
   { immediate: true },
 )
 function add(q: CatalogQuestionnaire) {
-  if (cart.value.some((item) => item.id === q._id)) return
-  cart.value.push({
-    id: q._id,
-    title: q.title,
-    revision: q.__v ?? 0,
-    mode: 'reference',
-  })
+  cart.add(q)
   notice.value = 'Cuestionario agregado al carrito.'
-}
-function reloadCatalog() {
-  cart.value = []
-  void load()
-}
-async function checkout() {
-  if (busy.value || !instituteId.value || !cart.value.length) return
-  busy.value = true
-  error.value = ''
-  notice.value = ''
-  const id = instituteId.value
-  try {
-    await $axios.post('/questionnaire/catalog/' + id + '/checkout', {
-      items: cart.value.map(({ id, revision, mode }) => ({
-        id,
-        revision,
-        mode,
-      })),
-    })
-    if (instituteId.value === id) {
-      cart.value = []
-      notice.value = 'Los cuestionarios están disponibles en Mis cuestionarios.'
-    }
-  } catch {
-    if (instituteId.value === id)
-      error.value =
-        'No se pudo confirmar el carrito. Si el catálogo cambió, recarga y vuelve a seleccionar.'
-  } finally {
-    busy.value = false
-  }
 }
 async function toggle(q: CatalogQuestionnaire) {
   if (busy.value) return
@@ -120,9 +75,9 @@ async function toggle(q: CatalogQuestionnaire) {
     <p v-if="loading" role="status">Cargando cuestionarios…</p>
     <div v-if="error" role="alert">
       {{ error }}
-      <button type="button" @click="reloadCatalog">Recargar catálogo</button>
+      <button type="button" @click="load">Recargar catálogo</button>
     </div>
-    <p v-if="notice" role="status">{{ notice }}</p>
+    <p v-if="notice && cart.items.length" role="status">{{ notice }}</p>
     <p v-if="!loading && !error && !entries.length">
       Todavía no hay cuestionarios disponibles.
     </p>
@@ -157,43 +112,21 @@ async function toggle(q: CatalogQuestionnaire) {
           <button
             v-else
             type="button"
-            :disabled="busy || cart.some((item) => item.id === q._id)"
+            :disabled="
+              cart.busy ||
+              !cart.institutionId ||
+              cart.items.some((item) => item.id === q._id)
+            "
             @click="add(q)"
           >
             {{
-              cart.some((item) => item.id === q._id)
+              cart.items.some((item) => item.id === q._id)
                 ? 'En el carrito'
                 : 'Agregar al carrito'
             }}
           </button>
         </div>
       </article>
-    </section>
-    <section v-if="!global && cart.length" class="basket">
-      <h2>Carrito</h2>
-      <p>
-        La referencia sigue la versión global. La copia se puede editar y
-        aplicar desde tu institución.
-      </p>
-      <div v-for="item in cart" :key="item.id" class="actions">
-        <label
-          >{{ item.title }}
-          <select v-model="item.mode" :disabled="busy">
-            <option value="reference">Referencia</option>
-            <option value="copy">Copia institucional</option>
-          </select></label
-        >
-        <button
-          type="button"
-          :disabled="busy"
-          @click="cart = cart.filter((q) => q.id !== item.id)"
-        >
-          Quitar
-        </button>
-      </div>
-      <button type="button" :disabled="busy || !instituteId" @click="checkout">
-        {{ busy ? 'Agregando…' : 'Agregar a Mis cuestionarios' }}
-      </button>
     </section>
     <v-dialog
       :model-value="!!preview"
@@ -238,19 +171,14 @@ async function toggle(q: CatalogQuestionnaire) {
   gap: 16px;
   margin-top: 24px;
 }
-.cards article,
-.basket {
+.cards article {
   padding: 22px;
   border-radius: 20px;
   background: white;
   border: 1px solid #ded6ea;
 }
-.catalog p,
-.basket .actions {
+.catalog p {
   margin: 12px 0;
-}
-.basket {
-  margin-top: 20px;
 }
 .catalog button,
 .catalog a,

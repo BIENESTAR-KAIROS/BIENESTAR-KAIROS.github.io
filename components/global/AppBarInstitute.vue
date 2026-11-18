@@ -14,6 +14,11 @@ const navLinks = [
   { title: 'Inicio', to: '/institute/dashboard', icon: 'home' },
   { title: 'Mis usuarios', to: '/institute/my-users', icon: 'users' },
   { title: 'Mis estadísticas', to: '/institute/stats', icon: 'chart' },
+  {
+    title: 'Cuestionarios disponibles',
+    to: '/institute/quizzes/catalog',
+    icon: 'catalog',
+  },
   { title: 'Mis cuestionarios', to: '/institute/quizzes', icon: 'clipboard' },
   {
     title: 'Recomendaciones',
@@ -33,7 +38,10 @@ const canViewAdmin = computed(
 
 const isOpen = computed(() => appStore.isNavBarOpen)
 
-const isActive = (to: string) => route.path.startsWith(to)
+const isActive = (to: string) =>
+  route.path === '/institute/quizzes/catalog'
+    ? route.path === to
+    : route.path.startsWith(to)
 
 const institute = computed(() => authStore.activeInstitute)
 
@@ -103,8 +111,14 @@ onMounted(() => {
           :class="{ 'institute-nav__item--active': isActive(link.to) }"
         >
           <span class="institute-nav__icon">
+            <v-icon
+              v-if="link.icon === 'catalog'"
+              icon="mdi-bookshelf"
+              size="20"
+              aria-hidden="true"
+            />
             <svg
-              v-if="link.icon === 'home'"
+              v-else-if="link.icon === 'home'"
               width="20"
               height="20"
               viewBox="0 0 24 24"

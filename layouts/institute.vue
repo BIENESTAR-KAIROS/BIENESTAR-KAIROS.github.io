@@ -62,6 +62,11 @@ const auth = useAuthStore()
     margin: 16px 18px 0;
   }
 }
+@media (min-width: 960px) {
+  .institute-main {
+    padding-bottom: 96px;
+  }
+}
 .institute-app,
 .institute-main {
   background: #f5f4f8;
