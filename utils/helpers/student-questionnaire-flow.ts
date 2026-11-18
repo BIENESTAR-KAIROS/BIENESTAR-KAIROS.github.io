@@ -10,25 +10,9 @@ export function resolveStudentQuestionnaireRoute(
   redirectTo: string | null
   questionnaire: StudentQuestionnaireItem | null
 } {
-  const preview = [...flow.questionnaires, ...flow.queue].find(
-    (q) => q.questionnaireId === id && q.canPreview,
-  )
-  if (preview) return { redirectTo: null, questionnaire: preview }
-  const independent = flow.questionnaires.find(
-    (q) => q.questionnaireId === id && !q.solved,
-  )
-  if (independent) return { redirectTo: null, questionnaire: independent }
-  if (flow.isActive && flow.nextQuestionnaireId !== id) {
-    return {
-      redirectTo: flow.nextQuestionnaireId
-        ? `/user/quiz/${flow.nextQuestionnaireId}`
-        : '/user/quiz',
-      questionnaire: null,
-    }
-  }
   const questionnaire =
-    (flow.isActive ? flow.queue : flow.questionnaires).find(
-      (q) => q.questionnaireId === id && !q.solved,
+    flow.questionnaires.find(
+      (q) => q.questionnaireId === id && (q.canPreview || !q.solved),
     ) ?? null
   return { redirectTo: null, questionnaire }
 }

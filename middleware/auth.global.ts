@@ -31,6 +31,7 @@ const authRoutes: string[] = [
 
   // ? ADMIN links
   '/admin/dashboard',
+  '/admin/quizzes',
   '/admin/recommendations',
   '/admin/registration',
   '/admin/institutions',

@@ -43,7 +43,7 @@ definePageMeta({ layout: 'empty-login', key: (route) => route.path })
   <QuestionnaireFlowState
     v-else-if="error"
     error
-    message="No pudimos consultar tu secuencia. Vuelve a intentarlo."
+    message="No pudimos consultar tus cuestionarios. Vuelve a intentarlo."
     @retry="load"
   />
   <DefinitionQuiz

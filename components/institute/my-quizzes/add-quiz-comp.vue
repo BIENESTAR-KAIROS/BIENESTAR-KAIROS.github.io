@@ -21,7 +21,8 @@ import {
   questionTypes,
 } from './quiz-builder-model'
 
-const props = defineProps<{ questionnaireId?: string }>()
+const props = defineProps<{ questionnaireId?: string; global?: boolean }>()
+const listPath = props.global ? '/admin/quizzes' : '/institute/quizzes'
 const loading = ref(Boolean(props.questionnaireId))
 const loadError = ref('')
 const savedDefinition = ref<QuestionnaireDefinition | null>(null)
@@ -43,7 +44,7 @@ async function saveQuestionnaire(publish = false) {
   errors.value = validateBuilder(title.value, flat, evaluation.value)
   const institute = auth.activeInstitute
   const institution = typeof institute === 'string' ? institute : institute?._id
-  if (!institution)
+  if (!props.global && !institution)
     errors.value.push(
       'No pudimos identificar tu institución. Revisa tu sesión antes de guardar.',
     )
@@ -72,9 +73,8 @@ async function saveQuestionnaire(publish = false) {
         item.weight = 1
       })
   }
-  const payload: CreateQuestionnaireRequest = {
+  const payload: Omit<CreateQuestionnaireRequest, 'institution'> = {
     hasRecomendations: hasRecommendations.value,
-    institution: institution!,
     title: title.value.trim(),
     description: description.value.trim(),
     questions: flat,
@@ -99,7 +99,10 @@ async function saveQuestionnaire(publish = false) {
       ).data
     } else {
       definition = (
-        await $axios.post<QuestionnaireDefinition>('/questionnaire', payload)
+        await $axios.post<QuestionnaireDefinition>(
+          props.global ? '/questionnaire/catalog/global' : '/questionnaire',
+          props.global ? payload : { ...payload, institution },
+        )
       ).data
     }
     savedDefinition.value = definition
@@ -111,7 +114,7 @@ async function saveQuestionnaire(publish = false) {
         )
       ).data
     }
-    await navigateTo('/institute/quizzes')
+    await navigateTo(listPath)
   } catch (error: unknown) {
     const detail = isAxiosError<{ message?: string | string[] }>(error)
       ? error.response?.data?.message
@@ -137,6 +140,8 @@ async function loadDefinition() {
     const { data } = await $axios.get<QuestionnaireDefinition>(
       `/questionnaire/${props.questionnaireId}/definition`,
     )
+    if (props.global && data.ownerType !== 'platform')
+      throw new Error('Este cuestionario no pertenece al catálogo global.')
     const restored = restoreBuilderQuestions(data.questions)
     title.value = data.title
     description.value = data.description
@@ -234,14 +239,19 @@ function addRule() {
     <header class="qb-header">
       <div class="qb-heading">
         <NuxtLink
-          to="/institute/quizzes"
+          :to="listPath"
           class="qb-icon qb-back"
-          aria-label="Volver a mis cuestionarios"
+          :aria-label="
+            global
+              ? 'Volver a cuestionarios globales'
+              : 'Volver a mis cuestionarios'
+          "
           ><v-icon icon="mdi-arrow-left" size="22"
         /></NuxtLink>
         <div>
           <p class="qb-eyebrow">
-            Mis cuestionarios / {{ questionnaireId ? 'Editar' : 'Crear' }}
+            {{ global ? 'Cuestionarios globales' : 'Mis cuestionarios' }} /
+            {{ questionnaireId ? 'Editar' : 'Crear' }}
           </p>
           <h1>
             {{ questionnaireId ? 'Editar cuestionario' : 'Nuevo cuestionario' }}

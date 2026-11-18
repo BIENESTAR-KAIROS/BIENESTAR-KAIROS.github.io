@@ -20,6 +20,8 @@ function audienceLabelFor(quiz: IInstituteQuizListItem): string {
   if (quiz.status === 'draft') return 'Sin publicar'
   if (quiz.audience === 'global')
     return 'Todos los estudiantes · asignación global'
+  if (quiz.ownerType === 'platform')
+    return 'Toda la institución · referencia de KAIROS'
   const groups = quiz.assignedGroups ?? []
   if (groups.length === 0) return 'Toda la institución'
   if (groups.length === 1) return groups[0].name

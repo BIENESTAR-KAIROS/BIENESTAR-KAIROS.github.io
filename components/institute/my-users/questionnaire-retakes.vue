@@ -140,10 +140,6 @@ function date(value: string) {
           No hay cuestionarios respondidos disponibles para habilitar de nuevo.
         </p>
         <form v-else @submit.prevent="release">
-          <p v-if="data.sequenceActive" class="retakes__intro">
-            Las nuevas aplicaciones respetarán el orden de la secuencia activa.
-            Los demás cuestionarios seguirán completados.
-          </p>
           <fieldset :disabled="saving || loading">
             <legend>Cuestionarios</legend>
             <div

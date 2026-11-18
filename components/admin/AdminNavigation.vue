@@ -123,6 +123,19 @@ async function logout() {
         class="admin-navigation__links"
       >
         <NuxtLink
+          to="/admin/quizzes"
+          class="admin-navigation__link"
+          :class="{
+            'admin-navigation__link--active':
+              route.path.startsWith('/admin/quizzes'),
+          }"
+          @click="closeMenu"
+          ><v-icon
+            icon="mdi-clipboard-text-outline"
+            aria-hidden="true"
+          />Cuestionarios globales</NuxtLink
+        >
+        <NuxtLink
           to="/admin/users"
           class="admin-navigation__link"
           :class="{

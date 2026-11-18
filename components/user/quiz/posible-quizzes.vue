@@ -4,49 +4,38 @@ import type { StudentQuestionnaireItem } from '~/interfaces/quizzes/student-ques
 const auth = useAuthStore()
 defineProps<{
   questionnaires: StudentQuestionnaireItem[]
-  sequenceComplete?: boolean
-  nextQuestionnaireId?: string | null
 }>()
 </script>
 
 <template>
   <div class="quizzes">
     <header class="quizzes__header">
-      <span class="quizzes__eyebrow">Cuestionarios</span>
       <h1 class="quizzes__title">
         {{
           auth.isStudentPreview
             ? 'Explorar cuestionarios'
-            : 'Responder un cuestionario'
+            : 'Cuestionarios disponibles'
         }}
       </h1>
       <p class="quizzes__intro">
         <template v-if="questionnaires.length > 0">
           Tienes {{ questionnaires.length }}
-          {{ questionnaires.length === 1 ? 'cuestionario' : 'cuestionarios' }}
-          disponibles.
+          {{
+            questionnaires.length === 1
+              ? 'cuestionario disponible'
+              : 'cuestionarios disponibles'
+          }}.
           {{
             auth.isStudentPreview
-              ? 'Puedes abrirlos sin guardar respuestas. La secuencia conserva el orden configurado por la institución.'
+              ? 'Puedes abrirlos sin guardar respuestas.'
               : 'Puedes elegir cuál responder.'
           }}
-        </template>
-        <template v-else-if="sequenceComplete">
-          No tienes cuestionarios pendientes en tu secuencia por ahora.
         </template>
         <template v-else>
           Por ahora no tienes cuestionarios pendientes disponibles.
         </template>
       </p>
     </header>
-
-    <NuxtLink
-      v-if="nextQuestionnaireId"
-      :to="`/user/quiz/${nextQuestionnaireId}`"
-      class="quizzes__cta"
-    >
-      Continuar mi secuencia
-    </NuxtLink>
 
     <div v-if="questionnaires.length" class="quizzes__grid">
       <article

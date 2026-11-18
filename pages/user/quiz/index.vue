@@ -2,9 +2,7 @@
 import PosibleQuizzes from '~/components/user/quiz/posible-quizzes.vue'
 import QuestionnaireFlowState from '~/components/user/quiz/questionnaire-flow-state.vue'
 import type { StudentQuestionnaireFlow } from '~/interfaces/quizzes/student-questionnaire-flow.interface'
-import { useAuthStore } from '~/store/auth'
 import { useUserStore } from '~/store/user'
-const auth = useAuthStore()
 const userStore = useUserStore()
 const isLoading = ref(true)
 const error = ref(false)
@@ -14,17 +12,6 @@ async function load() {
   error.value = false
   try {
     flow.value = await userStore.loadQuestionnaireFlow()
-    if (
-      !auth.isStudentPreview &&
-      flow.value.isActive &&
-      flow.value.nextQuestionnaireId &&
-      !flow.value.questionnaires.length
-    ) {
-      await navigateTo(`/user/quiz/${flow.value.nextQuestionnaireId}`, {
-        replace: true,
-      })
-      return
-    }
   } catch {
     error.value = true
   } finally {
@@ -45,24 +32,5 @@ onMounted(load)
     message="No pudimos consultar tus cuestionarios. Vuelve a intentarlo."
     @retry="load"
   />
-  <PosibleQuizzes
-    v-else-if="flow"
-    :questionnaires="
-      auth.isStudentPreview
-        ? [
-            ...flow.queue,
-            ...flow.questionnaires.filter(
-              (q) =>
-                !flow!.queue.some(
-                  (entry) => entry.questionnaireId === q.questionnaireId,
-                ),
-            ),
-          ]
-        : flow.questionnaires
-    "
-    :sequence-complete="flow.isActive && !flow.nextQuestionnaireId"
-    :next-questionnaire-id="
-      auth.isStudentPreview ? null : flow.nextQuestionnaireId
-    "
-  />
+  <PosibleQuizzes v-else-if="flow" :questionnaires="flow.questionnaires" />
 </template>

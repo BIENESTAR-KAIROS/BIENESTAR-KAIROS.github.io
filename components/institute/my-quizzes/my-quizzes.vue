@@ -40,6 +40,9 @@ onMounted(load)
         <span class="quizzes__title">{{ headerTitle }}</span>
       </div>
 
+      <NuxtLink to="/institute/quizzes/catalog" class="quizzes__create"
+        >Cuestionarios disponibles</NuxtLink
+      >
       <NuxtLink to="/institute/quizzes/add-quiz" class="quizzes__create">
         Crear cuestionario
       </NuxtLink>

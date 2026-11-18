@@ -103,6 +103,7 @@ export interface QuestionnaireActiveResponse {
 }
 export interface QuestionnaireDefinition extends CreateQuestionnaireRequest {
   _id: string
+  ownerType?: 'platform' | 'institution'
   schemaVersion: 2
   status: 'draft' | 'published'
   active: boolean
