@@ -10,5 +10,4 @@ export interface CatalogSelection {
   id: string
   title: string
   revision: number
-  mode: 'reference' | 'copy'
 }

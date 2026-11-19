@@ -108,6 +108,39 @@ export function useMyQuizzes() {
     return typeof institute === 'string' ? institute : institute._id
   })
 
+  const versionRequests = new Map<string, string>()
+  async function createVersion(quiz: IInstituteQuizCard) {
+    const institution = instituteId.value
+    if (
+      !institution ||
+      !quiz.canCreateVersion ||
+      savingIds.value.includes(quiz.id)
+    )
+      return
+    const key = [institution, quiz.id, quiz.revision].join(':')
+    savingIds.value.push(quiz.id)
+    actionErrors.value[quiz.id] = ''
+    try {
+      const requestId = versionRequests.get(key) ?? crypto.randomUUID()
+      versionRequests.set(key, requestId)
+      const { data } = await $axios.post<{ id: string }>(
+        `/questionnaire/catalog/${institution}/${quiz.id}/versions`,
+        { revision: quiz.revision ?? 0, requestId },
+      )
+      if (instituteId.value === institution)
+        await navigateTo(`/institute/quizzes/${data.id}/edit`)
+      versionRequests.delete(key)
+    } catch (error) {
+      const message = isAxiosError<{ message: string }>(error)
+        ? error.response?.data?.message
+        : undefined
+      actionErrors.value[quiz.id] =
+        message || 'No pudimos abrir el borrador. Vuelve a intentarlo.'
+    } finally {
+      savingIds.value = savingIds.value.filter((id) => id !== quiz.id)
+    }
+  }
+
   const activeCount = computed(
     () => quizzes.value.filter((quiz) => quiz.active).length,
   )
@@ -120,6 +153,11 @@ export function useMyQuizzes() {
     revision: quiz.revision,
     status: quiz.status,
     schemaVersion: quiz.schemaVersion,
+    canCreateVersion:
+      quiz.ownerType === 'platform' &&
+      quiz.schemaVersion === 2 &&
+      quiz.status === 'published' &&
+      quiz.active,
     readonly: Boolean(
       quiz.ownerType === 'platform' ||
       !quiz.institution?.id ||
@@ -195,6 +233,7 @@ export function useMyQuizzes() {
     actionErrors,
     actionMessage,
     setActive,
+    createVersion,
     errorMessage,
     quizzes,
     activeCount,

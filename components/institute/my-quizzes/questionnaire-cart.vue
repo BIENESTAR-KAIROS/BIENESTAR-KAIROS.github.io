@@ -50,17 +50,11 @@ watch(
         <p v-else-if="!cart.items.length">Tu carrito está vacío.</p>
         <template v-if="cart.items.length">
           <p>
-            La referencia sigue la versión global. La copia se puede editar
-            desde tu institución.
+            Los cuestionarios seguirán las actualizaciones de KAIROS. Para
+            adaptarlos, elige «Crear versión propia» en Mis cuestionarios.
           </p>
           <div v-for="item in cart.items" :key="item.id" class="cart-row">
-            <label
-              >{{ item.title
-              }}<select v-model="item.mode" :disabled="cart.busy">
-                <option value="reference">Referencia</option>
-                <option value="copy">Copia institucional</option>
-              </select></label
-            >
+            <strong>{{ item.title }}</strong>
             <v-btn
               icon="mdi-trash-can-outline"
               variant="text"
@@ -158,20 +152,9 @@ watch(
   padding: 14px 0;
   margin-top: 12px;
 }
-.cart-row label {
-  display: grid;
-  gap: 8px;
-  font-weight: 700;
+.cart-row strong {
   min-width: 0;
-}
-.cart-row select {
-  padding: 8px 12px;
-  min-height: 44px;
-  border: 1px solid #78678c;
-  border-radius: 12px;
-  background: white;
-  color: #3c2f52;
-  appearance: auto;
+  overflow-wrap: anywhere;
 }
 .cart-panel footer {
   display: flex;

@@ -40,7 +40,6 @@ export const useQuestionnaireCart = defineStore('questionnaire-cart', () => {
       id: q._id,
       title: q.title,
       revision: q.__v ?? 0,
-      mode: 'reference',
     })
   }
   async function checkout() {
@@ -52,10 +51,9 @@ export const useQuestionnaireCart = defineStore('questionnaire-cart', () => {
     message.value = ''
     try {
       await $axios.post(`/questionnaire/catalog/${id}/checkout`, {
-        items: items.value.map(({ id, revision, mode }) => ({
+        items: items.value.map(({ id, revision }) => ({
           id,
           revision,
-          mode,
         })),
       })
       if (generation === request) {

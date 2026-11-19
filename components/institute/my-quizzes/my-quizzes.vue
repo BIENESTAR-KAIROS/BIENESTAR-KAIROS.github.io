@@ -12,6 +12,7 @@ const {
   actionErrors,
   actionMessage,
   setActive,
+  createVersion,
 } = useMyQuizzes()
 
 const formatNumber = (value: number) => value.toLocaleString('es-MX')
@@ -72,6 +73,7 @@ onMounted(load)
         :quiz="quiz"
         :saving="savingIds.includes(quiz.id)"
         :error="actionErrors[quiz.id]"
+        @create-version="createVersion(quiz)"
         @set-active="setActive(quiz, $event)"
       />
 

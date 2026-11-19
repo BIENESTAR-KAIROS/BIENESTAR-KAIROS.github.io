@@ -89,6 +89,7 @@ export interface IInstituteQuizCard {
    * Un cuestionario que no pertenece a tu institución —la base que diseña
    * Kairos— se ve pero no se toca. El catálogo incluye las asignaciones globales.
    */
+  canCreateVersion: boolean
   readonly: boolean
   questionsCount: number
   groups: IInstituteQuizGroup[]

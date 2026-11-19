@@ -8,7 +8,7 @@ const props = defineProps<{
   error?: string
 }>()
 
-defineEmits<{ 'set-active': [active: boolean] }>()
+defineEmits<{ 'set-active': [active: boolean]; 'create-version': [] }>()
 
 const definitionOpen = ref(false)
 
@@ -98,8 +98,8 @@ const questionsLabel = computed(() =>
       >
         Publica el borrador desde Editar para activarlo.
       </p>
-      <p v-if="error" class="quiz-card__error" role="alert">{{ error }}</p>
     </div>
+    <p v-if="error" class="quiz-card__error" role="alert">{{ error }}</p>
     <footer class="quiz-card__footer">
       <span v-if="quiz.updatedLabel" class="quiz-card__updated">
         {{ quiz.updatedLabel }}
@@ -134,13 +134,14 @@ const questionsLabel = computed(() =>
           Editar
         </button>
         <button
-          v-else
+          v-else-if="quiz.canCreateVersion"
           type="button"
           class="quiz-card__button quiz-card__button--primary"
-          disabled
-          title="Duplicar el cuestionario llega en el siguiente paso"
+          :disabled="saving"
+          :aria-busy="saving"
+          @click="$emit('create-version')"
         >
-          Duplicar
+          {{ saving ? 'Creando borrador…' : 'Crear versión propia' }}
         </button>
       </div>
     </footer>
@@ -384,5 +385,8 @@ const questionsLabel = computed(() =>
 }
 .quiz-card__actions {
   flex-wrap: wrap;
+}
+.quiz-card--readonly .quiz-card__error {
+  color: #fff;
 }
 </style>
