@@ -30,6 +30,7 @@ export interface IInstituteQuizCreator {
 /** Un cuestionario tal como lo devuelve el listado. */
 export interface IInstituteQuizListItem {
   ownerType?: 'platform' | 'institution'
+  scheduledFor?: string
   audience?: 'global' | 'institution' | 'groups'
   id: string
   title: string

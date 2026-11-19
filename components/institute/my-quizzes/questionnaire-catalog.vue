@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatQuestionnaireDate } from './questionnaire-date'
 import { useQuestionnaireCart } from '~/store/questionnaire-cart'
 import type { CatalogQuestionnaire } from '~/interfaces/quizzes/catalog.interface'
 import BuilderDefinitionView from './builder-definition-view.vue'
@@ -93,6 +94,10 @@ async function toggle(q: CatalogQuestionnaire) {
                 ? 'Publicado · Activo'
                 : 'Publicado · Inactivo'
           }}
+        </p>
+        <p v-if="q.scheduledFor">
+          Cambio programado para el
+          {{ formatQuestionnaireDate(q.scheduledFor) }}.
         </p>
         <div class="actions">
           <button type="button" @click="preview = q._id">Explorar</button>

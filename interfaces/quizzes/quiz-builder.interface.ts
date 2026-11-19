@@ -94,6 +94,8 @@ export interface UpdateQuestionnaireRequest extends Omit<
   'institution'
 > {
   revision: number
+  effectiveDate?: string
+  changeSummary?: string
 }
 export interface QuestionnaireActiveResponse {
   id: string
@@ -103,6 +105,8 @@ export interface QuestionnaireActiveResponse {
 }
 export interface QuestionnaireDefinition extends CreateQuestionnaireRequest {
   _id: string
+  scheduledFor?: string
+  changeSummary?: string
   ownerType?: 'platform' | 'institution'
   schemaVersion: 2
   status: 'draft' | 'published'

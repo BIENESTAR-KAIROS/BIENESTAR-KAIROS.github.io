@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatQuestionnaireDate } from './questionnaire-date'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '~/store/auth'
 import type {
@@ -26,6 +27,22 @@ const listPath = props.global ? '/admin/quizzes' : '/institute/quizzes'
 const loading = ref(Boolean(props.questionnaireId))
 const loadError = ref('')
 const savedDefinition = ref<QuestionnaireDefinition | null>(null)
+const schedulesChange = computed(
+  () => props.global && savedDefinition.value?.status === 'published',
+)
+const effectiveDate = ref('')
+const changeSummary = ref('')
+function earliestDate() {
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+  const tomorrow = new Date(today + 'T00:00:00Z')
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  return tomorrow.toISOString().slice(0, 10)
+}
 const publishing = ref(false)
 const { $axios } = useNuxtApp()
 const auth = useAuthStore()
@@ -39,9 +56,23 @@ const scoredQuestions = computed(() =>
   allQuestions.value.filter((q) => q.scoringMode === 'scored'),
 )
 async function saveQuestionnaire(publish = false) {
-  if (saving.value || loading.value || loadError.value) return
+  if (
+    saving.value ||
+    loading.value ||
+    loadError.value ||
+    savedDefinition.value?.scheduledFor
+  )
+    return
   const flat = flattenQuestions(questions.value)
   errors.value = validateBuilder(title.value, flat, evaluation.value)
+  if (schedulesChange.value) {
+    if (!effectiveDate.value || effectiveDate.value < earliestDate())
+      errors.value.push('Elige un día futuro para aplicar el cambio.')
+    if (!changeSummary.value.trim())
+      errors.value.push(
+        'Describe el cambio para los administradores de las instituciones.',
+      )
+  }
   const institute = auth.activeInstitute
   const institution = typeof institute === 'string' ? institute : institute?._id
   if (!props.global && !institution)
@@ -89,6 +120,12 @@ async function saveQuestionnaire(publish = false) {
         description: payload.description,
         questions: payload.questions,
         evaluationConfiguration: payload.evaluationConfiguration,
+        ...(schedulesChange.value
+          ? {
+              effectiveDate: effectiveDate.value,
+              changeSummary: changeSummary.value.trim(),
+            }
+          : {}),
         revision: savedDefinition.value?.__v ?? 0,
       }
       definition = (
@@ -272,7 +309,7 @@ function addRule() {
             'qb-button--primary':
               !questionnaireId || savedDefinition?.status === 'published',
           }"
-          :disabled="saving"
+          :disabled="saving || !!savedDefinition?.scheduledFor"
           :aria-busy="saving"
           aria-describedby="qb-draft-note"
           @click="saveQuestionnaire()"
@@ -281,9 +318,11 @@ function addRule() {
           {{
             saving && !publishing
               ? 'Guardando…'
-              : questionnaireId
-                ? 'Guardar cambios'
-                : 'Guardar borrador'
+              : schedulesChange
+                ? 'Programar cambio'
+                : questionnaireId
+                  ? 'Guardar cambios'
+                  : 'Guardar borrador'
           }}
         </button>
         <button
@@ -305,7 +344,11 @@ function addRule() {
         Reintentar
       </button>
     </div>
-    <fieldset v-else class="qb-body qb-form-body" :disabled="saving">
+    <fieldset
+      v-else
+      class="qb-body qb-form-body"
+      :disabled="saving || !!savedDefinition?.scheduledFor"
+    >
       <div
         v-if="errors.length"
         ref="errorPanel"
@@ -324,11 +367,61 @@ function addRule() {
           size="20"
           aria-hidden="true"
         /><span>{{
-          savedDefinition?.status === 'published'
-            ? 'Los cambios se guardarán en el cuestionario publicado y conservarán su estado activo o inactivo.'
-            : 'Guarda el borrador para continuar después. Al publicar quedará inactivo; podrás activarlo desde Mis cuestionarios.'
+          savedDefinition?.scheduledFor
+            ? 'Hay un cambio programado. Aquí se muestra la versión vigente.'
+            : schedulesChange
+              ? 'La versión vigente seguirá disponible hasta las 00:00 del día elegido, hora de Ciudad de México.'
+              : savedDefinition?.status === 'published'
+                ? 'Los cambios se guardarán en el cuestionario publicado y conservarán su estado activo o inactivo.'
+                : 'Guarda el borrador para continuar después. Al publicar quedará inactivo; podrás activarlo desde Mis cuestionarios.'
         }}</span>
       </p>
+      <section
+        v-if="schedulesChange"
+        class="qb-panel qb-details"
+        aria-labelledby="qb-schedule-title"
+      >
+        <div class="qb-section-heading">
+          <h2 id="qb-schedule-title">
+            {{
+              savedDefinition?.scheduledFor
+                ? 'Cambio programado'
+                : 'Programar cambio'
+            }}
+          </h2>
+          <p>
+            Los administradores de las instituciones que usan la referencia
+            recibirán un correo con el resumen y la fecha para crear su versión
+            propia.
+          </p>
+        </div>
+        <div v-if="savedDefinition?.scheduledFor">
+          <strong
+            >{{ formatQuestionnaireDate(savedDefinition.scheduledFor) }} · 00:00
+            (Ciudad de México)</strong
+          >
+          <p>{{ savedDefinition.changeSummary }}</p>
+        </div>
+        <div v-else class="qb-details-fields">
+          <label class="qb-field"
+            ><span>Aplicar a partir del día</span
+            ><input
+              v-model="effectiveDate"
+              type="date"
+              required
+              :min="earliestDate()"
+          /></label>
+          <label class="qb-field"
+            ><span>Resumen para el correo</span
+            ><textarea
+              v-model="changeSummary"
+              rows="3"
+              maxlength="1000"
+              required
+            />
+          </label>
+        </div>
+      </section>
       <section class="qb-panel qb-details" aria-labelledby="qb-details-title">
         <div class="qb-section-heading">
           <h2 id="qb-details-title">Tu cuestionario</h2>

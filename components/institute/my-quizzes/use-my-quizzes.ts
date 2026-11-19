@@ -157,7 +157,10 @@ export function useMyQuizzes() {
       quiz.ownerType === 'platform' &&
       quiz.schemaVersion === 2 &&
       quiz.status === 'published' &&
-      quiz.active,
+      (quiz.active ||
+        Boolean(
+          quiz.scheduledFor && Date.parse(quiz.scheduledFor) > Date.now(),
+        )),
     readonly: Boolean(
       quiz.ownerType === 'platform' ||
       !quiz.institution?.id ||

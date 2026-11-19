@@ -30,6 +30,16 @@ const headerTitle = computed(() => {
   return `${formatNumber(total)} ${noun} · ${active}`
 })
 
+const route = useRoute()
+watch(
+  () => [state.value, route.query.referencia],
+  async () => {
+    if (state.value === 'loading' || typeof route.query.referencia !== 'string')
+      return
+    await nextTick()
+    document.getElementById('referencia-' + route.query.referencia)?.focus()
+  },
+)
 onMounted(load)
 </script>
 
@@ -69,7 +79,9 @@ onMounted(load)
     <div v-else class="quizzes__grid">
       <QuizCard
         v-for="quiz in quizzes"
+        :id="'referencia-' + quiz.id"
         :key="quiz.id"
+        tabindex="-1"
         :quiz="quiz"
         :saving="savingIds.includes(quiz.id)"
         :error="actionErrors[quiz.id]"

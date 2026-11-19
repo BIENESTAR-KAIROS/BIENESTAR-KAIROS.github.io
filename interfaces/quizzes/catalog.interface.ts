@@ -3,6 +3,7 @@ export interface CatalogQuestionnaire {
   title: string
   description?: string
   status: 'draft' | 'published'
+  scheduledFor?: string
   active: boolean
   __v: number
 }

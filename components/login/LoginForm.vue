@@ -6,6 +6,9 @@ import { useUserStore } from '~/store/user'
 import { required, validEmail } from '~/utils/helpers/form-rules'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 
+import { questionnaireReference } from '~/utils/helpers/questionnaire-reference'
+
+const route = useRoute()
 const { $axios, $router } = useNuxtApp()
 
 const email = ref('')
@@ -74,7 +77,12 @@ const login = async () => {
         authStore.user?.roles.includes(UserRolEnum.INSTITUTION_ADMIN) ||
         authStore.user?.roles.includes(UserRolEnum.INSTITUTION_STAFF)
       ) {
-        $router.push('/institute/dashboard')
+        const referencia = questionnaireReference(route.query.referencia)
+        $router.push(
+          referencia
+            ? { path: '/institute/quizzes', query: { referencia } }
+            : '/institute/dashboard',
+        )
       } else {
         $router.push('/user/dashboard')
       }

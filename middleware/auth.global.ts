@@ -1,3 +1,4 @@
+import { questionnaireReference } from '~/utils/helpers/questionnaire-reference'
 import { useAuthStore } from '~/store/auth'
 import { UserRolEnum } from '~/interfaces/user/enum/user-rol.enum'
 
@@ -104,7 +105,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       // * ============ User is not authenticated ============
       if (!isAuthenticated) {
         if (isValidRoute(to.path, authRoutes)) {
-          // ? is going to an authenticated route, redirect to login
+          const referencia = questionnaireReference(to.query.referencia)
+          if (to.path === '/institute/quizzes' && referencia)
+            return navigateTo({
+              path: '/institute/login',
+              query: { referencia },
+            })
           return navigateTo('/')
         } else if (isValidRoute(to.path, unAuthRoutes)) {
           // ? is going to an unauthenticated route, allow it
