@@ -7,6 +7,7 @@ import type {
 const props = defineProps<{
   question: StudentDefinitionQuestion
   answer?: StudentAnswer
+  profileForm?: boolean
   error?: string | null
 }>()
 const emit = defineEmits<{ answer: [value: StudentAnswer] }>()
@@ -51,12 +52,19 @@ function enterNumber(event: Event) {
 <template>
   <fieldset
     class="definition-question"
+    :class="{ 'definition-question--profile': profileForm }"
     :aria-describedby="`${inputId}-help ${inputId}-error`"
   >
-    <legend>{{ question.text }}</legend>
+    <legend :id="`${inputId}-label`">{{ question.text }}</legend>
     <div :id="`${inputId}-help`" class="definition-question__help">
       <p v-if="question.helpText">{{ question.helpText }}</p>
-      <p>
+      <p
+        v-if="
+          !profileForm ||
+          !question.required ||
+          question.type === 'multiple_choice'
+        "
+      >
         {{ question.required ? 'Obligatoria' : 'Opcional' }}
         <template v-if="question.type === 'multiple_choice'">
           ·
@@ -70,10 +78,14 @@ function enterNumber(event: Event) {
     </div>
 
     <select
-      v-if="isChoice && question.presentation === 'select'"
+      v-if="
+        isChoice &&
+        (question.presentation === 'select' ||
+          (profileForm && question.type === 'single_choice'))
+      "
       :id="inputId"
       :value="scalar"
-      aria-label="Tu respuesta"
+      :aria-labelledby="`${inputId}-label`"
       :aria-required="question.required"
       :aria-invalid="Boolean(error)"
       :aria-describedby="`${inputId}-help ${inputId}-error`"
@@ -121,10 +133,11 @@ function enterNumber(event: Event) {
     </div>
 
     <div v-else class="definition-question__field">
-      <label :for="inputId">Tu respuesta</label>
+      <label v-if="!profileForm" :for="inputId">Tu respuesta</label>
       <textarea
         v-if="question.type === 'text'"
         :id="inputId"
+        :aria-labelledby="`${inputId}-label`"
         :value="scalar"
         rows="4"
         :maxlength="question.constraints.maxLength"
@@ -136,6 +149,7 @@ function enterNumber(event: Event) {
       <input
         v-else-if="question.type === 'number'"
         :id="inputId"
+        :aria-labelledby="`${inputId}-label`"
         type="number"
         step="any"
         :value="scalar"
@@ -149,6 +163,7 @@ function enterNumber(event: Event) {
       <input
         v-else-if="question.type === 'date'"
         :id="inputId"
+        :aria-labelledby="`${inputId}-label`"
         type="date"
         :value="scalar"
         :aria-required="question.required"
@@ -172,7 +187,11 @@ function enterNumber(event: Event) {
       {{ error }}
     </p>
     <button
-      v-if="answer !== undefined"
+      v-if="
+        answer !== undefined &&
+        (!profileForm || !question.required) &&
+        answer !== ''
+      "
       type="button"
       class="definition-question__clear"
       @click="emit('answer', '')"
@@ -281,5 +300,34 @@ textarea {
   legend {
     font-size: 20px;
   }
+}
+
+.definition-question--profile legend {
+  font-size: 15px;
+  font-weight: 700;
+}
+.definition-question--profile .definition-question__help {
+  margin: 3px 0 6px;
+}
+.definition-question--profile .definition-question__options {
+  flex-flow: row wrap;
+  gap: 2px 14px;
+}
+.definition-question--profile .definition-question__option {
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+}
+.definition-question--profile
+  :is(select, textarea, .definition-question__field input) {
+  min-height: 52px;
+  border: 1.5px solid #82999f;
+  border-radius: 26px;
+  padding: 10px 16px;
+}
+.definition-question--profile textarea {
+  border-radius: 16px;
 }
 </style>
