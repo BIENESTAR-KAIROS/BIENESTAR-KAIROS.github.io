@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { isAxiosError } from 'axios'
 import { useQuizStore } from './quiz'
 import { useUserStore } from './user'
+import { clearQuestionnaireDrafts } from '~/utils/helpers/student-questionnaire-draft'
 
 import type { ILoginResponse } from '~/interfaces/login/login-response.interface'
 import type { IUser } from '~/interfaces/user/user.interface'
@@ -91,6 +92,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async setAuth(session: ILoginResponse) {
       this.clearInstitutionContext()
+      clearQuestionnaireDrafts(session.user._id || session.user.id)
       const nuxtApp = useNuxtApp()
       this.accessToken = session.accessToken
       this.user = session.user
@@ -183,6 +185,7 @@ export const useAuthStore = defineStore('auth', {
       if (this.accessToken !== token) {
         throw new Error('La sesión cambió. Vuelve a intentarlo.')
       }
+      clearQuestionnaireDrafts()
       this.clearAuth()
     },
     clearAuth() {

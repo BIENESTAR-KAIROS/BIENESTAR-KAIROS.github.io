@@ -4,6 +4,11 @@ import { useAuthStore } from '~/store/auth'
 import type { DefinitionSubmissionResult } from '~/interfaces/quizzes/definition-result.interface'
 import DefinitionQuestion from './definition-question.vue'
 import QuestionnaireFlowState from './questionnaire-flow-state.vue'
+import {
+  readQuestionnaireDraft,
+  removeQuestionnaireDraft,
+  writeQuestionnaireDraft,
+} from '~/utils/helpers/student-questionnaire-draft'
 import type {
   StudentAnswer,
   StudentAnswers,
@@ -41,6 +46,7 @@ const resultRecommendations = computed(() => {
   ]
 })
 const auth = useAuthStore()
+const studentId = computed(() => auth.user?._id || auth.user?.id)
 const visibilityMessage = ref('')
 const questionHeading = ref<HTMLElement | null>(null)
 const visible = computed(() =>
@@ -77,8 +83,15 @@ async function load() {
     if (data.schemaVersion !== 2 || !data.questions.length)
       throw new Error('Unsupported questionnaire definition')
     definition.value = data
-    answers.value = {}
-    currentId.value = visible.value[0]?._id ?? ''
+    const draft =
+      studentId.value && !auth.isStudentPreview
+        ? readQuestionnaireDraft(studentId.value, data)
+        : undefined
+    answers.value = draft?.answers ?? {}
+    currentId.value =
+      visible.value.find((q) => q._id === draft?.currentId)?._id ??
+      visible.value[0]?._id ??
+      ''
     if (!currentId.value) throw new Error('No visible questions')
     saved.value = null
     submissionError.value = ''
@@ -90,6 +103,22 @@ async function load() {
   }
 }
 onMounted(load)
+
+function keepDraft() {
+  if (
+    studentId.value &&
+    definition.value &&
+    !auth.isStudentPreview &&
+    !saved.value
+  ) {
+    writeQuestionnaireDraft(
+      studentId.value,
+      definition.value,
+      answers.value,
+      currentId.value,
+    )
+  }
+}
 
 function setAnswer(value: StudentAnswer) {
   if (!definition.value || !current.value) return
@@ -108,9 +137,11 @@ function setAnswer(value: StudentAnswer) {
     .filter(Boolean)
     .join(' ')
   submissionError.value = ''
+  keepDraft()
 }
 async function selectQuestion(id: string) {
   currentId.value = id
+  keepDraft()
   showHistory.value = false
   showErrors.value = false
   await nextTick()
@@ -128,7 +159,12 @@ function next() {
 }
 async function submit() {
   if (auth.isStudentPreview) return
-  if (submitting.value || saved.value || !definition.value || !auth.user) return
+  if (submitting.value || saved.value || !definition.value) return
+  if (!studentId.value) {
+    submissionError.value =
+      'Inicia sesión con la misma cuenta y vuelve a abrir el cuestionario en esta pestaña.'
+    return
+  }
   const invalid = visible.value.find((q) => errors.value.get(q._id))
   if (invalid) {
     await selectQuestion(invalid._id)
@@ -142,7 +178,7 @@ async function submit() {
       await $axios.post<DefinitionSubmissionResult>(
         `/questionnaire/${definition.value._id}/responses`,
         {
-          studentId: auth.user._id,
+          studentId: studentId.value,
           questionnaireId: definition.value._id,
           revision: definition.value.revision,
           attemptId: definition.value.attemptId,
@@ -155,16 +191,28 @@ async function submit() {
         },
       )
     ).data
+    removeQuestionnaireDraft(studentId.value, definition.value._id)
     await nextTick()
     questionHeading.value?.focus()
   } catch (error) {
     const text: unknown = axios.isAxiosError(error)
       ? error.response?.data?.message
       : null
-    submissionError.value =
-      typeof text === 'string'
-        ? text
-        : 'No pudimos guardar tus respuestas. Puedes volver a intentarlo.'
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      submissionError.value =
+        'Tu sesión venció. Inicia sesión con la misma cuenta y vuelve a abrir el cuestionario en esta pestaña.'
+    } else if (axios.isAxiosError(error) && !error.response) {
+      submissionError.value =
+        'No se pudo conectar con KAIROS. Vuelve a presionar «Guardar respuestas» cuando recuperes la conexión.'
+    } else {
+      const message = Array.isArray(text)
+        ? text.filter((item) => typeof item === 'string').join(' ')
+        : text
+      submissionError.value =
+        typeof message === 'string' && message.trim()
+          ? message
+          : 'No pudimos guardar tus respuestas. Puedes volver a intentarlo.'
+    }
   } finally {
     submitting.value = false
   }
