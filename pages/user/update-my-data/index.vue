@@ -20,7 +20,6 @@ const auth = useAuthStore()
 const profile = ref<SociodemographicProfile | null>(null)
 const saved = ref<StudentAnswers>({})
 const draft = ref<StudentAnswers>({})
-const group = ref('')
 const loading = ref(false)
 const saving = ref(false)
 const unavailable = ref(false)
@@ -43,12 +42,16 @@ const categories = computed(() => {
   }
   return map
 })
-const groups = computed(() => [
-  ...new Set(visible.value.map((q) => categories.value.get(q._id)!)),
-])
-const inSection = computed(() =>
-  visible.value.filter((q) => categories.value.get(q._id) === group.value),
-)
+const sections = computed(() => {
+  const grouped = new Map<string, StudentDefinitionQuestion[]>()
+  for (const question of visible.value) {
+    const name = categories.value.get(question._id)!
+    const section = grouped.get(name)
+    if (section) section.push(question)
+    else grouped.set(name, [question])
+  }
+  return grouped
+})
 const dirty = computed(
   () => JSON.stringify(draft.value) !== JSON.stringify(saved.value),
 )
@@ -65,7 +68,6 @@ function resetForm(data: SociodemographicProfile) {
     ),
   )
   draft.value = { ...saved.value }
-  if (!groups.value.includes(group.value)) group.value = groups.value[0] ?? ''
   attempted.value = false
   conflict.value = false
 }
@@ -104,11 +106,9 @@ function cancel() {
   draft.value = { ...saved.value }
   attempted.value = false
   error.value = ''
-  if (!groups.value.includes(group.value)) group.value = groups.value[0] ?? ''
   message.value = 'Cambios descartados.'
 }
 async function focusQuestion(q: StudentDefinitionQuestion) {
-  group.value = categories.value.get(q._id)!
   await nextTick()
   fields.value
     ?.querySelector<HTMLElement>(
@@ -170,6 +170,12 @@ async function save() {
                 .filter(Boolean)
                 .join(' · ')
             }}
+            <template v-if="profile.answer">
+              · {{ sections.size }}
+              {{ sections.size === 1 ? 'sección' : 'secciones' }} ·
+              {{ visible.length }}
+              {{ visible.length === 1 ? 'pregunta' : 'preguntas' }}
+            </template>
           </p>
         </div>
       </header>
@@ -196,27 +202,30 @@ async function save() {
         >
       </div>
       <form v-else novalidate @submit.prevent="save">
-        <fieldset class="editor" :disabled="saving || conflict">
+        <fieldset ref="fields" class="editor" :disabled="saving || conflict">
           <legend class="sr-only">Editar respuestas</legend>
-          <label for="profile-section">Sección del formulario</label>
-          <select id="profile-section" v-model="group">
-            <option v-for="name in groups" :key="name">{{ name }}</option>
-          </select>
-          <div ref="fields" class="fields">
-            <DefinitionQuestion
-              v-for="q in inSection"
-              :key="q._id"
-              :data-question="q._id"
-              :class="{
-                wide: q.text.length > 60 || q.type === 'multiple_choice',
-              }"
-              :question="q"
-              :answer="draft[q._id]"
-              :error="attempted ? studentAnswerError(q, draft[q._id]) : null"
-              profile-form
-              @answer="edit(q._id, $event)"
-            />
-          </div>
+          <section
+            v-for="([name, items], index) in sections"
+            :key="name"
+            :aria-labelledby="`profile-section-${index}`"
+          >
+            <h3 :id="`profile-section-${index}`">{{ name }}</h3>
+            <div class="fields">
+              <DefinitionQuestion
+                v-for="q in items"
+                :key="q._id"
+                :data-question="q._id"
+                :class="{
+                  wide: q.text.length > 60 || q.type === 'multiple_choice',
+                }"
+                :question="q"
+                :answer="draft[q._id]"
+                :error="attempted ? studentAnswerError(q, draft[q._id]) : null"
+                profile-form
+                @answer="edit(q._id, $event)"
+              />
+            </div>
+          </section>
         </fieldset>
         <div v-if="error" class="error" role="alert">
           {{ error }}
@@ -325,29 +334,23 @@ header p {
   min-height: 44px;
   margin-top: 8px;
 }
-.editor > label {
-  display: block;
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 6px;
+.editor section + section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #dce7e9;
 }
-.editor > select {
-  width: 100%;
-  padding: 0 18px;
-  height: 52px;
-  border: 1.5px solid #82999f;
-  border-radius: 26px;
-  font: inherit;
-  font-weight: 700;
-  background: #f2f9f9;
+h3 {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.35;
   color: #065c5d;
-  appearance: auto;
+  overflow-wrap: anywhere;
 }
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  margin: 22px 0 6px;
+  margin-top: 16px;
 }
 .wide {
   grid-column: 1/-1;
@@ -389,7 +392,7 @@ button:disabled {
   color: #415961;
   cursor: not-allowed;
 }
-:is(select, button, a):focus-visible {
+:is(button, a):focus-visible {
   outline: 3px solid #07979f;
   outline-offset: 3px;
 }
