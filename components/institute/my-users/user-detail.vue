@@ -4,7 +4,7 @@ import type { ChartData, ChartOptions, Plugin } from 'chart.js'
 import { useAuthStore } from '~/store/auth'
 import CalendarRecomendations from '~/components/institute/my-users/recommendations/calendar-recomendations.vue'
 import type { IUserDetail } from '~/interfaces/user/user-detail.interface'
-import { campusLabels, translateValue } from '~/utils/translations'
+import { translateValue } from '~/utils/translations'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import QuestionnaireRetakes from './questionnaire-retakes.vue'
 import DefinitionDimensionResult from './definition-dimension-result.vue'
@@ -109,6 +109,11 @@ const campusEntries = computed(() => {
 
   if (!campus) return []
 
+  const campusLabels: Record<string, string> = {
+    name: authStore.terms.site,
+    department: authStore.terms.department,
+    career: authStore.terms.role,
+  }
   return Object.entries(campus).map(([key, value]) => ({
     label: campusLabels[key] || key,
     value: translateValue(value),
@@ -619,7 +624,7 @@ onMounted(() => {
           </section>
 
           <section v-if="campusEntries.length" class="card card--pad">
-            <span class="card__title">Información del campus</span>
+            <span class="card__title">{{ authStore.terms.affiliation }}</span>
             <dl class="facts">
               <div
                 v-for="entry in campusEntries"

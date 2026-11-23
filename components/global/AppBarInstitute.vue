@@ -214,7 +214,7 @@ onMounted(() => {
           >Recomendaciones de KAIROS e instituciones</NuxtLink
         >
         <NuxtLink to="/user/dashboard" class="institute-nav__switch">
-          Ver como alumno
+          Ver como {{ authStore.terms.member.toLowerCase() }}
         </NuxtLink>
         <p v-if="logoutError" class="institute-nav__logout-error" role="alert">
           {{ logoutError }}

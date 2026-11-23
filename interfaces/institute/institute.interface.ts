@@ -3,6 +3,7 @@ import type { InstituteCampusInformation } from './institute-campus-information.
 export interface IInstitute {
   _id: string
   name: string
+  institutionType?: 'school' | 'company'
   businessName: string
   address: string
   phoneNumber: string

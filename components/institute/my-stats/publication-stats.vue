@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import { usePublicationStats } from './use-publication-stats'
 import PublicationReport from './publication-report.vue'
 import { formatPeriodInstant } from '~/utils/helpers/statistics-period-time'
+const auth = useAuthStore()
 const {
   catalog,
   periods,
@@ -30,7 +32,7 @@ const date = (value: string) =>
   <section class="publication-page" :aria-busy="loading || consulting">
     <header class="page-heading">
       <div>
-        <p class="eyebrow">Alumnos reales</p>
+        <p class="eyebrow">{{ auth.terms.members }} reales</p>
         <h1>Mis estadísticas</h1>
         <p>
           Consulta los resultados de cada cuestionario sin combinar revisiones
@@ -147,6 +149,7 @@ const date = (value: string) =>
       <PublicationReport
         v-if="result"
         :response="result"
+        :members-label="auth.terms.members"
         :labels="labels"
         :title="selected?.title || 'Cuestionario'"
       />

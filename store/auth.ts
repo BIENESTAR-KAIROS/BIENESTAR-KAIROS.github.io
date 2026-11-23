@@ -1,3 +1,7 @@
+import {
+  institutionTerms,
+  availableCampuses,
+} from '~/utils/helpers/institution-structure'
 import { defineStore } from 'pinia'
 import { isAxiosError } from 'axios'
 import { useQuizStore } from './quiz'
@@ -17,6 +21,7 @@ export const useAuthStore = defineStore('auth', {
       accessToken: '',
       isLoading: false,
       expiresAt: 0,
+      membershipInstitution: null as IInstitute | null,
       institutionContext: null as IInstitute | null,
       institutionContextError: '',
       institutionContextMode: 'institution' as
@@ -90,8 +95,23 @@ export const useAuthStore = defineStore('auth', {
           'No pudimos recuperar la institución. Selecciónala de nuevo.'
       }
     },
+    async loadMembershipInstitution() {
+      const membership = this.user?.institute
+      const id = typeof membership === 'string' ? membership : membership?._id
+      if (!id || this.user?.roles.includes(UserRolEnum.KAIROS_ADMIN)) {
+        this.membershipInstitution = null
+        return
+      }
+      if (this.membershipInstitution?._id === id) return
+      const token = this.accessToken
+      const { data } = await useNuxtApp().$axios.get<IInstitute | null>(
+        `/institute/${encodeURIComponent(id)}`,
+      )
+      if (this.accessToken === token) this.membershipInstitution = data
+    },
     async setAuth(session: ILoginResponse) {
       this.clearInstitutionContext()
+      this.membershipInstitution = null
       clearQuestionnaireDrafts(session.user._id || session.user.id)
       const nuxtApp = useNuxtApp()
       this.accessToken = session.accessToken
@@ -189,6 +209,7 @@ export const useAuthStore = defineStore('auth', {
       this.clearAuth()
     },
     clearAuth() {
+      this.membershipInstitution = null
       this.clearInstitutionContext()
       this.institutionContextError = ''
       const nuxtApp = useNuxtApp()
@@ -253,6 +274,21 @@ export const useAuthStore = defineStore('auth', {
       return this.user?.roles.includes(UserRolEnum.KAIROS_ADMIN)
         ? (this.institutionContext ?? undefined)
         : this.user?.institute
+    },
+    terms() {
+      return institutionTerms(
+        (this.institutionContext ?? this.membershipInstitution)
+          ?.institutionType,
+      )
+    },
+    needsAffiliation(): boolean {
+      const saved = this.user?.studentData?.campusInformation
+      return (
+        !!this.user?.roles.includes(UserRolEnum.STUDENT) &&
+        !this.user.roles.some((role) => role !== UserRolEnum.STUDENT) &&
+        availableCampuses(this.membershipInstitution).length > 0 &&
+        !(saved?.name && saved.career)
+      )
     },
     isInstitutionContext(): boolean {
       return Boolean(

@@ -62,7 +62,7 @@ function addChild(option: BuilderOption) {
     <section class="qb-panel">
       <div class="qb-section-heading">
         <h2>{{ nested ? 'Tipo de subpregunta' : '1 · Tipo de pregunta' }}</h2>
-        <p v-if="!nested">Elige cómo responderá el alumno.</p>
+        <p v-if="!nested">Elige cómo se responderá esta pregunta.</p>
       </div>
       <div
         class="qb-types"

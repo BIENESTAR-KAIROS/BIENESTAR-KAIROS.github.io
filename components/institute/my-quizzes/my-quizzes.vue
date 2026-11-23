@@ -95,7 +95,7 @@ onMounted(load)
         </span>
         <span class="quizzes__empty-text">
           En cuanto publiques el primero aparecerá aquí, con sus preguntas, a
-          quién le llega y cuántos alumnos han respondido.
+          quién le llega y cuántas personas han respondido.
         </span>
       </div>
 

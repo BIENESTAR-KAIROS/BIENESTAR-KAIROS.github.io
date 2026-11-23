@@ -50,7 +50,7 @@ const chips = computed(() => [
   { key: 'all' as FilterKey, label: 'Todos', count: facets.value?.all },
   {
     key: 'students' as FilterKey,
-    label: 'Estudiantes',
+    label: authStore.terms.members,
     count: facets.value?.students,
   },
   { key: 'staff' as FilterKey, label: 'Staff', count: facets.value?.staff },
@@ -115,7 +115,7 @@ const isStudent = (user: IUserSummary) => user.roles.includes('STUDENT')
 
 /** El diseño muestra una sola etiqueta por persona, no todos sus roles. */
 function roleLabel(user: IUserSummary) {
-  if (user.isDemo) return 'Alumno demo'
+  if (user.isDemo) return `${authStore.terms.member} demo`
   if (user.roles.includes('KAIROS_ADMIN'))
     return roleLabels.KAIROS_ADMIN || 'Administrador KAIROS'
   const primary = isStudent(user)

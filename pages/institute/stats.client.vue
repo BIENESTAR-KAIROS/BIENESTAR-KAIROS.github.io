@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import PublicationStats from '~/components/institute/my-stats/publication-stats.vue'
 import DemoStats from '~/components/institute/my-stats/demo-stats.vue'
+const auth = useAuthStore()
 const population = ref<'real' | 'demo'>('real')
 definePageMeta({ layout: 'institute' })
 </script>
@@ -17,7 +19,7 @@ definePageMeta({ layout: 'institute' })
         :aria-pressed="population === 'real'"
         @click="population = 'real'"
       >
-        Alumnos reales
+        {{ auth.terms.members }} reales
       </button>
       <button
         type="button"

@@ -288,7 +288,7 @@ async function logout() {
             class="admin-navigation__link"
             @click="closeMenu"
           >
-            Vista de alumno
+            Vista de participante
           </NuxtLink>
         </nav>
         <p v-if="logoutError" role="alert">{{ logoutError }}</p>

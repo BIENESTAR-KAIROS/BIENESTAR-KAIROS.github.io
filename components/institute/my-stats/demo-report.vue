@@ -35,7 +35,7 @@ const name = (m: PublicationMetric, index: number, question = false) =>
       </p>
       <p>
         Estos resultados son ejemplos generados. No representan respuestas de
-        alumnos reales ni un período de evaluación. Se muestra una sola
+        personas reales ni un período de evaluación. Se muestra una sola
         generación completa.
       </p>
       <p v-if="!Object.keys(labels.metrics).length && report.metrics.length">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
+import InstitutionAffiliation from '~/components/user/profile/institution-affiliation.vue'
 import DefinitionQuestion from '~/components/user/quiz/definition-question.vue'
 import type { SociodemographicProfile } from '~/interfaces/user/sociodemographic-profile.interface'
 import type {
@@ -157,6 +158,7 @@ async function save() {
       <NuxtLink to="/user/profile">Mi perfil</NuxtLink> / Editar mis datos
     </nav>
     <h1>Editar mis datos</h1>
+    <InstitutionAffiliation />
     <article>
       <header>
         <span class="icon" aria-hidden="true"
@@ -180,8 +182,8 @@ async function save() {
         </div>
       </header>
       <p v-if="auth.isStudentPreview" class="notice">
-        Las respuestas personales solo están disponibles en la cuenta del
-        alumno.
+        Las respuestas personales solo están disponibles en la cuenta de la
+        persona que respondió.
       </p>
       <p v-else-if="loading" class="notice" role="status">
         Cargando tus datos…

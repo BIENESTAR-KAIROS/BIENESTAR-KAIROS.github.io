@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { institutionTerms } from '~/utils/helpers/institution-structure'
 import type {
   CreateRegistrationInstitute,
   RegistrationInstitute,
@@ -24,6 +25,8 @@ const instituteError = ref('')
 const instituteMessage = ref('')
 const institutionDomains = ref('')
 const emptyInstitution = (): CreateRegistrationInstitute => ({
+  institutionType: 'school',
+  campuses: [],
   name: '',
   businessName: '',
   address: '',
@@ -32,6 +35,15 @@ const emptyInstitution = (): CreateRegistrationInstitute => ({
   emailDomains: [],
 })
 const institution = ref(emptyInstitution())
+const terms = computed(() =>
+  institutionTerms(institution.value.institutionType),
+)
+function addCampus() {
+  institution.value.campuses.push({
+    name: '',
+    departments: [{ name: '', careers: [''] }],
+  })
+}
 const normalizeDomain = (value: string) => value.trim().toLowerCase()
 
 async function load() {
@@ -134,7 +146,10 @@ async function createInstitution() {
         .map(normalizeDomain),
     ),
   ]
-  if (!emailDomains.length) {
+  if (
+    !emailDomains.length &&
+    !institution.value.campuses.some((c) => c.emailDomain?.trim())
+  ) {
     instituteError.value = 'Agrega al menos un dominio institucional.'
     return
   }
@@ -142,6 +157,11 @@ async function createInstitution() {
   try {
     const payload: CreateRegistrationInstitute = {
       ...institution.value,
+      campuses: institution.value.campuses.map((c) => ({
+        ...c,
+        emailDomain: c.emailDomain?.trim() || undefined,
+        contactEmail: c.contactEmail?.trim() || undefined,
+      })),
       name: institution.value.name.trim(),
       businessName: institution.value.businessName.trim(),
       address: institution.value.address.trim(),
@@ -332,6 +352,13 @@ onMounted(() => {
               Datos de la nueva institución
             </legend>
             <label
+              >Tipo de institución
+              <select v-model="institution.institutionType">
+                <option value="school">Escuela</option>
+                <option value="company">Empresa</option>
+              </select>
+            </label>
+            <label
               ><span>Nombre</span
               ><input
                 v-model="institution.name"
@@ -375,12 +402,93 @@ onMounted(() => {
               ><span>Dominios institucionales</span
               ><textarea
                 v-model="institutionDomains"
-                required
                 rows="2"
                 placeholder="universidad.edu.mx"
                 aria-describedby="institution-domain-help"
               />
             </label>
+          </fieldset>
+          <fieldset :disabled="instituteBusy" class="structure">
+            <legend>
+              {{
+                institution.institutionType === 'company' ? 'Sedes' : 'Campus'
+              }}
+              (opcional)
+            </legend>
+            <fieldset v-for="(campus, i) in institution.campuses" :key="i">
+              <legend>{{ terms.site }} {{ i + 1 }}</legend>
+              <label>Nombre<input v-model.trim="campus.name" required /></label>
+              <label
+                >Alias de dominio (opcional)<input
+                  v-model.trim="campus.emailDomain"
+                  placeholder="norte.ejemplo.mx"
+              /></label>
+              <label>Dirección<input v-model.trim="campus.address" /></label>
+              <label
+                >Teléfono<input v-model.trim="campus.phoneNumber" type="tel"
+              /></label>
+              <label
+                >Correo de contacto<input
+                  v-model.trim="campus.contactEmail"
+                  type="email"
+              /></label>
+              <fieldset
+                v-for="(dept, j) in campus.departments"
+                :key="j"
+                class="registration-manager__wide"
+              >
+                <legend>{{ terms.department }} {{ j + 1 }}</legend>
+                <label>Nombre<input v-model.trim="dept.name" required /></label>
+                <label v-for="(_, k) in dept.careers" :key="k"
+                  >{{ terms.role }} {{ k + 1 }}
+                  <input v-model.trim="dept.careers[k]" required />
+                  <button
+                    v-if="dept.careers.length > 1"
+                    type="button"
+                    class="registration-manager__text-button"
+                    @click="dept.careers.splice(k, 1)"
+                  >
+                    Quitar {{ terms.role.toLowerCase() }} {{ k + 1 }}
+                  </button>
+                </label>
+                <button
+                  type="button"
+                  class="registration-manager__secondary"
+                  @click="dept.careers.push('')"
+                >
+                  Agregar {{ terms.role.toLowerCase() }}
+                </button>
+                <button
+                  v-if="campus.departments.length > 1"
+                  type="button"
+                  class="registration-manager__text-button"
+                  @click="campus.departments.splice(j, 1)"
+                >
+                  Quitar {{ terms.department.toLowerCase() }} {{ j + 1 }}
+                </button>
+              </fieldset>
+              <button
+                type="button"
+                class="registration-manager__secondary"
+                @click="campus.departments.push({ name: '', careers: [''] })"
+              >
+                Agregar {{ terms.department.toLowerCase() }}
+              </button>
+              <button
+                type="button"
+                class="registration-manager__text-button"
+                @click="institution.campuses.splice(i, 1)"
+              >
+                Quitar {{ terms.site.toLowerCase() }} {{ i + 1 }}
+              </button>
+            </fieldset>
+            <button
+              type="button"
+              class="registration-manager__secondary"
+              @click="addCampus"
+            >
+              Agregar {{ terms.site.toLowerCase() }}
+            </button>
           </fieldset>
           <p id="institution-domain-help" class="registration-manager__hint">
             Separa varios dominios con comas. Cada dominio pertenece a una sola
@@ -480,7 +588,7 @@ onMounted(() => {
   font-weight: 600;
   min-width: 0;
 }
-.registration-manager :is(input, textarea) {
+.registration-manager :is(input, select, textarea) {
   width: 100%;
   min-height: 50px;
   border: 2px solid #dbe7e9;
@@ -494,7 +602,7 @@ onMounted(() => {
   border-radius: 20px;
   resize: vertical;
 }
-.registration-manager :is(input, textarea, button, a):focus-visible {
+.registration-manager :is(input, select, textarea, button, a):focus-visible {
   outline: 3px solid #065c5d;
   outline-offset: 3px;
 }
@@ -628,5 +736,14 @@ onMounted(() => {
   .registration-manager__wide {
     grid-column: auto;
   }
+}
+.registration-manager__institution-form .structure {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+.structure fieldset {
+  min-width: 0;
 }
 </style>

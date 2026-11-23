@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import { useDemoStats } from './use-demo-stats'
 import DemoReport from './demo-report.vue'
 import { demoJobLabels } from '~/utils/translations/demo'
+const auth = useAuthStore()
 const {
   catalog,
   questionnaireId,
@@ -30,7 +32,8 @@ const jobLabel = computed(() =>
         <h1>Mis estadísticas</h1>
         <p>
           Explora ejemplos de tu institución. Los resultados sintéticos se
-          consultan por separado de los alumnos reales.
+          consultan por separado de los
+          {{ auth.terms.members.toLowerCase() }} reales.
         </p>
       </div>
       <button type="button" :disabled="loading || consulting" @click="load">

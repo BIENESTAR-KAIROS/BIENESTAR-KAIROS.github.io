@@ -2,6 +2,7 @@ import type { InstituteDepartmentInformation } from './institute-departement-inf
 
 export interface InstituteCampusInformation {
   name: string
+  emailDomain?: string
   address: string
   phoneNumber: string
   contactEmail: string

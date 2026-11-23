@@ -399,6 +399,10 @@ Mantener el mismo tono en títulos, acciones, mensajes y datos.
 
 Usar español claro y consistente; mayúsculas solo en etiquetas breves. Corregir microcopy técnico heredado (“llega en el siguiente paso”, “Sustituye al radar”) al diseñar futuras versiones.
 
+### Vocabulario institucional · 23 de noviembre de 2026
+
+En el alta y la edición del perfil, las escuelas usan «campus», «facultad», «carrera» y «alumno». Las empresas usan «sede», «área», «puesto» y «empleado». En contextos compartidos sin institución seleccionada se usa «persona» o «usuario». Las instituciones anteriores al selector de tipo conservan el vocabulario escolar. El PDF está pendiente de incorporar esta regla.
+
 ## 19. Contraste y acceso: deuda visible
 
 Conservar una apariencia reciente no exige reproducir sus problemas de legibilidad.

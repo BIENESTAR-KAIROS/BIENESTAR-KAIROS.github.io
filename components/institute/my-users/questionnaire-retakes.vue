@@ -124,8 +124,8 @@ function date(value: string) {
     <p v-if="success" class="retakes__success" role="status">{{ success }}</p>
     <div v-show="expanded" :id="panelId">
       <p class="retakes__intro">
-        Selecciona los cuestionarios que este estudiante podrá responder de
-        nuevo. Cada habilitación permite un envío y conserva sus respuestas y
+        Selecciona los cuestionarios que esta persona podrá responder de nuevo.
+        Cada habilitación permite un envío y conserva sus respuestas y
         resultados anteriores.
       </p>
       <p v-if="loading" role="status">Cargando cuestionarios…</p>

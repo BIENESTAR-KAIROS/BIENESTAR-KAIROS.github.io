@@ -530,7 +530,7 @@ function addRule() {
           <section class="qb-panel">
             <div class="qb-section-heading">
               <h2>4 · Reglas condicionales</h2>
-              <p>Qué aparece según lo que responda el alumno.</p>
+              <p>Qué aparece según lo que responda la persona.</p>
             </div>
             <template v-if="hasOptions(activeQuestion.type)">
               <div v-for="child in rules" :key="child.id" class="qb-rule">
@@ -585,7 +585,7 @@ function addRule() {
           </section>
           <section class="qb-live">
             <div class="qb-row">
-              <h2>Vista del alumno</h2>
+              <h2>Vista de quien responde</h2>
               <span class="qb-badge">En vivo</span>
             </div>
             <BuilderQuestionPreview :question="activeQuestion" />

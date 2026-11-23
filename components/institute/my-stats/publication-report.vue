@@ -15,6 +15,7 @@ const props = defineProps<{
   response: StatisticsPublicationResponse
   labels: PublicationLabels
   title: string
+  membersLabel?: string
   syntheticPreview?: boolean
 }>()
 const report = computed(() => props.response.report)
@@ -28,8 +29,8 @@ const metricLabel = (m: PublicationMetric, index: number) =>
 <template>
   <section class="publication-report" aria-label="Informe estadístico">
     <p v-if="syntheticPreview" class="panel protected">
-      Datos sintéticos de validación local. No representan alumnos ni una
-      publicación guardada en la base de datos.
+      Datos sintéticos de validación local. No representan personas reales ni
+      una publicación guardada en la base de datos.
     </p>
     <div
       v-if="response.status === 'suppressed'"
@@ -49,7 +50,7 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           {{
             syntheticPreview
               ? 'Prueba sintética · Gowther'
-              : 'Alumnos reales · Informe fijado'
+              : `${membersLabel ?? 'Alumnos'} reales · Informe fijado`
           }}
         </p>
         <h2>{{ title }}</h2>
