@@ -1,11 +1,11 @@
 export function isGowtherInstitutionDemoRoute(path?: string): boolean {
-  return /^\/v1\/statistics\/demos\/questionnaires\/(?!0{24}(?:$|\/))[a-f0-9]{24}(?:\/report)?$/.test(
+  return /^\/v1\/statistics\/demos\/questionnaires\/(?!0{24}(?:$|\/))[a-f0-9]{24}(?:\/(?:report|comparison))?$/.test(
     path || '',
   )
 }
 
 export function isGowtherDemoRoute(path?: string): boolean {
-  return /^\/v1\/demos\/questionnaires\/(?!0{24}(?:$|\/))[a-f0-9]{24}(?:\/(?:jobs|cancel|report))?$/.test(
+  return /^\/v1\/demos\/questionnaires\/(?!0{24}(?:$|\/))[a-f0-9]{24}(?:\/(?:jobs|cancel|report|comparison))?$/.test(
     path || '',
   )
 }

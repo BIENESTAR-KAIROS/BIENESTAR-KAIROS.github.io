@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DemoComparison from '~/components/institute/my-stats/demo-comparison.vue'
 import { useAuthStore } from '~/store/auth'
 import { useDemoStats } from './use-demo-stats'
 import DemoReport from './demo-report.vue'
@@ -102,6 +103,18 @@ const jobLabel = computed(() =>
           KAIROS que revise la configuración.
         </p>
       </div>
+      <DemoComparison
+        v-if="report && selected"
+        :key="
+          [report.institutionId, questionnaireId, report.generationId].join('-')
+        "
+        :institution="report.institutionId"
+        :questionnaire="questionnaireId"
+        :generation="report.generationId"
+        :participants="report.participants"
+        :metrics="report.metrics"
+        :labels="labels"
+      />
       <DemoReport
         v-if="report && selected"
         :report="report"
