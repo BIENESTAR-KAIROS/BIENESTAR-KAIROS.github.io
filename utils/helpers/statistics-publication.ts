@@ -129,6 +129,69 @@ export function validatePublicationMetric(
   }
 }
 
+function validateComparisons(report: Record<string, unknown>) {
+  if (report.comparisons === undefined) return
+  const rows = report.comparisons
+  const n = Number(report.participants)
+  const minimum = Number(report.minCohort)
+  const safeCount = (v: number) => v === 0 || v >= minimum
+  ensure(Array.isArray(rows) && rows.length <= 3200)
+  const seen = new Set<string>()
+  const metrics = (report.metrics as unknown[]).map(object)
+  for (const row of rows) {
+    const c = object(row)
+    const metric = metrics.find(
+      (m) =>
+        m.id === c.metricId && m.publicationStatus === 'published' && m.values,
+    )
+    ensure(
+      metric &&
+        typeof c.questionId === 'string' &&
+        /^[a-f0-9]{24}$/.test(c.questionId),
+    )
+    const key = JSON.stringify([c.metricId, c.questionId])
+    ensure(!seen.has(key))
+    seen.add(key)
+    ensure(
+      typeof c.text === 'string' &&
+        c.text.trim().length > 0 &&
+        ['number', 'single_choice', 'multiple_choice'].includes(String(c.kind)),
+    )
+    ensure(integer(c.paired, minimum, n) && safeCount(n - Number(c.paired)))
+    const paired = Number(c.paired)
+    const scored = Number(object(metric.values).count)
+    ensure(paired <= scored && safeCount(scored - paired))
+    ensure(
+      c.pearson === null ||
+        (c.kind === 'number' && finite(c.pearson) && Math.abs(c.pearson) <= 1),
+    )
+    ensure(
+      c.etaSquared === null ||
+        (c.kind === 'single_choice' &&
+          finite(c.etaSquared) &&
+          c.etaSquared >= 0 &&
+          c.etaSquared <= 1),
+    )
+    ensure(Array.isArray(c.groups) && c.groups.length <= 100)
+    ensure(c.kind === 'number' ? c.groups.length === 0 : c.groups.length > 0)
+    let members = 0
+    for (const item of c.groups) {
+      const g = object(item)
+      const count = Number(g.count)
+      ensure(
+        typeof g.label === 'string' &&
+          g.label.trim().length > 0 &&
+          integer(g.count, 0, paired),
+      )
+      ensure(safeCount(count) && safeCount(paired - count))
+      ensure(count === 0 ? g.mean === null : finite(g.mean))
+      members += count
+    }
+    if (c.kind === 'single_choice') ensure(members === paired)
+    if (c.kind === 'multiple_choice') ensure(members >= paired)
+  }
+}
+
 // Validate scope and suppression before rendering; never reconstruct protected data.
 export function parseStatisticsPublication(
   value: unknown,
@@ -205,5 +268,6 @@ export function parseStatisticsPublication(
   )
   r.metrics.forEach((m) => validatePublicationMetric(m, false))
   r.questions.forEach((m) => validatePublicationMetric(m, true))
+  validateComparisons(r)
   return value as StatisticsPublicationResponse
 }

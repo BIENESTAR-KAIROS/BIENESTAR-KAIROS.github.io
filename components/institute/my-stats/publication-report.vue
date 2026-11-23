@@ -11,6 +11,7 @@ import {
 } from '~/utils/translations/statistics-publication'
 import { formatPeriodInstant } from '~/utils/helpers/statistics-period-time'
 import PublicationMetricCard from './publication-metric.vue'
+import PublicationComparison from './publication-comparison.vue'
 import PublicationCharts from './publication-charts.vue'
 const props = defineProps<{
   response: StatisticsPublicationResponse
@@ -85,6 +86,11 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           {{ publicationExplanation(reason) }}
         </p>
       </header>
+      <PublicationComparison
+        v-if="!syntheticPreview"
+        :report="report"
+        :labels="labels"
+      />
       <PublicationCharts
         :items="
           report.metrics.map((metric, index) => ({
@@ -150,6 +156,11 @@ const metricLabel = (m: PublicationMetric, index: number) =>
       </section>
       <details v-if="report.questions.length" class="questions">
         <summary>Ver resultados por pregunta</summary>
+        <PublicationComparison
+          v-if="!syntheticPreview"
+          :report="report"
+          :labels="labels"
+        />
         <PublicationCharts
           questions
           :items="

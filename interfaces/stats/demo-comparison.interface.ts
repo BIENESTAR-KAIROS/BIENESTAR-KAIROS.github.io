@@ -1,4 +1,9 @@
-export interface DemoComparison {
+import type {
+  ComparisonKind,
+  ComparisonResult,
+} from './questionnaire-comparison.interface'
+
+export interface DemoComparison extends ComparisonResult {
   synthetic: true
   institutionId: string
   questionnaireId: string
@@ -8,13 +13,9 @@ export interface DemoComparison {
   questions: {
     id: string
     text: string
-    kind: 'number' | 'single_choice' | 'multiple_choice'
+    kind: ComparisonKind
   }[]
   questionId?: string
   metricId?: string
   participants: number
-  paired: number
-  groups: { label: string; count: number; mean: number | null }[]
-  pearson: number | null
-  etaSquared: number | null
 }

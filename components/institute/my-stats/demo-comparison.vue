@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
+import ComparisonResults from './comparison-results.vue'
 import { isAxiosError } from 'axios'
 import type { DemoComparison } from '~/interfaces/stats/demo-comparison.interface'
 import type {
@@ -31,7 +32,12 @@ const selected = computed(() =>
 )
 const busy = ref(false),
   error = ref('')
-const format = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 3 })
+const metricLabel = computed(() => {
+  const index = props.metrics.findIndex((m) => m.id === result.value?.metricId)
+  return index < 0
+    ? ''
+    : publicationMetricLabel(props.metrics[index], index, props.labels)
+})
 let request: AbortController | undefined
 watch(
   [question, metric],
@@ -197,57 +203,15 @@ async function load(compare: boolean) {
       </p>
       <p v-if="busy" role="status">Consultando datos demo…</p>
       <p v-if="error" role="alert">{{ error }}</p>
-      <div v-if="result" aria-live="polite">
-        <p>
-          <strong
-            >{{ result.paired }} de {{ result.participants }} participantes
-            demo</strong
-          >
-          tienen una respuesta y un puntaje válidos para esta comparación.
-        </p>
-        <template v-if="result.paired">
-          <p v-if="selected?.kind === 'number'">
-            {{
-              result.pearson === null
-                ? 'El coeficiente de Pearson requiere variación en ambas medidas y al menos dos pares.'
-                : 'Correlación de Pearson (r) = ' +
-                  format.format(result.pearson)
-            }}
-          </p>
-          <template v-else>
-            <p v-if="selected?.kind === 'multiple_choice'">
-              Una persona puede contar en varias opciones si eligió más de una
-              respuesta.
-            </p>
-            <table>
-              <caption>
-                Puntaje por respuesta a «{{
-                  selected?.text
-                }}»
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Respuesta</th>
-                  <th scope="col">Participantes</th>
-                  <th scope="col">Puntaje medio</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(g, i) in result.groups" :key="i">
-                  <th scope="row">{{ g.label }}</th>
-                  <td>{{ g.count }}</td>
-                  <td>{{ g.mean === null ? '—' : format.format(g.mean) }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p v-if="result.etaSquared !== null">
-              El {{ format.format(result.etaSquared * 100) }} % de la variación
-              del puntaje corresponde a diferencias entre las medias de los
-              grupos (η²).
-            </p>
-          </template>
-        </template>
-      </div>
+      <ComparisonResults
+        v-if="result && selected"
+        :result="result"
+        :participants="result.participants"
+        :question="selected.text"
+        :kind="selected.kind"
+        :metric-label="metricLabel"
+        demo
+      />
     </template>
   </section>
 </template>
@@ -308,26 +272,6 @@ button:disabled {
 :focus-visible {
   outline: 3px solid var(--ink);
   outline-offset: 3px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-  overflow-wrap: anywhere;
-}
-caption {
-  text-align: left;
-  font-weight: 700;
-  padding: 8px 0;
-}
-th,
-td {
-  text-align: start;
-  padding: 8px 4px;
-  border-bottom: 1px solid #ded9e4;
-}
-td {
-  font-variant-numeric: tabular-nums;
 }
 [role='alert'] {
   color: #982821;

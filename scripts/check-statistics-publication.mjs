@@ -216,6 +216,47 @@ try {
           }),
       }),
     )
+  const comparisonReport = structuredClone(fixture)
+  comparisonReport.report.comparisons = [
+    {
+      questionId: 'c'.repeat(24),
+      metricId: published.id,
+      kind: 'single_choice',
+      text: 'Tipo de vivienda',
+      paired: 100,
+      pearson: null,
+      etaSquared: null,
+      groups: [
+        { label: 'Propia', count: 40, mean: 0 },
+        { label: 'Rentada', count: 60, mean: 0 },
+      ],
+    },
+  ]
+  const compared = await render(parseReport(comparisonReport, query))
+  assert.ok(
+    compared.includes('Tipo de vivienda') &&
+      compared.includes('dot-plot') &&
+      compared.includes('Rentada'),
+  )
+  for (const mutate of [
+    (c) => {
+      c.groups[0].count = 9
+      c.groups[1].count = 91
+    },
+    (c) => {
+      c.metricId = protectedMetric.id
+    },
+    (c) => {
+      c.paired = 99
+    },
+    (c) => {
+      c.groups[0].mean = null
+    },
+  ]) {
+    const unsafe = structuredClone(comparisonReport)
+    mutate(unsafe.report.comparisons[0])
+    assert.throws(() => parseReport(unsafe, query))
+  }
   const historical = structuredClone(fixture)
   historical.report.metrics[0].label = 'Nombre de la revisión evaluada'
   const historicalHtml = await render(historical)
