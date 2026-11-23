@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
 import type {
   StatisticsPublicationResponse,
   PublicationLabels,
@@ -20,10 +21,7 @@ const props = defineProps<{
 }>()
 const report = computed(() => props.response.report)
 const metricLabel = (m: PublicationMetric, index: number) =>
-  props.labels.metrics[m.id] ||
-  (m.kind === 'overall'
-    ? 'Resultado general'
-    : `Dimensión ${index + 1} · ${m.id}`)
+  publicationMetricLabel(m, index, props.labels)
 </script>
 
 <template>
@@ -157,9 +155,7 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           :items="
             report.questions.map((metric, index) => ({
               metric,
-              label:
-                labels.questions[metric.id] ||
-                `Pregunta ${index + 1} · ${metric.id}`,
+              label: metricLabel(metric, index),
             }))
           "
         />
@@ -168,10 +164,7 @@ const metricLabel = (m: PublicationMetric, index: number) =>
             v-for="(question, index) in report.questions"
             :key="question.id"
             :metric="question"
-            :label="
-              labels.questions[question.id] ||
-              `Pregunta ${index + 1} · ${question.id}`
-            "
+            :label="metricLabel(question, index)"
           />
         </div>
       </details>

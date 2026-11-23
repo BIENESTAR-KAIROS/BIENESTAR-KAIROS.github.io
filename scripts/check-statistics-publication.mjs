@@ -216,6 +216,11 @@ try {
           }),
       }),
     )
+  const historical = structuredClone(fixture)
+  historical.report.metrics[0].label = 'Nombre de la revisión evaluada'
+  const historicalHtml = await render(historical)
+  assert.ok(historicalHtml.includes('Nombre de la revisión evaluada'))
+  assert.ok(!historicalHtml.includes(labels.metrics.zero))
   const html = await render(fixture)
   for (const text of [
     'Mediana',

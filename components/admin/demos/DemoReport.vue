@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
 import type { DemoReport } from '~/interfaces/stats/demo.interface'
 import type {
   PublicationLabels,
@@ -17,12 +18,12 @@ const props = defineProps<{
 const sameRevision = computed(
   () => props.report.configuration.definitionRevision === props.currentRevision,
 )
-const name = (m: PublicationMetric, index: number, question = false) =>
-  (sameRevision.value &&
-    (question ? props.labels.questions[m.id] : props.labels.metrics[m.id])) ||
-  (m.kind === 'overall'
-    ? 'Resultado general'
-    : `${question ? 'Pregunta' : 'Dimensión'} ${index + 1} · ${m.id}`)
+const name = (m: PublicationMetric, index: number) =>
+  publicationMetricLabel(
+    m,
+    index,
+    sameRevision.value ? props.labels : undefined,
+  )
 </script>
 <template>
   <section class="demo-results" aria-labelledby="demo-report-title">
@@ -56,16 +57,17 @@ const name = (m: PublicationMetric, index: number, question = false) =>
             :key="d.dimensionId"
           >
             {{
+              report.metrics.find((m) => m.id === d.dimensionId)?.label ||
               (sameRevision && labels.metrics[d.dimensionId]) ||
-              `Dimensión ${index + 1} · ${d.dimensionId}`
+              `Dimensión ${index + 1} (nombre no disponible)`
             }}: {{ demoProfileLabel(d.profile) }}.
           </li>
         </ul>
         <p v-else>Sin ajustes específicos por dimensión.</p>
       </details>
       <p v-if="!sameRevision" class="user-notice">
-        La generación activa usa una revisión anterior. Sus nombres se muestran
-        como identificadores para no mezclarlos con la revisión actual.
+        La generación activa corresponde a la revisión
+        {{ report.configuration.definitionRevision }} del cuestionario.
       </p>
     </header>
     <PublicationCharts
@@ -103,7 +105,7 @@ const name = (m: PublicationMetric, index: number, question = false) =>
         :items="
           report.questions.map((metric, index) => ({
             metric,
-            label: name(metric, index, true),
+            label: name(metric, index),
           }))
         "
       />
@@ -112,7 +114,7 @@ const name = (m: PublicationMetric, index: number, question = false) =>
           v-for="(metric, index) in report.questions"
           :key="metric.id"
           :metric="metric"
-          :label="name(metric, index, true)"
+          :label="name(metric, index)"
         />
       </div>
     </details>

@@ -1,4 +1,6 @@
 import type {
+  PublicationLabels,
+  PublicationMetric,
   PublicationQuery,
   StatisticsPublicationResponse,
 } from '~/interfaces/stats/statistics-publication.interface'
@@ -28,6 +30,24 @@ export function validDefinitionRevision(value: string): boolean {
     /^(0|[1-9][0-9]{0,15})$/.test(value) && Number.isSafeInteger(Number(value))
   )
 }
+export function publicationMetricLabel(
+  metric: PublicationMetric,
+  index: number,
+  labels?: PublicationLabels,
+) {
+  const sameRevision =
+    metric.kind === 'question'
+      ? labels?.questions[metric.id]
+      : labels?.metrics[metric.id]
+  return (
+    metric.label?.trim() ||
+    sameRevision?.trim() ||
+    (metric.kind === 'overall'
+      ? 'Resultado general'
+      : `${metric.kind === 'question' ? 'Pregunta' : 'Dimensión'} ${index + 1} (nombre no disponible)`)
+  )
+}
+
 export function validatePublicationMetric(
   value: unknown,
   question: boolean,
@@ -43,6 +63,10 @@ export function validatePublicationMetric(
   ensure(
     m.unit === undefined ||
       (typeof m.unit === 'string' && m.unit.length <= 100),
+  )
+  ensure(
+    m.label === undefined ||
+      (typeof m.label === 'string' && m.label.length <= (question ? 500 : 100)),
   )
   ensure(m.method === undefined || typeof m.method === 'string')
   codes(m.reasons)

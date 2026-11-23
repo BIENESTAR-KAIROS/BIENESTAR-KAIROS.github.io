@@ -34,6 +34,7 @@ export interface PublicationCoverage {
 }
 
 export interface PublicationMetric {
+  label?: string
   id: string
   kind: 'question' | 'dimension' | 'overall'
   unit?: string

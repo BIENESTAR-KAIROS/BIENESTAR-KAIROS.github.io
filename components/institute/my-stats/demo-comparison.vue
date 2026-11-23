@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
 import { isAxiosError } from 'axios'
 import type { DemoComparison } from '~/interfaces/stats/demo-comparison.interface'
 import type {
@@ -173,13 +174,8 @@ async function load(compare: boolean) {
         <label
           >Resultado del cuestionario
           <select v-model="metric" :disabled="busy">
-            <option v-for="(m, i) in allowed" :key="m.id" :value="m.id">
-              {{
-                labels.metrics[m.id] ||
-                (m.kind === 'overall'
-                  ? 'Resultado general'
-                  : 'Dimensión ' + (i + 1))
-              }}
+            <option v-for="m in allowed" :key="m.id" :value="m.id">
+              {{ publicationMetricLabel(m, metrics.indexOf(m), labels) }}
             </option>
           </select>
         </label>
