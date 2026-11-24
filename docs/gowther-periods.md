@@ -148,12 +148,12 @@ Los reintentos distinguen promedio entre todos y entre repetidores, y respetan l
 supresión del bloque completo. La fecha de cálculo y las fechas del alcance se
 presentan en `America/Mexico_City`, indicada explícitamente.
 
-Los nombres actuales de preguntas/dimensiones se consultan opcionalmente mediante
-`GET /questionnaire/{id}/definition` solo para la revisión actual, comprobando ID y
-revisión. Si no coinciden, no están disponibles o se consulta una revisión anterior,
-se conserva una referencia al ID de la métrica/pregunta; nunca se atribuyen etiquetas
-actuales a resultados históricos. Un catálogo de revisiones y etiquetas históricas
-congeladas requiere ampliar el contrato; no se deducen desde respuestas individuales.
+Los informes nuevos incluyen los nombres de dimensiones y preguntas de la definición
+verificada al calcular los resultados. En las demos se recuperan también para las
+generaciones anteriores desde su definición congelada. Si una publicación antigua
+carece de nombres, el frontend puede consultar `GET /questionnaire/{id}/definition`
+cuando coinciden el cuestionario y la revisión. Si falta el nombre, la interfaz
+identifica el elemento por su posición en el informe.
 
 Verificación reproducible sin red, `.env` ni base de datos:
 

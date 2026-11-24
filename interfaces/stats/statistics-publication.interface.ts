@@ -1,3 +1,5 @@
+import type { PublishedComparison } from './questionnaire-comparison.interface'
+
 export interface PublicationQuery {
   institutionId: string
   questionnaireId: string
@@ -34,6 +36,7 @@ export interface PublicationCoverage {
 }
 
 export interface PublicationMetric {
+  label?: string
   id: string
   kind: 'question' | 'dimension' | 'overall'
   unit?: string
@@ -46,6 +49,7 @@ export interface PublicationMetric {
 }
 
 export interface StatisticsPublication {
+  comparisons?: PublishedComparison[]
   scope: {
     institutionId: string
     revision: {

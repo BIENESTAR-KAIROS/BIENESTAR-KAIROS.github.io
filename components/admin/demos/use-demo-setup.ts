@@ -76,7 +76,7 @@ export function useDemoSetup() {
       inspection.value.assignment.count > inspection.value.maxParticipants,
   )
   const dimensionName = (id: string, index: number) =>
-    labels.value.metrics[id] || `Dimensión ${index + 1} · ${id}`
+    labels.value.metrics[id] || `Dimensión ${index + 1} (nombre no disponible)`
   const overlapping = computed(() => {
     const groups = definition.value?.evaluationConfiguration.dimensions || []
     const seen = new Set<string>()

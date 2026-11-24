@@ -9,7 +9,6 @@ const roleLabels: Record<string, string> = {
   KAIROS_ADMIN: 'Administrador KAIROS',
   INSTITUTION_ADMIN: 'Administrador institucional',
   INSTITUTION_STAFF: 'Equipo institucional',
-  STUDENT: 'Alumna/o',
 }
 
 const user = computed(() => authStore.user)
@@ -36,16 +35,15 @@ const initials = computed(() => {
 const roleLabel = computed(() => {
   const [firstRole] = user.value?.roles || []
 
-  return firstRole
-    ? roleLabels[firstRole] || formatLabel(firstRole)
-    : 'Alumna/o'
+  if (firstRole === 'STUDENT') return authStore.terms.member
+  return firstRole ? roleLabels[firstRole] || formatLabel(firstRole) : 'Usuario'
 })
 
 const campusName = computed(() => {
   return (
     user.value?.studentData?.campusInformation?.name ||
     authStore.activeInstitute?.name ||
-    'Campus pendiente'
+    `${authStore.terms.site} pendiente`
   )
 })
 

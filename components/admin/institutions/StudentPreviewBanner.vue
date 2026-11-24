@@ -7,16 +7,19 @@ const auth = useAuthStore()
   <section
     v-if="auth.isStudentPreview"
     class="student-preview"
-    aria-label="Vista de alumno en exploración"
+    aria-label="Vista de participante en exploración"
   >
     <div>
-      <strong>Vista de alumno · {{ auth.activeInstitute?.name }}</strong>
+      <strong
+        >Vista de {{ auth.terms.member.toLowerCase() }} ·
+        {{ auth.activeInstitute?.name }}</strong
+      >
       <p>
         Solo exploración. No se guardan respuestas ni cambios. Puedes abrir cada
         cuestionario sin completar los anteriores.
       </p>
     </div>
-    <nav aria-label="Cambiar vista de alumno">
+    <nav aria-label="Cambiar vista de participante">
       <NuxtLink to="/admin/institutions?view=student"
         >Cambiar institución</NuxtLink
       >

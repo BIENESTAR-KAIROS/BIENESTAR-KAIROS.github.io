@@ -102,6 +102,30 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
       }
 
+      if (isAuthenticated && isValidRoute(to.path, authRoutes)) {
+        try {
+          await authStore.loadMembershipInstitution()
+        } catch {
+          return abortNavigation(
+            createError({
+              statusCode: 503,
+              statusMessage:
+                'No pudimos cargar tu institución. Vuelve a intentarlo.',
+            }),
+          )
+        }
+        if (
+          authStore.needsAffiliation &&
+          to.path !== '/user/register/campus-info'
+        )
+          return navigateTo('/user/register/campus-info')
+        if (
+          !authStore.needsAffiliation &&
+          to.path === '/user/register/campus-info'
+        )
+          return navigateTo('/user/dashboard')
+      }
+
       // * ============ User is not authenticated ============
       if (!isAuthenticated) {
         if (isValidRoute(to.path, authRoutes)) {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DemoComparison from '~/components/institute/my-stats/demo-comparison.vue'
 import DemoAssignment from '~/components/admin/users/DemoAssignment.vue'
 import DemoProfileFields from './DemoProfileFields.vue'
 import DemoReport from './DemoReport.vue'
@@ -131,7 +132,9 @@ async function confirmCancel() {
         <h2 id="demo-controls-title">Estadísticas de la demo</h2>
         <p>
           Elige un cuestionario activo y publicado. Los controles orientan las
-          respuestas; el cuestionario determina sus puntuaciones finales.
+          respuestas y el cuestionario determina sus puntuaciones finales. Para
+          comparar resultados, genera una demo del Sociodemográfico vinculado y
+          otra del cuestionario que quieras analizar con la misma asignación.
         </p>
         <div class="user-actions">
           <label
@@ -394,6 +397,22 @@ async function confirmCancel() {
           </div>
         </template>
       </section>
+      <DemoComparison
+        v-if="report && inspection && selectedQuestionnaire"
+        :key="[institutionId, questionnaireId, report.generationId].join('-')"
+        :institution="institutionId"
+        :questionnaire="questionnaireId"
+        :generation="report.generationId"
+        :participants="report.participants"
+        :metrics="report.metrics"
+        admin
+        :labels="
+          report.configuration.definitionRevision ===
+          inspection.revision.definitionRevision
+            ? labels
+            : { metrics: {}, questions: {} }
+        "
+      />
       <DemoReport
         v-if="report && inspection && selectedQuestionnaire"
         :report="report"

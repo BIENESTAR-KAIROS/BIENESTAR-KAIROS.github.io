@@ -71,11 +71,11 @@ onMounted(load)
   <main class="institutions" :aria-busy="loading">
     <header class="institutions__heading">
       <div>
-        <h1>{{ studentView ? 'Vista de alumno' : 'Instituciones' }}</h1>
+        <h1>{{ studentView ? 'Vista de participante' : 'Instituciones' }}</h1>
         <p>
           {{
             studentView
-              ? 'Elige una institución para explorar sus cuestionarios y configuración como alumno. No se guardarán respuestas ni cambios.'
+              ? 'Elige una institución para explorar sus cuestionarios y configuración como participante. No se guardarán respuestas ni cambios.'
               : 'Consulta las instituciones registradas y entra a su panel para administrarlas.'
           }}
         </p>
@@ -132,6 +132,11 @@ onMounted(load)
           <li v-for="institution in filtered" :key="institution._id">
             <div class="institutions__details">
               <h2>{{ institution.name }}</h2>
+              <span>{{
+                institution.institutionType === 'company'
+                  ? 'Empresa'
+                  : 'Escuela'
+              }}</span>
               <span
                 class="institutions__badge"
                 :class="{
@@ -151,14 +156,16 @@ onMounted(load)
               class="institutions__secondary"
               type="button"
               :disabled="Boolean(entering)"
-              :aria-label="`${studentView ? 'Explorar como alumno de' : 'Entrar a'} ${institution.name}`"
+              :aria-label="`${studentView ? 'Explorar el acceso personal de' : 'Entrar a'} ${institution.name}`"
               @click="enter(institution)"
             >
               {{
                 entering === institution._id
                   ? 'Abriendo…'
                   : studentView
-                    ? 'Explorar como alumno'
+                    ? institution.institutionType === 'company'
+                      ? 'Explorar como empleado'
+                      : 'Explorar como alumno'
                     : 'Entrar a institución'
               }}
             </button>

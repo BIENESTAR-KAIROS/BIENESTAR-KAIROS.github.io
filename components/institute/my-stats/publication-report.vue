@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
 import type {
   StatisticsPublicationResponse,
   PublicationLabels,
@@ -10,26 +11,25 @@ import {
 } from '~/utils/translations/statistics-publication'
 import { formatPeriodInstant } from '~/utils/helpers/statistics-period-time'
 import PublicationMetricCard from './publication-metric.vue'
+import PublicationComparison from './publication-comparison.vue'
 import PublicationCharts from './publication-charts.vue'
 const props = defineProps<{
   response: StatisticsPublicationResponse
   labels: PublicationLabels
   title: string
+  membersLabel?: string
   syntheticPreview?: boolean
 }>()
 const report = computed(() => props.response.report)
 const metricLabel = (m: PublicationMetric, index: number) =>
-  props.labels.metrics[m.id] ||
-  (m.kind === 'overall'
-    ? 'Resultado general'
-    : `Dimensión ${index + 1} · ${m.id}`)
+  publicationMetricLabel(m, index, props.labels)
 </script>
 
 <template>
   <section class="publication-report" aria-label="Informe estadístico">
     <p v-if="syntheticPreview" class="panel protected">
-      Datos sintéticos de validación local. No representan alumnos ni una
-      publicación guardada en la base de datos.
+      Datos sintéticos de validación local. No representan personas reales ni
+      una publicación guardada en la base de datos.
     </p>
     <div
       v-if="response.status === 'suppressed'"
@@ -49,7 +49,7 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           {{
             syntheticPreview
               ? 'Prueba sintética · Gowther'
-              : 'Alumnos reales · Informe fijado'
+              : `${membersLabel ?? 'Alumnos'} reales · Informe fijado`
           }}
         </p>
         <h2>{{ title }}</h2>
@@ -86,6 +86,11 @@ const metricLabel = (m: PublicationMetric, index: number) =>
           {{ publicationExplanation(reason) }}
         </p>
       </header>
+      <PublicationComparison
+        v-if="!syntheticPreview"
+        :report="report"
+        :labels="labels"
+      />
       <PublicationCharts
         :items="
           report.metrics.map((metric, index) => ({
@@ -151,14 +156,17 @@ const metricLabel = (m: PublicationMetric, index: number) =>
       </section>
       <details v-if="report.questions.length" class="questions">
         <summary>Ver resultados por pregunta</summary>
+        <PublicationComparison
+          v-if="!syntheticPreview"
+          :report="report"
+          :labels="labels"
+        />
         <PublicationCharts
           questions
           :items="
             report.questions.map((metric, index) => ({
               metric,
-              label:
-                labels.questions[metric.id] ||
-                `Pregunta ${index + 1} · ${metric.id}`,
+              label: metricLabel(metric, index),
             }))
           "
         />
@@ -167,10 +175,7 @@ const metricLabel = (m: PublicationMetric, index: number) =>
             v-for="(question, index) in report.questions"
             :key="question.id"
             :metric="question"
-            :label="
-              labels.questions[question.id] ||
-              `Pregunta ${index + 1} · ${question.id}`
-            "
+            :label="metricLabel(question, index)"
           />
         </div>
       </details>

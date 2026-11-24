@@ -155,6 +155,14 @@ export function useDemoStats() {
       })
       if (current !== queryVersion) return
       const parsed = parseInstitutionDemoReport(response.data, state)
+      if (
+        [...parsed.metrics, ...parsed.questions].every((item) =>
+          item.label?.trim(),
+        )
+      ) {
+        report.value = parsed
+        return
+      }
       try {
         const { data: d } = await $axios.get<QuestionnaireDefinition>(
           `/questionnaire/${q}/definition`,

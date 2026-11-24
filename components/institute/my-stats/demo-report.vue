@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { publicationMetricLabel } from '~/utils/helpers/statistics-publication'
 import type { InstitutionDemoReport } from '~/interfaces/stats/institution-demo.interface'
 import type {
   PublicationLabels,
@@ -12,11 +13,8 @@ const props = defineProps<{
   labels: PublicationLabels
   title: string
 }>()
-const name = (m: PublicationMetric, index: number, question = false) =>
-  (question ? props.labels.questions[m.id] : props.labels.metrics[m.id]) ||
-  (m.kind === 'overall'
-    ? 'Resultado general'
-    : `${question ? 'Pregunta' : 'Dimensión'} ${index + 1} · ${m.id}`)
+const name = (m: PublicationMetric, index: number) =>
+  publicationMetricLabel(m, index, props.labels)
 </script>
 <template>
   <section class="demo-report" aria-label="Informe demo institucional">
@@ -35,12 +33,11 @@ const name = (m: PublicationMetric, index: number, question = false) =>
       </p>
       <p>
         Estos resultados son ejemplos generados. No representan respuestas de
-        alumnos reales ni un período de evaluación. Se muestra una sola
+        personas reales ni un período de evaluación. Se muestra una sola
         generación completa.
       </p>
-      <p v-if="!Object.keys(labels.metrics).length && report.metrics.length">
-        Las etiquetas de esta revisión no están disponibles. Se muestran
-        identificadores para conservar la correspondencia de los resultados.
+      <p v-if="report.metrics.some((m) => !m.label && !labels.metrics[m.id])">
+        Faltan nombres para algunos resultados de esta revisión.
       </p>
     </header>
     <PublicationCharts
@@ -76,7 +73,7 @@ const name = (m: PublicationMetric, index: number, question = false) =>
         :items="
           report.questions.map((metric, index) => ({
             metric,
-            label: name(metric, index, true),
+            label: name(metric, index),
           }))
         "
       />
@@ -85,7 +82,7 @@ const name = (m: PublicationMetric, index: number, question = false) =>
           v-for="(metric, index) in report.questions"
           :key="metric.id"
           :metric="metric"
-          :label="name(metric, index, true)"
+          :label="name(metric, index)"
         />
       </div>
     </details>

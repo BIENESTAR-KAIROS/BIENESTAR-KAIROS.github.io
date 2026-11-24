@@ -71,7 +71,7 @@ const stats = computed(() => [
     note: activeShare.value,
   },
   {
-    label: 'Estudiantes',
+    label: authStore.terms.members,
     value: formatNumber(instituteStore.statistics?.studentUsers),
     link: { to: '/institute/my-users', text: 'Ver detalles →' },
   },

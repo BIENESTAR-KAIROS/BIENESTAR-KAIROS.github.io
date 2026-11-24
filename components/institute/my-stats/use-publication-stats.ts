@@ -222,6 +222,9 @@ export function usePublicationStats() {
       // Labels are optional metadata, never scores; do not attach today's labels to an old revision.
       if (
         parsed.status === 'evaluated' &&
+        [...parsed.report.metrics, ...parsed.report.questions].some(
+          (item) => !item.label?.trim(),
+        ) &&
         query.definitionRevision === currentRevision
       ) {
         try {

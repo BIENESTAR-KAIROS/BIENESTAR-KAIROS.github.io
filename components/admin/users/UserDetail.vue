@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { institutionTerms } from '~/utils/helpers/institution-structure'
 import type { AdminUserDetail } from '~/interfaces/user/admin-user.interface'
 import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
@@ -46,6 +47,12 @@ function changePage(next: number) {
   load()
 }
 const user = computed(() => detail.value?.user)
+const terms = computed(() =>
+  institutionTerms(
+    institutions.value.find((i) => i._id === user.value?.institute)
+      ?.institutionType,
+  ),
+)
 const pages = computed(() =>
   Math.max(1, Math.ceil((detail.value?.history.total || 0) / 10)),
 )
@@ -98,13 +105,13 @@ onBeforeUnmount(() => {
             <dd>{{ genderLabel(user.studentData?.gender) }}</dd>
           </div>
           <div>
-            <dt>Campus</dt>
+            <dt>{{ terms.site }}</dt>
             <dd>
               {{ user.studentData?.campusInformation?.name || 'Sin registro' }}
             </dd>
           </div>
           <div>
-            <dt>Carrera</dt>
+            <dt>{{ terms.role }}</dt>
             <dd>
               {{
                 user.studentData?.campusInformation?.career || 'Sin registro'

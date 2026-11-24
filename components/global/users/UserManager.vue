@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
+import { institutionTerms } from '~/utils/helpers/institution-structure'
 import { useId } from 'vue'
 import type { AdminUser } from '~/interfaces/user/admin-user.interface'
 import type {
@@ -40,12 +42,21 @@ const base = computed(() =>
     ? `/institute/${props.institutionId}/managed-users`
     : '/admin/managed-users',
 )
-const roleOptions = [
-  { value: 'STUDENT', label: 'Alumno' },
+const auth = useAuthStore()
+const terms = computed(() =>
+  props.institutionId
+    ? auth.terms
+    : institutionTerms(
+        props.institutions?.find((i) => i._id === form.institutionId)
+          ?.institutionType,
+      ),
+)
+const roleOptions = computed(() => [
+  { value: 'STUDENT', label: terms.value.member },
   { value: 'INSTITUTION_STAFF', label: 'Personal institucional' },
   { value: 'INSTITUTION_ADMIN', label: 'Administrador institucional' },
   { value: 'KAIROS_ADMIN', label: 'Administrador KAIROS' },
-]
+])
 const emailChanged = computed(() =>
   Boolean(
     record.value && form.email.trim().toLowerCase() !== record.value.email,
@@ -367,7 +378,8 @@ watch(open, (value) => {
                 </select></label
               >
               <label
-                >Campus<input
+                >{{ terms.site
+                }}<input
                   v-model="form.campus"
                   maxlength="150"
                   :disabled="saving"
@@ -415,7 +427,8 @@ watch(open, (value) => {
               </p>
             </fieldset>
             <p v-if="!userId && institutionId">
-              Se creará como alumno de esta institución.
+              Se creará como {{ terms.member.toLowerCase() }} de esta
+              institución.
             </p>
             <p v-if="willSendEmail" class="management-notice">
               Al guardar se enviará un correo de verificación a

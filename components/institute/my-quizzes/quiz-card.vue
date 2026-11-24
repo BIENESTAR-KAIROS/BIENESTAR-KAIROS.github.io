@@ -31,7 +31,7 @@ const responsesLabel = computed(() => {
 
   const answers = responses.total === 1 ? 'respuesta' : 'respuestas'
   if (responses.potential > 0) {
-    return `${formatNumber(responses.total)} de ${formatNumber(responses.potential)} alumnos · ${responses.responseRate}%`
+    return `${formatNumber(responses.total)} de ${formatNumber(responses.potential)} participantes · ${responses.responseRate}%`
   }
 
   return `${formatNumber(responses.total)} ${answers}`
