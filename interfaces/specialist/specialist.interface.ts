@@ -3,6 +3,7 @@ export interface SpecialistFields {
   image: string
   specialties: string[]
   locations: string[]
+  officeHours?: string
   contacts: string[]
 }
 

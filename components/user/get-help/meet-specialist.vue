@@ -135,6 +135,13 @@ function contactHref(value: string): string {
           </div>
         </div>
 
+        <div v-if="specialist.officeHours" class="specialist-card__section">
+          <span class="specialist-card__label">Horario de atención</span>
+          <p class="specialist-card__row specialist-card__hours">
+            {{ specialist.officeHours }}
+          </p>
+        </div>
+
         <div class="specialist-card__section">
           <span class="specialist-card__label">Contacto</span>
           <a
@@ -387,6 +394,9 @@ function contactHref(value: string): string {
 
 .specialist-card__row--link {
   color: #0e2a36;
+}
+.specialist-card__hours {
+  white-space: pre-line;
 }
 
 .specialist-card__row--link:hover {

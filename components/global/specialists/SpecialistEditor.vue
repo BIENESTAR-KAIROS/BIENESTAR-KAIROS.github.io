@@ -22,6 +22,7 @@ const title = ref(props.entry?.title ?? '')
 const image = ref(props.entry?.image ?? '')
 const specialties = ref(props.entry?.specialties.join('\n') ?? '')
 const locations = ref(props.entry?.locations.join('\n') ?? '')
+const officeHours = ref(props.entry?.officeHours ?? '')
 const contacts = ref(props.entry?.contacts.join('\n') ?? '')
 const localError = ref('')
 onMounted(() => heading.value?.focus())
@@ -37,6 +38,7 @@ function submit() {
     image: image.value.trim(),
     specialties: lines(specialties.value),
     locations: lines(locations.value),
+    officeHours: officeHours.value.trim(),
     contacts: lines(contacts.value),
   }
   localError.value = ''
@@ -110,6 +112,15 @@ function submit() {
       <label
         >Ubicaciones (opcional) <small>Una dirección por línea.</small
         ><textarea v-model="locations" rows="2" />
+      </label>
+      <label>
+        Horario de atención (opcional)
+        <textarea
+          v-model="officeHours"
+          rows="2"
+          maxlength="500"
+          placeholder="Lunes a viernes de 9:00 a 17:00"
+        />
       </label>
       <label
         >Contacto

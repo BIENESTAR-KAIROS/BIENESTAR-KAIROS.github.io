@@ -225,8 +225,13 @@ async function updateList(entry: SpecialistEntry, archive: boolean) {
               <h2>{{ entry.title }}</h2>
               <p>{{ entry.specialties.join(' · ') }}</p>
               <details>
-                <summary>Ver ubicación y contacto</summary>
+                <summary>Ver datos de atención</summary>
                 <p v-for="place in entry.locations" :key="place">{{ place }}</p>
+                <p v-if="entry.officeHours" class="specialist-hours">
+                  <strong>Horario de atención</strong><br />{{
+                    entry.officeHours
+                  }}
+                </p>
                 <p v-for="contact in entry.contacts" :key="contact">
                   {{ contact }}
                 </p>
@@ -392,6 +397,9 @@ async function updateList(entry: SpecialistEntry, archive: boolean) {
   padding: 10px 0;
   color: var(--directory-accent);
   font-weight: 700;
+}
+.specialist-manager .specialist-hours {
+  white-space: pre-line;
 }
 .specialist-manager button {
   min-height: 44px;
