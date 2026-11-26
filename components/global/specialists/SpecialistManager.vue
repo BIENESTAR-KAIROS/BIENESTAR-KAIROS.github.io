@@ -177,7 +177,10 @@ async function updateList(entry: SpecialistEntry, archive: boolean) {
       @cancel="closeEditor"
     />
     <template v-else>
-      <EmergencyLineForm v-if="!global" />
+      <EmergencyLineForm
+        v-if="!global || (!loading && !loadError)"
+        :institutions="global ? institutions : undefined"
+      />
       <p v-if="loading" role="status">Cargando especialistas…</p>
       <div v-else-if="loadError" class="specialist-panel">
         <p role="alert" class="specialist-error">{{ loadError }}</p>

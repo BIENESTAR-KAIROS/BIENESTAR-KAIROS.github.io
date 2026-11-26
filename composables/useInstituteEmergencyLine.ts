@@ -1,10 +1,11 @@
 import type { IInstitute } from '~/interfaces/institute/institute.interface'
 import { useAuthStore } from '~/store/auth'
 
-export function useInstituteEmergencyLine() {
+export function useInstituteEmergencyLine(selectedInstitution?: Ref<string>) {
   const auth = useAuthStore()
   const { $axios } = useNuxtApp()
   const instituteId = computed(() => {
+    if (selectedInstitution) return selectedInstitution.value
     const institute = auth.activeInstitute
     return typeof institute === 'string' ? institute : institute?._id
   })

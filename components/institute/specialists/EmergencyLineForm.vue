@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
 import type { IInstitute } from '~/interfaces/institute/institute.interface'
+import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
 
+const props = defineProps<{ institutions?: RegistrationInstitute[] }>()
+const selectedInstitution = ref('')
 const { $axios } = useNuxtApp()
 const { instituteId, phone, loading, failed, retry } =
-  useInstituteEmergencyLine()
+  useInstituteEmergencyLine(
+    props.institutions ? selectedInstitution : undefined,
+  )
 const draft = ref('')
 const saving = ref(false)
 const error = ref('')
@@ -13,9 +18,10 @@ function clearFeedback() {
   error.value = ''
   message.value = ''
 }
-watch(phone, (value) => {
+watch([instituteId, phone], ([, value]) => {
   draft.value = value
 })
+watch(instituteId, clearFeedback)
 async function save() {
   if (saving.value || !instituteId.value) return
   const id = instituteId.value
@@ -24,7 +30,9 @@ async function save() {
   message.value = ''
   try {
     const { data } = await $axios.patch<Pick<IInstitute, 'emergencyPhone'>>(
-      '/institute/emergency-line',
+      props.institutions
+        ? '/institute/' + encodeURIComponent(id) + '/emergency-line'
+        : '/institute/emergency-line',
       { emergencyPhone: draft.value.trim() },
     )
     if (id !== instituteId.value) return
@@ -50,12 +58,27 @@ async function save() {
     aria-labelledby="emergency-line-title"
   >
     <h2 id="emergency-line-title">Línea de emergencia</h2>
-    <p v-if="loading" role="status">Cargando línea de emergencia…</p>
+    <label v-if="institutions"
+      >Institución
+      <select
+        v-model="selectedInstitution"
+        :disabled="saving || !institutions.length"
+      >
+        <option disabled value="">Selecciona una institución</option>
+        <option v-for="item in institutions" :key="item._id" :value="item._id">
+          {{ item.name }}
+        </option>
+      </select>
+    </label>
+    <p v-if="institutions && !institutions.length">
+      Todavía no hay instituciones registradas.
+    </p>
+    <p v-else-if="loading" role="status">Cargando línea de emergencia…</p>
     <div v-else-if="failed">
       <p role="alert">No pudimos cargar la línea de emergencia.</p>
       <button type="button" @click="retry">Reintentar</button>
     </div>
-    <form v-else @submit.prevent="save">
+    <form v-else-if="instituteId" @submit.prevent="save">
       <fieldset :disabled="saving">
         <label
           >Teléfono de emergencia (opcional)
