@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { specialists } from './specialists-data'
+import SpecialistImage from '~/components/global/specialists/SpecialistImage.vue'
 
 const practices = [
   {
@@ -12,7 +12,8 @@ const practices = [
   },
 ]
 
-const featuredSpecialist = specialists[0]
+const { entries } = useSpecialistDirectory()
+const featuredSpecialist = computed(() => entries.value[0])
 const goToHelpTab = inject<(value: string) => void>('goToHelpTab')
 </script>
 
@@ -50,16 +51,15 @@ const goToHelpTab = inject<(value: string) => void>('goToHelpTab')
         class="practice-card practice-card--promo"
         @click="goToHelpTab?.('specialists')"
       >
-        <img
-          :src="featuredSpecialist.image"
-          alt=""
+        <SpecialistImage
+          :image="featuredSpecialist.image"
           class="practice-card--promo__icon"
         />
         <span class="practice-card--promo__title">
           {{ featuredSpecialist.title }}
         </span>
         <span class="practice-card--promo__description">
-          {{ featuredSpecialist.specialities.slice(0, 3).join(', ') }}
+          {{ featuredSpecialist.specialties.slice(0, 3).join(', ') }}
         </span>
         <span class="practice-card--promo__cta">Conoce especialistas →</span>
       </button>

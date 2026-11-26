@@ -123,6 +123,22 @@ async function logout() {
         class="admin-navigation__links"
       >
         <NuxtLink
+          to="/admin/specialists"
+          class="admin-navigation__link"
+          :class="{
+            'admin-navigation__link--active':
+              route.path.startsWith('/admin/specialists'),
+          }"
+          :aria-current="
+            route.path.startsWith('/admin/specialists') ? 'page' : undefined
+          "
+          @click="closeMenu"
+          ><v-icon
+            icon="mdi-account-heart-outline"
+            aria-hidden="true"
+          />Especialistas</NuxtLink
+        >
+        <NuxtLink
           to="/admin/quizzes"
           class="admin-navigation__link"
           :class="{

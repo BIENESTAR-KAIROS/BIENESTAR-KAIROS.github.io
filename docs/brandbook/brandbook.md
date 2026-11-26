@@ -11,6 +11,8 @@ Ventana de referencia: 8 de agosto a 22 de septiembre de 2026 (45 días transcur
 
 **Actualización de navegación · 18 de noviembre de 2026.** El administrador de KAIROS gestiona las plantillas en «Cuestionarios globales». Las instituciones agregan referencias desde «Cuestionarios disponibles». En «Mis cuestionarios», la acción «Crear versión propia» abre un borrador editable. En el panel institucional, el catálogo tiene entrada propia en la navegación. El carrito se abre desde un botón flotante en escritorio y junto al logo en la barra superior móvil. El alumnado ve «Cuestionarios disponibles» y elige cuál responder. El PDF conserva la navegación del corte inicial.
 
+**Actualización de navegación · 26 de noviembre de 2026.** «Especialistas» está en los menús de administración general e institucional. En «Conoce especialistas», cada ficha identifica su procedencia con «Recomendación de KAIROS» o «Servicio de tu institución». El PDF conserva la navegación de la auditoría inicial.
+
 ## 1. Brandbook del producto digital
 
 Criterios visuales y editoriales para evolucionar la aplicación.
