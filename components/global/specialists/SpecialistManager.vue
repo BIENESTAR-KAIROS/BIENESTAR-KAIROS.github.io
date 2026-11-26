@@ -10,6 +10,7 @@ import type {
 } from '~/dto/specialist/save-specialist.dto'
 import { getApiErrorMessage, hasErrorStatus } from '~/utils/helpers/http-errors'
 import SpecialistEditor from './SpecialistEditor.vue'
+import EmergencyLineForm from '~/components/institute/specialists/EmergencyLineForm.vue'
 
 const props = defineProps<{ global?: boolean }>()
 const { $axios } = useNuxtApp()
@@ -176,6 +177,7 @@ async function updateList(entry: SpecialistEntry, archive: boolean) {
       @cancel="closeEditor"
     />
     <template v-else>
+      <EmergencyLineForm v-if="!global" />
       <p v-if="loading" role="status">Cargando especialistas…</p>
       <div v-else-if="loadError" class="specialist-panel">
         <p role="alert" class="specialist-error">{{ loadError }}</p>

@@ -7,6 +7,7 @@ export interface IInstitute {
   businessName: string
   address: string
   phoneNumber: string
+  emergencyPhone?: string
   contactEmail: string
   registrationDate: Date
   active: boolean

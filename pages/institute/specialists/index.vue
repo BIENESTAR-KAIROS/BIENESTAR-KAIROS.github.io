@@ -3,6 +3,11 @@ import SpecialistManager from '~/components/global/specialists/SpecialistManager
 import { useAuthStore } from '~/store/auth'
 definePageMeta({ layout: 'institute' })
 const auth = useAuthStore()
+const instituteId = computed(() =>
+  typeof auth.activeInstitute === 'string'
+    ? auth.activeInstitute
+    : auth.activeInstitute?._id,
+)
 </script>
 
-<template><SpecialistManager :key="auth.activeInstitute?._id" /></template>
+<template><SpecialistManager :key="instituteId" /></template>

@@ -234,7 +234,9 @@ La ubicación activa se reconoce por forma, contraste y peso tipográfico.
 
 ### Una estructura estable
 
-Marca arriba, grupos al centro y ayuda o salida al pie. Ítem alto 46 px y radio 999 px.
+Marca arriba y grupos al centro. Ítem alto 46 px y radio 999 px.
+
+Actualización del 26 de noviembre de 2026. El pie del menú lateral del estudiante conserva la salida de sesión. El aviso «¿Necesitas hablar con alguien ahora?» aparece en «Conoce especialistas» únicamente cuando la institución configura su línea de emergencia. El PDF conserva la navegación del corte inicial.
 
 ### Activo visible
 

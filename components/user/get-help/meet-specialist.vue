@@ -5,6 +5,7 @@ import { useAuthStore } from '~/store/auth'
 
 const authStore = useAuthStore()
 const institute = computed(() => authStore.activeInstitute)
+const { phone: emergencyPhone } = useInstituteEmergencyLine()
 const { entries: specialists, loading, error, retry } = useSpecialistDirectory()
 
 function isEmail(value: string): boolean {
@@ -32,7 +33,7 @@ function contactHref(value: string): string {
       </span>
     </div>
 
-    <div v-if="institute?.phoneNumber" class="urgency">
+    <div v-if="emergencyPhone" class="urgency">
       <span class="urgency__icon">
         <svg
           width="20"
@@ -54,10 +55,11 @@ function contactHref(value: string): string {
       <div class="urgency__copy">
         <span class="urgency__title">¿Necesitas hablar con alguien ahora?</span>
         <span class="urgency__description">
-          Contacta directamente a {{ institute.name || 'tu institución' }}.
+          Línea de emergencia de {{ institute?.name || 'tu institución' }} ·
+          {{ emergencyPhone }}
         </span>
       </div>
-      <a :href="`tel:${institute.phoneNumber}`" class="urgency__btn">
+      <a :href="contactHref(emergencyPhone)" class="urgency__btn">
         Llamar ahora
       </a>
     </div>
