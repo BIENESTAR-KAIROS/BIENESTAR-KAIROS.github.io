@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UserManager from '~/components/global/users/UserManager.vue'
 import { institutionTerms } from '~/utils/helpers/institution-structure'
 import type { AdminUserDetail } from '~/interfaces/user/admin-user.interface'
 import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
@@ -91,6 +92,11 @@ onBeforeUnmount(() => {
           >
         </h2>
         <p>{{ user.email }}</p>
+        <UserManager
+          :user-id="user._id"
+          :institutions="institutions"
+          @changed="load"
+        />
         <dl class="user-profile">
           <div>
             <dt>Instituciones</dt>

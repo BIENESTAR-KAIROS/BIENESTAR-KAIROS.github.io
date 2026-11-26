@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RegistrationGrants from './RegistrationGrants.vue'
 import { useAuthStore } from '~/store/auth'
 import type { RegistrationInstitute } from '~/interfaces/institution/registration-institute.interface'
 import { getApiErrorMessage } from '~/utils/helpers/http-errors'
@@ -152,6 +153,10 @@ onMounted(load)
                 }}
               </p>
             </div>
+            <RegistrationGrants
+              v-if="!studentView"
+              :institution="institution"
+            />
             <button
               class="institutions__secondary"
               type="button"

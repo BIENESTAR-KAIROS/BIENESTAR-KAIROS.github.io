@@ -23,6 +23,9 @@ const saving = ref(false)
 const error = ref('')
 const feedback = ref('')
 const record = ref<AdminUser | null>(null)
+const protectedAccount = computed(
+  () => record.value?.email.trim().toLowerCase() === 'bruno.vitte@siatsa.com',
+)
 const statusConfirmation = ref(false)
 const saved = ref(false)
 const form = reactive({
@@ -97,7 +100,7 @@ async function launch() {
         age: data.studentData?.age?.toString() ?? '',
         gender: data.studentData?.gender?.split('.').pop()?.toLowerCase() ?? '',
         campus: data.studentData?.campusInformation?.name ?? '',
-        roles: [...data.roles],
+        roles: [...(data.roles ?? [])],
         institutionId: data.institute ?? '',
       })
     }
@@ -133,14 +136,25 @@ async function save() {
       surName: form.surName.trim(),
       campus: form.campus.trim(),
     }
-    if (form.age !== '') body.age = Number(form.age)
-    if (form.gender) body.gender = form.gender
+    if (form.age !== '' && Number(form.age) !== record.value?.studentData?.age)
+      body.age = Number(form.age)
+    if (
+      form.gender &&
+      form.gender !==
+        record.value?.studentData?.gender?.split('.').pop()?.toLowerCase()
+    )
+      body.gender = form.gender
     if (willSendEmail.value) body.email = form.email.trim().toLowerCase()
     if (!props.userId) body.password = form.password
     if (!props.institutionId && !record.value?.isDemo) {
-      body.roles = form.roles
-      // Blank on creation follows the registration domain's institution.
-      if (form.institutionId || props.userId)
+      const previousRoles = record.value?.roles ?? []
+      if (
+        !record.value ||
+        previousRoles.length !== form.roles.length ||
+        form.roles.some((role) => !previousRoles.includes(role))
+      )
+        body.roles = form.roles
+      if (form.institutionId !== (record.value?.institute ?? ''))
         body.institutionId = form.institutionId || null
     }
     const response = props.userId
@@ -339,7 +353,7 @@ watch(open, (value) => {
                   required
                   maxlength="254"
                   autocomplete="off"
-                  :disabled="saving"
+                  :disabled="saving || protectedAccount"
               /></label>
               <label v-if="!userId"
                 >Contraseña inicial<input
@@ -419,11 +433,12 @@ watch(open, (value) => {
                   v-model="form.roles"
                   type="checkbox"
                   :value="role.value"
+                  :disabled="protectedAccount && role.value === 'KAIROS_ADMIN'"
                 />{{ role.label }}</label
               >
               <p>
-                Los correos @siatsa.com reciben el rol de administrador KAIROS
-                al verificarse.
+                El rol de administrador KAIROS da acceso a todas las
+                instituciones.
               </p>
             </fieldset>
             <p v-if="!userId && institutionId">
@@ -444,7 +459,7 @@ watch(open, (value) => {
                 v-if="record"
                 type="button"
                 class="management-status"
-                :disabled="saving"
+                :disabled="saving || (protectedAccount && record.active)"
                 @click="statusConfirmation = true"
               >
                 {{
