@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import RecommendationSource from './recommendation-source.vue'
 import CalendarRecomendations from './calendar-recomendations.vue'
 import type { ITrackingTask } from '~/interfaces/tracking/tracking-task.interface'
 import type { ITrackingMonthlyStatsResponse } from '~/interfaces/tracking/tracking-stats.interface'
@@ -115,7 +116,15 @@ onMounted(async () => {
             </svg>
           </button>
           <div class="task-card__copy">
-            <span class="task-card__category">{{ task.category }}</span>
+            <RecommendationSource
+              :title="task.questionnaireTitle"
+              :assigned-at="task.assignedAt"
+            />
+            <span
+              v-if="task.category && task.category !== 'N/A'"
+              class="task-card__category"
+              >{{ task.category }}</span
+            >
             <span
               class="task-card__label"
               :class="{ 'task-card__label--done': task.isCompleted }"

@@ -4,7 +4,8 @@ export interface QuestionnaireAnswerResponseDto {
   id: string
   studentId: string
   questionnaireId: string
-  submittedAt: Date
+  submittedAt: string
+  recommendations: { text: string; category?: string }[]
   responses: QuestionAnswerResponseDto[]
   hasRecomendations: boolean
 }

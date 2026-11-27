@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { IRecomendations } from '~/interfaces/recomendations/recomendations.interface'
-import { useAuthStore } from '~/store/auth'
+import RecommendationSource from '../recomendations/recommendation-source.vue'
 import { useQuizStore, type IQuizResponse } from '~/store/quiz'
-import { useUserStore } from '~/store/user'
-import { hasErrorStatus } from '~/utils/helpers/http-errors'
 
-const { $axios } = useNuxtApp()
 const quizStore = useQuizStore()
-const authStore = useAuthStore()
-const userStore = useUserStore()
 const { $router } = useNuxtApp()
-
+const route = useRoute()
+const submission = computed(() =>
+  quizStore.lastSubmission?.questionnaireId ===
+  quizStore.quiz[0]?.questionnaireId
+    ? quizStore.lastSubmission
+    : null,
+)
 const calification = computed(() => {
   let sum = 0
   const suma = (question: IQuizResponse): number => {
@@ -54,124 +54,12 @@ const evaluteQuestion = (question: IQuizResponse) => {
   return temp
 }
 
-const isLoading = ref(false)
-const recomendations = ref([] as IRecomendations[])
-const route = useRoute()
-const alreadySubmitted = ref(route.query.alreadySubmitted === 'true')
-
-const claves = ref<Record<string, string>>({
-  '6865871136aa0b3c141cf766': 'PHQ',
-  '687f24aa1c222766e367ff24': 'GAD',
-  '687f3d331c222766e367ff26': 'ASST',
-})
-
-// Función para verificar si es error 409
-const isError409 = (error: unknown): boolean => hasErrorStatus(error, 409)
-
-const goToNextOrDashboard = async () => {
-  await $router.push('/user/quiz')
-}
-
-onMounted(async () => {
-  isLoading.value = true
-
-  try {
-    // Si ya se detectó que respondió antes, no hacer nada más
-    if (alreadySubmitted.value) {
-      return
-    }
-
-    // 1. Determinar categoría
-    let category = claves.value[quizStore.quiz[0].questionnaireId]
-    if (category === 'PHQ') {
-      if (calification.value < 5) category += '0001'
-      else if (calification.value < 10) category += '0002'
-      else if (calification.value < 15) category += '0003'
-      else category += '0004'
-    } else if (category === 'GAD') {
-      if (calification.value < 5) category += '0001'
-      else if (calification.value < 10) category += '0002'
-      else if (calification.value < 15) category += '0003'
-      else category += '0004'
-    } else if (category === 'ASST') {
-      if (calification.value < 35) category += '0004'
-      else if (calification.value < 270) category += '0005'
-      else category += '0006'
-    }
-
-    let fallback = false
-
-    // 2. Intentar obtener recomendación específica si aplica
-    if (
-      quizStore.quiz[0].questionnaireId !== '687eb71ad314bf6498877687' &&
-      category
-    ) {
-      try {
-        if (authStore.user) {
-          const response = await $axios.get(
-            `/user-recommendation/${authStore.user._id}/`,
-          )
-          recomendations.value =
-            response.data.userRecommendation.recommendationIds
-        }
-      } catch (error: unknown) {
-        if (isError409(error)) {
-          alreadySubmitted.value = true
-          return
-        } else {
-          // Si no es 409, usar fallback
-          console.warn('⚠️ Error obteniendo recomendación específica:', error)
-          fallback = true
-        }
-      }
-    } else {
-      fallback = true
-    }
-
-    // 3. Obtener recomendaciones aleatorias
-    /* const count = fallback ? 4 : 3
-    for (let i = 0; i < count; i++) {
-      try {
-        const response = await $axios.get(`/recommendations/random`)
-        recomendations.value.push(response.data)
-      } catch (error: unknown) {
-        if (isError409(error)) {
-          alreadySubmitted.value = true
-          return
-        } else {
-          console.warn(
-            `⚠️ Error obteniendo recomendación aleatoria ${i + 1}:`,
-            error,
-          )
-          // Continuar con las siguientes recomendaciones aleatorias
-        }
-      }
-    } */
-  } catch (err: unknown) {
-    console.error('⚠️ Error inesperado:', err)
-    // Solo marcar como ya respondido si es específicamente un 409
-    if (isError409(err)) {
-      alreadySubmitted.value = true
-    } else {
-      // Para otros errores, podrías mostrar un mensaje diferente
-      // o manejar de otra manera según tu lógica de negocio
-    }
-  } finally {
-    isLoading.value = false
-  }
-})
+const alreadySubmitted = computed(() => route.query.alreadySubmitted === 'true')
+const goToNextOrDashboard = () => $router.push('/user/quiz')
 </script>
 
 <template>
-  <!-- Pantalla de carga -->
-  <div v-show="isLoading" class="w-100 h-100">
-    <div class="w-100 h-100 d-flex justify-center align-center">
-      <v-progress-circular color="primary" indeterminate></v-progress-circular>
-    </div>
-  </div>
-
-  <!-- Pantalla principal cuando ya cargó -->
-  <div v-show="!isLoading">
+  <div>
     <v-row class="h-md-screen">
       <v-col cols="12" md="3" class="h-100">
         <div class="d-block d-md-none">
@@ -207,7 +95,7 @@ onMounted(async () => {
 
           <!-- 🟢 Recomendaciones si no ha respondido antes -->
           <v-card
-            v-if="!alreadySubmitted"
+            v-else-if="submission"
             elevation="5"
             color="secondary"
             class="px-6 pt-6 d-flex flex-column align-center overflow-auto"
@@ -250,52 +138,25 @@ onMounted(async () => {
               </div>
             </div>
 
-            <v-row>
-              <v-col
-                v-for="(recomendation, i) in recomendations"
-                :key="i"
-                cols="12"
-                md="3"
+            <v-sheet rounded="xl" class="pa-5 mb-4 w-100">
+              <RecommendationSource
+                :title="quizStore.quizName"
+                :assigned-at="submission.submittedAt"
+              />
+              <div
+                v-for="(message, index) in submission.recommendations"
+                :key="index"
+                class="border-t mt-4 pt-4"
               >
-                <v-sheet
-                  rounded="xl"
-                  class="px-4 py-4 pt-5 d-flex flex-column justify-space-around align-center text-center h-100"
-                  :elevation="5"
+                <p
+                  v-if="message.category && message.category !== 'N/A'"
+                  class="text-caption"
                 >
-                  <div class="mb-9">
-                    <span class="text-body-1 catamaran-regular">
-                      {{ recomendation.recommendation }}
-                    </span>
-                  </div>
-                  <span class="text-body-1 catamaran-regular">
-                    <span
-                      class="text-body-1 catamaran-regular font-weight-bold"
-                    >
-                      Categoría:
-                    </span>
-                    {{ recomendation.category }}
-                  </span>
-                </v-sheet>
-              </v-col>
-            </v-row>
-
-            <v-row>
-              <v-col
-                class="w-100 h-50 d-flex justify-space-around align-center mb-6"
-              >
-                <span class="handlee-regular text-h4 font-weight-bold">
-                  Recomendación especial:
-                </span>
-              </v-col>
-              <v-col
-                class="w-100 h-50 d-flex justify-space-around align-center mb-6"
-              >
-                <h2 class="handlee-regular font-weight-regular">
-                  Recuerda que puedes acercarte a la Unidad de Psicología
-                  Clínica de la UP para que te orienten sobre tu bienestar.
-                </h2>
-              </v-col>
-            </v-row>
+                  {{ message.category }}
+                </p>
+                <p>{{ message.text }}</p>
+              </div>
+            </v-sheet>
 
             <v-card-actions class="">
               <v-btn
@@ -306,6 +167,9 @@ onMounted(async () => {
               </v-btn>
             </v-card-actions>
           </v-card>
+          <NuxtLink v-else to="/user/get-help?tab=recommendations"
+            >Ver mis recomendaciones</NuxtLink
+          >
         </div>
       </v-col>
     </v-row>

@@ -119,6 +119,10 @@ export const useQuizStore = defineStore('quiz', {
       totalQuestions: 0,
       actualQuestion: 0,
       quizName: '',
+      lastSubmission: null as Pick<
+        QuestionnaireAnswerResponseDto,
+        'questionnaireId' | 'submittedAt' | 'recommendations'
+      > | null,
       evaluateByCategory: false,
       newQuiz: {
         title: '',
@@ -153,7 +157,6 @@ export const useQuizStore = defineStore('quiz', {
         attemptId: this.attemptId,
         studentId: this.studentId,
         questionnaireId: this.quiz[0].questionnaireId,
-        submittedAt: new Date(),
         responses: this.answers,
       }
 
@@ -164,6 +167,8 @@ export const useQuizStore = defineStore('quiz', {
             payload,
           )
 
+        const { questionnaireId, submittedAt, recommendations } = response.data
+        this.lastSubmission = { questionnaireId, submittedAt, recommendations }
         return response.data
       } catch (error: unknown) {
         throw error

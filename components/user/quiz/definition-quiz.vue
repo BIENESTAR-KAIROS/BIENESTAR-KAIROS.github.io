@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
+import RecommendationSource from '../recomendations/recommendation-source.vue'
 import { useAuthStore } from '~/store/auth'
 import type { DefinitionSubmissionResult } from '~/interfaces/quizzes/definition-result.interface'
 import DefinitionQuestion from './definition-question.vue'
@@ -250,15 +251,26 @@ async function submit() {
     <section v-if="saved" class="definition-quiz__card" role="status">
       <h2 ref="questionHeading" tabindex="-1">Tus respuestas se guardaron</h2>
       <p>Gracias por completar el cuestionario.</p>
-      <template v-if="resultRecommendations.length">
-        <h3>Recomendaciones para ti</h3>
-        <p
-          v-for="recommendation in resultRecommendations"
-          :key="recommendation"
+      <div
+        v-if="resultRecommendations.length"
+        class="definition-quiz__feedback"
+      >
+        <h3 id="feedback-heading">Recomendaciones para ti</h3>
+        <RecommendationSource
+          id="feedback-source"
+          :title="definition.title"
+          :assigned-at="saved.submittedAt"
+        />
+        <ul
+          role="list"
+          aria-labelledby="feedback-heading"
+          aria-describedby="feedback-source"
         >
-          {{ recommendation }}
-        </p>
-      </template>
+          <li v-for="message in resultRecommendations" :key="message">
+            {{ message }}
+          </li>
+        </ul>
+      </div>
       <NuxtLink to="/user/quiz" class="definition-quiz__exit"
         >Continuar con mis cuestionarios</NuxtLink
       >
@@ -421,6 +433,26 @@ progress {
 }
 .definition-quiz__status:empty {
   display: none;
+}
+.definition-quiz__feedback {
+  overflow-wrap: anywhere;
+}
+.definition-quiz__feedback h3 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.definition-quiz__feedback ul {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.definition-quiz__feedback li {
+  border-top: 1px solid #cfdde1;
+  padding-block: 16px;
+  line-height: 1.6;
+}
+.definition-quiz__feedback li:last-child {
+  padding-bottom: 0;
 }
 .definition-quiz__navigation {
   display: flex;
