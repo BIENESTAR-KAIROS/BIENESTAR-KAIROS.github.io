@@ -20,9 +20,9 @@ export interface DefinitionEvaluation {
   }
 }
 export interface AssignedRecommendation {
-  recommendationId: string
+  recommendationId: string | null
   origin: 'kairos' | 'institution'
-  target: 'overall' | 'dimension'
+  target: 'overall' | 'dimension' | 'summary'
   dimensionId: string | null
   text: string
 }
