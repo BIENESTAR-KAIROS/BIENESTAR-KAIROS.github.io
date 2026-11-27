@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import type { QuestionnaireAnswerByUserResponseDto } from '~/dto/response/questionnaire-answer/questionniare-answer-by-user.response.dto'
 import { useAuthStore } from '~/store/auth'
 
 const authStore = useAuthStore()
-const { $axios } = useNuxtApp()
 
 const roleLabels: Record<string, string> = {
   KAIROS_ADMIN: 'Administrador KAIROS',
@@ -12,9 +10,6 @@ const roleLabels: Record<string, string> = {
 }
 
 const user = computed(() => authStore.user)
-
-const questionnaireAnswers = ref<QuestionnaireAnswerByUserResponseDto[]>([])
-const isLoadingHistory = ref(false)
 
 const fullName = computed(() => {
   return [user.value?.name, user.value?.lastName, user.value?.surName]
@@ -71,29 +66,6 @@ function formatDate(value?: Date | string | number) {
     year: 'numeric',
   })
 }
-
-async function fetchQuestionnaireHistory() {
-  if (authStore.isStudentPreview) return
-  if (!user.value?._id) return
-
-  try {
-    isLoadingHistory.value = true
-
-    const response = await $axios.get<QuestionnaireAnswerByUserResponseDto[]>(
-      `/questionnaire-answer/user/${user.value._id}/all/`,
-    )
-
-    questionnaireAnswers.value = response.data
-  } catch (error) {
-    console.error(error)
-  } finally {
-    isLoadingHistory.value = false
-  }
-}
-
-onMounted(() => {
-  fetchQuestionnaireHistory()
-})
 </script>
 
 <template>
@@ -115,78 +87,39 @@ onMounted(() => {
         </div>
       </div>
 
-      <NuxtLink to="/user/update-my-data" class="profile__edit-button">
-        Editar mis datos
-      </NuxtLink>
+      <div class="profile__actions">
+        <NuxtLink to="/user/update-my-data" class="profile__action">
+          Editar mis datos
+        </NuxtLink>
+        <NuxtLink to="/user/history" class="profile__action">
+          ver mi historial
+        </NuxtLink>
+      </div>
     </header>
 
-    <div class="profile__body">
-      <article class="profile__history">
-        <div class="profile__history-header">
-          <span class="profile__history-title"
-            >Mi historial de cuestionarios</span
-          >
-          <span class="profile__history-count">
-            {{ questionnaireAnswers.length }}
-            {{ questionnaireAnswers.length === 1 ? 'respuesta' : 'respuestas' }}
-          </span>
-        </div>
-
-        <p v-if="isLoadingHistory" class="profile__history-empty">
-          Cargando tu historial…
+    <aside class="profile__body">
+      <article class="profile__privacy-card">
+        <span class="profile__privacy-title">Tu privacidad</span>
+        <p class="profile__privacy-text">
+          Tu institución ve tendencias agregadas y solo abre tu historial
+          clínico si tú lo autorizas o si detectamos un riesgo.
         </p>
-
-        <p
-          v-else-if="questionnaireAnswers.length === 0"
-          class="profile__history-empty"
-        >
-          Aún no has llenado ningún cuestionario.
-        </p>
-
-        <table v-else class="profile__table">
-          <thead>
-            <tr>
-              <th>Cuestionario</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="answer in questionnaireAnswers" :key="answer.id">
-              <td class="profile__table-title">
-                {{ answer.questionnaireId?.title || 'Cuestionario' }}
-              </td>
-              <td class="profile__table-date">
-                {{ formatDate(answer.submittedAt) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <NuxtLink to="/user/privacy-policy" class="profile__privacy-link">
+          Leer el aviso completo →
+        </NuxtLink>
       </article>
 
-      <aside class="profile__sidebar">
-        <article class="profile__privacy-card">
-          <span class="profile__privacy-title">Tu privacidad</span>
-          <p class="profile__privacy-text">
-            Tu institución ve tendencias agregadas y solo abre tu historial
-            clínico si tú lo autorizas o si detectamos un riesgo.
-          </p>
-          <NuxtLink to="/user/privacy-policy" class="profile__privacy-link">
-            Leer el aviso completo →
-          </NuxtLink>
-        </article>
-
-        <article class="profile__support-card">
-          <span class="profile__support-title">Recuerda</span>
-          <p class="profile__support-text">
-            Tu institución pone a tu disposición especialistas y recursos de
-            apoyo para cualquier cosa que necesites.
-          </p>
-          <NuxtLink to="/user/get-help" class="profile__support-button">
-            Contactar ahora
-          </NuxtLink>
-        </article>
-      </aside>
-    </div>
+      <article class="profile__support-card">
+        <span class="profile__support-title">Recuerda</span>
+        <p class="profile__support-text">
+          Tu institución pone a tu disposición especialistas y recursos de apoyo
+          para cualquier cosa que necesites.
+        </p>
+        <NuxtLink to="/user/get-help" class="profile__support-button">
+          Contactar ahora
+        </NuxtLink>
+      </article>
+    </aside>
   </div>
 </template>
 
@@ -268,8 +201,13 @@ onMounted(() => {
   color: #065c5d;
 }
 
-.profile__edit-button {
-  flex-shrink: 0;
+.profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile__action {
   height: 46px;
   padding: 0 22px;
   border-radius: 999px;
@@ -288,96 +226,21 @@ onMounted(() => {
     color 0.15s ease;
 }
 
-.profile__edit-button:hover {
-  border-color: #07979f;
-  color: #07979f;
+.profile__action:hover {
+  border-color: #065c5d;
+  color: #065c5d;
+}
+
+.profile__action:focus-visible {
+  outline: 2px solid #065c5d;
+  outline-offset: 2px;
 }
 
 .profile__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   align-items: start;
-}
-
-.profile__history {
-  background: #fff;
-  border-radius: 24px;
-  border: 1px solid #eaf1f2;
-  box-shadow: 0 6px 20px -12px rgba(6, 92, 93, 0.35);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.profile__history-header {
-  padding: 22px 24px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.profile__history-title {
-  font-size: 19px;
-  font-weight: 800;
-}
-
-.profile__history-count {
-  font-size: 13px;
-  color: #5f767e;
-  white-space: nowrap;
-}
-
-.profile__history-empty {
-  margin: 0;
-  padding: 8px 24px 28px;
-  color: #5c7078;
-  line-height: 1.7;
-}
-
-.profile__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.profile__table thead tr {
-  height: 44px;
-  background: #f7fafb;
-  color: #5f767e;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.profile__table th {
-  text-align: left;
-  padding: 0 24px;
-  font-weight: 700;
-}
-
-.profile__table tbody tr {
-  height: 56px;
-  border-top: 1px solid #f0f5f6;
-}
-
-.profile__table td {
-  padding: 0 24px;
-}
-
-.profile__table-title {
-  font-weight: 600;
-}
-
-.profile__table-date {
-  color: #5c7078;
-}
-
-.profile__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .profile__privacy-card,
@@ -469,13 +332,9 @@ onMounted(() => {
     flex-wrap: wrap;
   }
 
-  .profile__edit-button {
+  .profile__actions,
+  .profile__action {
     width: 100%;
-  }
-
-  .profile__table {
-    display: block;
-    overflow-x: auto;
   }
 }
 </style>

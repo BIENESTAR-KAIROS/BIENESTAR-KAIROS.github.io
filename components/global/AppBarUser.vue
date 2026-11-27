@@ -44,8 +44,6 @@ const isOpen = computed(() => appStore.isNavBarOpen)
 
 const isActive = (to: string) => route.path.startsWith(to)
 
-const institute = computed(() => authStore.activeInstitute)
-
 watch(mobile, () => {
   if (isOpen.value && mobile.value) {
     appStore.isNavBarOpen = false
@@ -222,15 +220,6 @@ onMounted(async () => {
       </nav>
 
       <div class="kairos-nav__footer">
-        <div class="kairos-nav__sos">
-          <span class="kairos-nav__sos-title">¿Necesitas hablar hoy?</span>
-          <span class="kairos-nav__sos-copy">
-            {{ institute?.name || 'Tu institución' }}
-            <template v-if="institute?.phoneNumber">
-              · {{ institute.phoneNumber }}</template
-            >
-          </span>
-        </div>
         <p v-if="logoutError" class="kairos-nav__logout-error" role="alert">
           {{ logoutError }}
         </p>
@@ -370,26 +359,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.kairos-nav__sos {
-  background: #0b7273;
-  border-radius: 20px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.kairos-nav__sos-title {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.kairos-nav__sos-copy {
-  font-size: 12px;
-  line-height: 1.5;
-  color: #c7e9ea;
 }
 
 .kairos-nav__logout {

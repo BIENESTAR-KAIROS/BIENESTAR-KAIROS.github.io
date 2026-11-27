@@ -236,10 +236,6 @@ onMounted(() => {
           Los correos personales permiten acceder al Cuestionario de Bienestar
           Emocional y a los demás recursos de Kairos.
         </p>
-        <p class="registration-manager__note">
-          Verificar un correo @siatsa.com concede acceso a la administración
-          general. Los dominios institucionales se configuran por separado.
-        </p>
         <form
           class="registration-manager__domain-form"
           @submit.prevent="addDomain"
@@ -286,12 +282,7 @@ onMounted(() => {
         </p>
         <ul v-else class="registration-manager__domains">
           <li v-for="allowed in domains" :key="allowed">
-            <span
-              >{{ allowed
-              }}<small v-if="allowed === 'siatsa.com'"
-                >Administración KAIROS</small
-              ></span
-            >
+            <span>{{ allowed }}</span>
             <button
               class="registration-manager__text-button"
               type="button"

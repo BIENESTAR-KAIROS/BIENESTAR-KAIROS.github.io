@@ -12,6 +12,7 @@ const authRoutes: string[] = [
   '/institute/quizzes', // Includes /add-quiz and /:id/edit through isValidRoute.
   '/institute/settings',
   '/institute/recommendations',
+  '/institute/specialists',
 
   // ? USERS links
   '/user/quiz',
@@ -34,6 +35,7 @@ const authRoutes: string[] = [
   '/admin/dashboard',
   '/admin/quizzes',
   '/admin/recommendations',
+  '/admin/specialists',
   '/admin/registration',
   '/admin/institutions',
   '/admin/users',

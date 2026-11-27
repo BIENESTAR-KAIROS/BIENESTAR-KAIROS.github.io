@@ -70,7 +70,7 @@ provide('goToHelpTab', selectTab)
           {{ item.label }}
         </button>
       </div>
-      <span class="get-help__curated">
+      <span v-if="tab !== 'specialists'" class="get-help__curated">
         Curado por especialistas de tu institución
       </span>
     </header>

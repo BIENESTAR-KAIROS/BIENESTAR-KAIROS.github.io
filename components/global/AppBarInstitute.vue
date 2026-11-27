@@ -26,6 +26,7 @@ const navLinks = [
     icon: 'clipboard',
   },
   { title: 'Mis configuraciones', to: '/institute/settings', icon: 'settings' },
+  { title: 'Especialistas', to: '/institute/specialists', icon: 'specialists' },
 ]
 
 const updateNavBarState = (value: boolean) => {
@@ -112,7 +113,13 @@ onMounted(() => {
         >
           <span class="institute-nav__icon">
             <v-icon
-              v-if="link.icon === 'catalog'"
+              v-if="link.icon === 'specialists'"
+              icon="mdi-account-heart-outline"
+              size="20"
+              aria-hidden="true"
+            />
+            <v-icon
+              v-else-if="link.icon === 'catalog'"
               icon="mdi-bookshelf"
               size="20"
               aria-hidden="true"

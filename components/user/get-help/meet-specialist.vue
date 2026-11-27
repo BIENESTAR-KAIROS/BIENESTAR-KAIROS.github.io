@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { specialists } from './specialists-data'
+import SpecialistImage from '~/components/global/specialists/SpecialistImage.vue'
 import { useAuthStore } from '~/store/auth'
 
 const authStore = useAuthStore()
 const institute = computed(() => authStore.activeInstitute)
+const { phone: emergencyPhone } = useInstituteEmergencyLine()
+const { entries: specialists, loading, error, retry } = useSpecialistDirectory()
 
 function isEmail(value: string): boolean {
   return value.includes('@')
 }
 
 function contactHref(value: string): string {
-  return isEmail(value) ? `mailto:${value}` : `tel:${value.replace(/\s+/g, '')}`
+  if (isEmail(value))
+    return 'mailto:' + encodeURIComponent(value).replace('%40', '@')
+  const [number, extension] = value.split(/\s*(?:ext\.?|x)\s*/i)
+  return (
+    'tel:' +
+    number.replace(/[^\d+]/g, '') +
+    (extension ? ';ext=' + extension : '')
+  )
 }
 </script>
 
@@ -20,12 +29,11 @@ function contactHref(value: string): string {
     <div class="specialists__intro">
       <span class="specialists__title">Conoce especialistas</span>
       <span class="specialists__subtitle">
-        Servicios de tu universidad y aliados cercanos. Todas las citas son
-        confidenciales.
+        Encuentra servicios de atención y consulta cómo contactarlos.
       </span>
     </div>
 
-    <div v-if="institute?.phoneNumber" class="urgency">
+    <div v-if="emergencyPhone" class="urgency">
       <span class="urgency__icon">
         <svg
           width="20"
@@ -47,33 +55,45 @@ function contactHref(value: string): string {
       <div class="urgency__copy">
         <span class="urgency__title">¿Necesitas hablar con alguien ahora?</span>
         <span class="urgency__description">
-          Contacta directamente a {{ institute.name || 'tu institución' }}.
+          Línea de emergencia de {{ institute?.name || 'tu institución' }} ·
+          {{ emergencyPhone }}
         </span>
       </div>
-      <a :href="`tel:${institute.phoneNumber}`" class="urgency__btn">
+      <a :href="contactHref(emergencyPhone)" class="urgency__btn">
         Llamar ahora
       </a>
     </div>
 
-    <div v-if="specialists.length === 0" class="specialists__empty">
+    <div v-if="loading" class="specialists__empty" role="status">
+      Cargando especialistas…
+    </div>
+    <div v-else-if="error" class="specialists__empty">
+      <p role="alert">No pudimos cargar los especialistas.</p>
+      <button type="button" class="specialists__retry" @click="retry">
+        Reintentar
+      </button>
+    </div>
+    <div v-else-if="specialists.length === 0" class="specialists__empty">
       Todavía no hay especialistas disponibles para mostrar.
     </div>
 
     <div v-else class="specialists__grid">
       <div
-        v-for="(specialist, i) in specialists"
-        :key="i"
+        v-for="specialist in specialists"
+        :key="specialist._id"
         class="specialist-card"
       >
         <div class="specialist-card__header">
           <span class="specialist-card__avatar">
-            <img :src="specialist.image" alt="" />
+            <SpecialistImage :image="specialist.image" />
           </span>
           <div class="specialist-card__heading">
             <span class="specialist-card__name">{{ specialist.title }}</span>
-            <span class="specialist-card__badge"
-              >Servicio de tu universidad</span
-            >
+            <span class="specialist-card__badge">{{
+              specialist.instituteId
+                ? 'Servicio de tu institución'
+                : 'Recomendación de KAIROS'
+            }}</span>
           </div>
         </div>
 
@@ -81,7 +101,7 @@ function contactHref(value: string): string {
           <span class="specialist-card__label">Especialidades</span>
           <div class="specialist-card__chips">
             <span
-              v-for="(speciality, j) in specialist.specialities"
+              v-for="(speciality, j) in specialist.specialties"
               :key="j"
               class="specialist-card__chip"
             >
@@ -90,10 +110,13 @@ function contactHref(value: string): string {
           </div>
         </div>
 
-        <div class="specialist-card__section">
+        <div
+          v-if="specialist.locations.length"
+          class="specialist-card__section"
+        >
           <span class="specialist-card__label">Ubicación</span>
           <div
-            v-for="(place, j) in specialist.schedule"
+            v-for="(place, j) in specialist.locations"
             :key="j"
             class="specialist-card__row"
           >
@@ -114,10 +137,17 @@ function contactHref(value: string): string {
           </div>
         </div>
 
+        <div v-if="specialist.officeHours" class="specialist-card__section">
+          <span class="specialist-card__label">Horario de atención</span>
+          <p class="specialist-card__row specialist-card__hours">
+            {{ specialist.officeHours }}
+          </p>
+        </div>
+
         <div class="specialist-card__section">
           <span class="specialist-card__label">Contacto</span>
           <a
-            v-for="(contact, j) in specialist.contact"
+            v-for="(contact, j) in specialist.contacts"
             :key="j"
             :href="contactHref(contact)"
             class="specialist-card__row specialist-card__row--link"
@@ -256,11 +286,13 @@ function contactHref(value: string): string {
 
 .specialists__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 20px;
 }
 
 .specialist-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   background: #fff;
   border-radius: 26px;
   border: 1px solid #eaf1f2;
@@ -340,7 +372,7 @@ function contactHref(value: string): string {
 }
 
 .specialist-card__chip {
-  height: 32px;
+  min-height: 32px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
@@ -365,9 +397,23 @@ function contactHref(value: string): string {
 .specialist-card__row--link {
   color: #0e2a36;
 }
+.specialist-card__hours {
+  white-space: pre-line;
+}
 
 .specialist-card__row--link:hover {
-  color: #07979f;
+  color: #065c5d;
+  text-decoration: underline;
+}
+.specialists__retry {
+  min-height: 44px;
+  color: #065c5d;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.specialists :is(a, button):focus-visible {
+  outline: 3px solid #065c5d;
+  outline-offset: 3px;
 }
 
 @media (max-width: 720px) {
